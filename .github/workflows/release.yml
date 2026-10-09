@@ -2,27 +2,46 @@ name: 青单发布
 
 on:
   push:
+    branches: ['main']
     tags: ['v*.*.*']
+    # Updating this file is the intentional release request; ordinary commits do not release.
+    paths: ['.github/release/request.json']
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ github.repository }}
   cancel-in-progress: false
 
 env:
   NODE_VERSION: '24.19.0'
 
 jobs:
+  metadata:
+    name: 发布版本与明确请求
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+      android-version: ${{ steps.meta.outputs.androidVersion }}
+      android-version-code: ${{ steps.meta.outputs.androidVersionCode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - id: meta
+        run: node .github/release/metadata.mjs
+
   verify:
     name: 完整检查
     uses: ./.github/workflows/check.yml
 
   package-server:
     name: 独立服务端 Linux 与 macOS 运行时
-    needs: verify
+    needs: [metadata, verify]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -71,7 +90,7 @@ jobs:
 
   package-macos:
     name: macOS arm64
-    needs: verify
+    needs: [metadata, verify]
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -91,7 +110,7 @@ jobs:
           npm ci --prefix application
           node desktop/scripts/prepare-backend.cjs
           node desktop/scripts/verify-backend.cjs desktop/backend backend-verification-macos.json --smoke
-      - name: 构建并校验未签名安装包
+      - name: 构建并校验 macOS 安装包
         working-directory: desktop
         env:
           ELECTRON_CACHE: ${{ runner.temp }}/electron-cache
@@ -100,9 +119,10 @@ jobs:
         run: |
           npm ci
           node scripts/package.cjs mac --arm64 --dmg --zip
+          node scripts/verify-desktop-archives.cjs mac
           mkdir -p release
           cp dist/*.dmg dist/*.zip release/
-          cp dist/verified-mac-arm64.json ../backend-verification-macos.json docs/MAC-START-HERE.txt release/
+          cp dist/verified-mac-arm64.json dist/verified-mac-arm64-archives.json ../backend-verification-macos.json docs/MAC-START-HERE.txt release/
           (cd release && shasum -a 256 *.dmg *.zip > SHA256SUMS-macos.txt)
       - uses: actions/upload-artifact@v4
         with:
@@ -112,7 +132,7 @@ jobs:
 
   package-windows:
     name: Windows x64
-    needs: verify
+    needs: [metadata, verify]
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
@@ -141,9 +161,10 @@ jobs:
         run: |
           npm ci
           node scripts/package.cjs win --x64 --zip
+          node scripts/verify-desktop-archives.cjs win
           mkdir -p release
           cp dist/*.zip release/
-          cp dist/verified-win-x64.json ../backend-verification-windows.json docs/WINDOWS-START-HERE.txt release/
+          cp dist/verified-win-x64.json dist/verified-win-x64-archives.json ../backend-verification-windows.json docs/WINDOWS-START-HERE.txt release/
           (cd release && sha256sum *.zip > SHA256SUMS-windows.txt)
       - uses: actions/upload-artifact@v4
         with:
@@ -151,23 +172,137 @@ jobs:
           if-no-files-found: error
           path: desktop/release/*
 
-  publish:
-    name: 发布 GitHub Release
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    permissions:
-      contents: write
-    needs: [package-server, package-macos, package-windows]
+  package-linux:
+    name: Linux x64 客户端 AppImage
+    needs: [metadata, verify]
     runs-on: ubuntu-24.04
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            application/package-lock.json
+            desktop/package-lock.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-application
+          path: application
+      - name: 准备当前内置后端
+        run: |
+          npm ci --prefix application
+          node desktop/scripts/prepare-backend.cjs
+          node desktop/scripts/verify-backend.cjs desktop/backend backend-verification-linux.json --smoke
+      - name: 构建与独立验收 AppImage
+        working-directory: desktop
+        env:
+          ELECTRON_CACHE: ${{ runner.temp }}/electron-cache
+          ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder-cache
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: |
+          npm ci
+          node scripts/package.cjs linux --x64 --appimage
+          mkdir -p release
+          cp dist/*.AppImage dist/verified-linux-x64.json dist/verified-linux-appimage-x64.json ../backend-verification-linux.json docs/LINUX-START-HERE.txt release/
+          (cd release && sha256sum *.AppImage > SHA256SUMS-linux.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ github.sha }}
+          if-no-files-found: error
+          path: desktop/release/*
+
+  package-android:
+    name: Android 可安装发布 APK
+    needs: metadata
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: 检查用户已安全配置发布签名
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          names = ('ANDROID_KEYSTORE_BASE64', 'ANDROID_KEYSTORE_PASSWORD', 'ANDROID_KEY_ALIAS', 'ANDROID_KEY_PASSWORD')
+          missing = [name for name in names if not os.environ.get(name)]
+          if missing:
+              raise SystemExit('Android installable APK blocked: configure these GitHub Repository Secrets yourself: ' + ', '.join(missing) + '. See android/docs/RELEASE-SIGNING.md. No unsigned APK will be published.')
+          PYTHON
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: android/webapp/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: 仅使用已预装授权的 SDK，缺少时停止
+        run: |
+          test -f "$ANDROID_HOME/platforms/android-36/android.jar"
+          test -x "$ANDROID_HOME/build-tools/36.0.0/apksigner"
+          test -x "$ANDROID_HOME/build-tools/36.0.0/aapt"
+          test -x "$ANDROID_HOME/build-tools/36.0.0/zipalign"
+      - name: 构建并检查独立 Android 网页与原生代码
+        env:
+          QINGDAN_ANDROID_VERSION_NAME: ${{ needs.metadata.outputs.android-version }}
+          QINGDAN_ANDROID_VERSION_CODE: ${{ needs.metadata.outputs.android-version-code }}
+        run: |
+          npm ci --prefix android/webapp
+          npm run build:web --prefix android
+          npm run test:android --prefix android
+          python3 -m unittest discover -s android/tests -p 'test_*.py' -v
+          (cd android/android && gradle --no-daemon -Pandroid.builder.sdkDownload=false securityTests localStorePolicyTests testReleaseUnitTest assembleRelease)
+      - name: 用已有发布身份签名并验收安装候选
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          QINGDAN_ANDROID_VERSION_NAME: ${{ needs.metadata.outputs.android-version }}
+          QINGDAN_ANDROID_VERSION_CODE: ${{ needs.metadata.outputs.android-version-code }}
+        run: |
+          mkdir -p android/release
+          bash android/scripts/sign-release.sh android/android/app/build/outputs/apk/release/app-release-unsigned.apk "android/release/Qingdan-${QINGDAN_ANDROID_VERSION_NAME}-android.apk"
+          (cd android/release && sha256sum *.apk > SHA256SUMS-android.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            android/release/Qingdan-${{ needs.metadata.outputs.android-version }}-android.apk
+            android/release/Qingdan-${{ needs.metadata.outputs.android-version }}-android.apk.verification.json
+            android/release/SHA256SUMS-android.txt
+
+  publish:
+    name: 汇总成品并发布（缺 APK 时仅草稿）
+    if: >-
+      always() && !cancelled() &&
+      needs.metadata.result == 'success' &&
+      needs.package-server.result == 'success' &&
+      needs.package-macos.result == 'success' &&
+      needs.package-windows.result == 'success' &&
+      needs.package-linux.result == 'success'
+    permissions:
+      contents: write
+    needs: [metadata, package-server, package-macos, package-windows, package-linux, package-android]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           pattern: '*-${{ github.sha }}'
           path: release-assets
           merge-multiple: true
-      - name: 发布通过验收的成品
+      - name: 精确验收五类资源并创建正式或草稿 Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          mapfile -d '' assets < <(find release-assets -maxdepth 1 -type f -print0)
-          test "${#assets[@]}" -gt 0
-          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes --title "青单 $GITHUB_REF_NAME" "${assets[@]}"
+          ANDROID_RESULT: ${{ needs.package-android.result }}
+        run: python3 .github/release/publish.py --assets release-assets --android-result "$ANDROID_RESULT"

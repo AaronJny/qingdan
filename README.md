@@ -52,3 +52,11 @@ npm start
 
 私服按账号隔离数据。部署者应备份完整的数据目录，并妥善保管账号数据库。应用内导出文件不包含登录密码或会话。
 
+
+## 自动发行
+
+发布流水线构建 macOS arm64 DMG、Windows x64 便携 ZIP、Linux x64 AppImage、内置运行时与一键脚本的服务器 ZIP，以及 Android 可安装 release APK，并附 SHA256 和独立成品检查报告。桌面和服务端版本为 1.1.1；Android 独立客户端为 0.1.1，业务基准为 1.0.1。
+
+发布请求通过 `.github/release/request.json` 明确指定版本；更新此文件、推送对应版本 tag 或手动运行“青单发布”工作流会构建发行，普通代码提交只做完整检查。只有五类成品齐备才正式发布；Android 签名未配置时只保留明确标注缺少 APK 的草稿。
+
+Android 签名须由仓库所有者安全配置，见 [签名设置](android/docs/RELEASE-SIGNING.md)。密钥或密码不要进入聊天、源码或构建产物。macOS 当前没有 Developer ID 签名或 Apple 公证，Windows 未签名；请保留系统安全机制。构建、归档和后端检查不等同于桌面 GUI 或 Android 真机验收。

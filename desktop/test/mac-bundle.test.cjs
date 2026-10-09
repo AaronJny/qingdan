@@ -6,6 +6,17 @@ const path = require('node:path');
 const os = require('node:os');
 const plist = require('plist');
 const hook = require('../scripts/finalize-mac-bundle.cjs');
+const windows = process.platform === 'win32';
+if (windows) {
+  // Windows does not store POSIX execute bits. Only that fixture metadata is
+  // simulated; helper names, bytes, plist identity and collisions remain real.
+  const originalLstat = fs.lstat;
+  test.mock.method(fs, 'lstat', async function(file, ...args) {
+    const value = await originalLstat.call(fs, file, ...args);
+    if (String(file).includes('qingdan-mac-test-') && String(file).includes(path.sep + 'MacOS' + path.sep) && value.isFile()) value.mode |= 0o111;
+    return value;
+  });
+}
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'qingdan-mac-test-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
@@ -31,7 +42,7 @@ test('macOS internal helper names match the Electron 44.6.0 default lookup and d
     assert.equal(info.CFBundleName, `Electron Helper${suffix}`);
     assert.ok(info.CFBundleDisplayName.startsWith('青单辅助程序'));
     assert.equal(info.CFBundleIdentifier, `app.qingdan.desktop.helper${suffix}`);
-    assert.ok((await fs.stat(path.join(helper, 'Contents/MacOS', info.CFBundleExecutable))).mode & 0o111);
+    if (!windows) assert.ok((await fs.stat(path.join(helper, 'Contents/MacOS', info.CFBundleExecutable))).mode & 0o111);
     await assert.rejects(fs.access(path.join(frameworks, `Qingdan Helper${suffix}.app`)));
   }
   assert.equal(plist.parse(await fs.readFile(path.join(app, 'Contents/Info.plist'), 'utf8')).CFBundleIdentifier, 'app.qingdan.desktop');
@@ -45,8 +56,11 @@ test('missing helper fails packaging before changing other helpers', async t => 
 test('nonexecutable helper and conflicting destination are rejected', async t => {
   const { app, frameworks } = await fixture(t);
   const binary = path.join(frameworks, 'Qingdan Helper.app/Contents/MacOS/Qingdan Helper');
-  await fs.chmod(binary, 0o644); await assert.rejects(hook.finalizeBundle(app, 'Qingdan'), /Invalid bundle file/);
-  await fs.chmod(binary, 0o755); await fs.mkdir(path.join(frameworks, 'Electron Helper.app'));
+  if (!windows) {
+    await fs.chmod(binary, 0o644); await assert.rejects(hook.finalizeBundle(app, 'Qingdan'), /Invalid bundle file/);
+    await fs.chmod(binary, 0o755);
+  }
+  await fs.mkdir(path.join(frameworks, 'Electron Helper.app'));
   await assert.rejects(hook.finalizeBundle(app, 'Qingdan'), /collision/);
 });
 test('hook ignores Windows and Linux packages', async () => {

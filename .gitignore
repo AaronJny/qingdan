@@ -18,6 +18,11 @@
 .env*
 *.jks
 *.keystore
+*.p12
+*.pfx
+*.pk8
+*.key
+/android/release/
 .DS_Store
 # Embedded runtime payloads are recreated from verified application source.
 /desktop/backend/

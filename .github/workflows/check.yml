@@ -33,6 +33,8 @@ jobs:
         run: |
           npm ci --ignore-scripts
           npm run check
+      - name: 检查发布成品与权限边界
+        run: python3 -m unittest discover -s .github/release/tests -v
       - name: 检查服务端打包脚本
         run: python3 -m unittest discover -s server-packaging/tests -v
       - name: 生成并启动验证当前内置后端

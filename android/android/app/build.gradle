@@ -3,14 +3,15 @@ plugins { id 'com.android.application' }
 android {
     namespace 'cn.qingdan.android'
     compileSdk 36
+    buildToolsVersion '36.0.0'
     useLibrary 'android.test.runner', false
     useLibrary 'android.test.base', false
     defaultConfig {
         applicationId 'cn.qingdan.android'
         minSdk 26
         targetSdk 36
-        versionCode 1
-        versionName '0.1.0'
+        versionCode (System.getenv('QINGDAN_ANDROID_VERSION_CODE') ?: '2').toInteger()
+        versionName System.getenv('QINGDAN_ANDROID_VERSION_NAME') ?: '0.1.1'
         testInstrumentationRunner 'android.test.InstrumentationTestRunner'
     }
     // This deliverable is intentionally unsigned. Do not generate a debug key.

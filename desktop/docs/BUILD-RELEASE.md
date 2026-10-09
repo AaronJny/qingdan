@@ -22,12 +22,31 @@ backend/ 全部属于生成文件，不提交到 Git。源码构建者必须先�
 ```sh
 node scripts/package.cjs win --x64 --zip
 node scripts/package.cjs mac --arm64 --dmg --zip
+node scripts/package.cjs linux --x64 --appimage
 node scripts/package.cjs linux --x64 --dir
 ```
 
 脚本运行桌面语法/单元检查、校验内置后端，然后调用 electron-builder（--publish never）。完成后独立读取成品 app.asar，检查当前源码、后台运行资源、依赖文件与全部既有 Electron fuses；结果写在 dist/verified-平台-架构.json。macOS 保留官方 Electron Helper 名称和中文应用名、许可证复制及既有打包钩子。本流程未配置正式签名或公证身份，成品仍需 macOS 实机启动验收。
 
-npm run verify:backend 使用普通 Node 在临时合成数据目录检查精确版本握手、前端、迁移、建任务、正常停止/重启持久性。该检查不代表 Electron utilityProcess 或原生 GUI 已通过。GitHub check.yml 在每次分支 push/PR 上运行完整检查及运行后端测试，不发布 Release。release.yml 复用这些已验证构建资源，分别在 macOS/Windows 打包并检查 ASAR；只有匹配 application 版本的 v 标签才进入 GitHub Release 发布。手工运行只生成验收成品。
+npm run verify:backend 使用普通 Node 在临时合成数据目录检查精确版本握手、前端、迁移、建任务、正常停止/重启持久性。该检查不代表 Electron utilityProcess 或原生 GUI 已通过。GitHub check.yml 在每次分支 push/PR 上运行完整检查及运行后端测试，不发布 Release。release.yml 复用这些已验证构建资源，分别在 macOS/Windows/Linux 打包并检查 ASAR；只有匹配 application 版本的 v 标签才进入 GitHub Release 发布。手工运行只生成验收成品。
+
+## Linux x64 AppImage
+
+Linux 与 macOS 共用 src/main.cjs、隔离窗口、连接设置和内置后端管理，不另维护应用源码。Linux 像 Windows 一样在最后一个窗口关闭后退出；当前桌面代码没有托盘常驻依赖。
+
+AppImage 使用锁定 electron-builder 26.15.3 中的 appimage 1.0.3 静态运行时工具集。下载地址与 SHA256 固定在该版本的 app-builder-lib/out/toolsets/linux.js，构建器自动验证工具下载。AppImage 文件不再套一层 ZIP。
+
+该构建器默认生成的 AppRun 在 user namespace 不可用时会自动添加 --no-sandbox。本项目的 finalize-linux-bundle.cjs 提供安全启动器，构建器在生成 AppRun 后复制当前打包目录，使该启动器成为最终文件；appImage.executableArgs 同时明确设为空数组。启动器没有关闭沙箱的自动降级路径，显式拒绝关闭沙箱的选项。不提供修改 AppArmor、系统 namespace 限制或 setuid 权限的绕过步骤。若系统无法正常初始化 Electron 沙箱，应停止运行并使用符合安全要求的系统环境。
+
+package.cjs 生成 Qingdan-版本-linux-x64.AppImage 后自动调用 verify-linux-appimage.cjs --smoke：
+
+- 在全新的临时目录执行 --appimage-extract，不依赖 FUSE 挂载
+- 检查 AppImage/应用 ELF 为 x86-64，逐字节匹配 linux-unpacked 中的全部应用文件及固定工具集中的运行库
+- 验证安全 AppRun、desktop Exec、中文名称、图标与内部相对链接；拒绝额外文件、越界或悬空链接、用户数据与仓库状态
+- 从干净解出的 app.asar 再次检查当前源码、后端文件/依赖与七项安全 fuses
+- 解出已核验的实际 ASAR 后端，用构建机普通 Node 24 在合成数据目录测试版本握手、在线及离线资源、迁移、日历 worker、建任务与正常重启持久性
+
+结果写入 dist/verified-linux-appimage-x64.json，明确记录 electronUtilityProcessTested=false、nativeGuiTested=false。此流程验证 AppImage 结构及归档后端，不代表 Linux 窗口、Electron utilityProcess、图形菜单、桌面通知、X11/Wayland 或发行版兼容性已实机验收。
 
 以下为历史变更说明，不替代当前 1.1.0 成品验收。
 

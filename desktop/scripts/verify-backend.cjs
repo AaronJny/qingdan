@@ -70,7 +70,14 @@ async function verifyCalendarWorker(root) {
   } finally { clearTimeout(timeout); await worker.terminate(); }
 }
 async function smokeBackend(root, expectedVersion) {
-  const structural = verifyBackend(root, expectedVersion);
+  return smokeVerifiedRuntime(root, verifyBackend(root, expectedVersion));
+}
+// For already byte-verified packaged payloads, whose development metadata is
+// intentionally stripped by electron-builder. The caller must verify the
+// archive before extraction; this exercises the actual extracted runtime.
+async function smokeVerifiedRuntime(root, structural) {
+  assert(validateLocalInfo({ app: 'qingdan', version: structural?.version, mode: 'local' }), 'A verified runtime version is required.');
+  assert.match(structural.sourceSnapshotSha256, /^[a-f0-9]{64}$/);
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), '青单 backend smoke '));
   const port = await new Promise((resolve, reject) => {
     const socket = net.createServer(); socket.once('error', reject);
@@ -141,4 +148,4 @@ if (require.main === module) {
   const root = positional[0] || path.join(__dirname, '../backend');
   Promise.resolve(smoke ? smokeBackend(root) : verifyBackend(root)).then(report => { if (positional[1]) fs.writeFileSync(positional[1], JSON.stringify(report, null, 2) + '\n'); console.log(JSON.stringify(report, null, 2)); }).catch(error => { console.error(error); process.exitCode = 1; });
 }
-module.exports = { verifyBackend, smokeBackend, verifyCalendarWorker };
+module.exports = { verifyBackend, smokeBackend, smokeVerifiedRuntime, verifyCalendarWorker };

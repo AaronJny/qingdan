@@ -1,0 +1,33 @@
+{
+  "schema": "qingdan-android-release-pipeline-source-verification-v1",
+  "date": "2026-10-09",
+  "android_client_version": "0.1.1",
+  "version_code": 2,
+  "application_id": "cn.qingdan.android",
+  "application_baseline_version": "1.0.1",
+  "local_pass": {
+    "synthetic_apk_verifier_unit_tests": 24,
+    "shell_syntax": true,
+    "python_compile_and_cli": true,
+    "native_security_policy_java21_assertions": 85,
+    "native_local_store_policy_java21_checks": 60
+  },
+  "local_not_run": [
+    "independent npm ci and current web build",
+    "Android SDK/Gradle build",
+    "real APK signature generation or verification",
+    "Android device install, launch and instrumentation",
+    "in-place upgrade",
+    "Xiaomi 14 Ultra runtime",
+    "real HTTPS account login and offline reopen"
+  ],
+  "signing": {
+    "key_generation_executed_by_assistant": false,
+    "actual_secret_values_read_by_assistant": false,
+    "secrets_configured_by_repository_owner": true,
+    "final_candidate_requires_real_signature_verification": true,
+    "original_signing_key_available": false,
+    "in_place_upgrade_claimed": false
+  },
+  "hosted_release_evidence": "Use the actual GitHub Actions run and final APK .verification.json, not these source-only unit tests."
+}

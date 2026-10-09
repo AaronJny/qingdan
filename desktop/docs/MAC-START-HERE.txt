@@ -1,4 +1,4 @@
-青单 1.1.0 · Apple Silicon · macOS 13及以上
+青单 1.1.1 · Apple Silicon · macOS 13及以上
 
 1. 先正常退出旧版。如果“应用程序”内还有旧名 Qingdan.app，请先把它移走，避免之后误开旧版；不要删除 Library/Application Support/QingdanDesktop 数据目录。
 2. 在此镜像内把青单.app拖到Applications，之后从“应用程序”打开。

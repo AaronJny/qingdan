@@ -1,10 +1,10 @@
-# 青单 Android 0.1.0 源码与内置网页资源
+# 青单 Android 0.1.1
 
-独立安卓项目，应用基准为青单 1.0.1 源码 c3194463a8cf748242955c61da72969c652ea062。2026-10-09 仅清理自用界面文案并重建内置网页资源；产品名、Android 0.1.0 版本、包名 cn.qingdan.android、数据标识、业务处理与数据库迁移保持不变。
+Android 是独立适配的客户端，内置业务源码基准仍为青单 1.0.1 / c3194463a8cf748242955c61da72969c652ea062。客户端版本为 0.1.1 / versionCode 2；包名 cn.qingdan.android、本地与私服数据身份及数据库迁移保持不变。此版本不等同桌面与服务端 1.1.1 的实现。
 
-本次交付只有源码与预生成网页资源，没有新 APK。原 APK 签名私钥当前不可用，本次没有生成新签名密钥，不能据此声称可覆盖升级已安装应用。
+本次补齐可安装 APK 的构建、签名与验证流水线。构建默认仍输出 unsigned APK；只有用户已在 GitHub 安全配置的本应用专用签名身份才能签名，最终签名、版本、资源和原生库检查通过后才进入发布产物。原 APK 私钥不可用，改用新证书后不能直接覆盖旧签名安装。先在已有应用内导出完整备份；不要自动卸载旧应用，卸载会删除应用私有数据。
 
-当前唯一修改的应用源文件为 webapp/app/workspace-dialogs.tsx，SHA256：467c10cf0a629fccee3033bb8a683fb5e581baaff8c3d819a2367d526f295e0d。完整当前文件哈希见 ANDROID-SOURCE-MANIFEST.json，本次验证见 VERIFICATION.md；旧基准的验证记录仅供历史追溯。
+签名配置步骤见 [发布签名说明](docs/RELEASE-SIGNING.md)。秘密不得发送到聊天、提交源码或进入 APK/artifact。SDK/Gradle 构建与真实签名以对应 GitHub Actions 的运行结果和 APK 验证报告为准；本地源码/单元测试通过不等于已完成安装或真机测试。当前源码清单见 ANDROID-SOURCE-MANIFEST.json，历次验证见 VERIFICATION.md。
 
 ## 两种模式
 
@@ -22,12 +22,16 @@ Android 8.0/API26 起，target/compile API36。内置 WebView 使用系统提供
 
 ## 构建
 
-需要 JDK21、Gradle8.13、Android SDK Platform36/BuildTools36.0.0。Android SDK 工具和包的法律许可须自行阅读接受：https://developer.android.com/studio#command-tools 。本项目不会自动 yes --licenses、伪造许可文件或生成长期签名身份。
+需要 Node.js 24、JDK21（AGP最低为17）、Gradle8.13、已预装且已接受许可的 Android SDK Platform36 / BuildTools36.0.0。本项目禁用 Gradle SDK 自动下载，不运行 sdkmanager --licenses，不伪造许可文件，不在构建中生成签名密钥。GitHub ubuntu-24.04 提供这些 SDK 包；工作流在使用前逐一检查，缺少即停止。
 
-1. 在 webapp 执行 npm ci（标准 npm 注册源），或在锁文件一致情况下提供同一依赖图。
-2. 项目根目录执行 node scripts/build-web.mjs。
-3. 配置 JAVA_HOME 与 ANDROID_SDK_ROOT；在 android 执行 gradle assembleRelease。
-4. 默认 release/debug 均未指定 signingConfig，不生成默认调试签名密钥。未签名APK不能直接安装。安装候选须使用明确授权的专用签名密钥；密钥不应放入源码包或APK。签名后用 apksigner verify --verbose --print-certs 验证。
+1. 仓库根运行 npm ci --prefix android/webapp，使用该独立项目自己的锁文件。
+2. 运行 npm run build:web --prefix android 和 npm run test:android --prefix android。
+3. 运行 python3 -m unittest discover -s android/tests -p 'test_*.py' -v。
+4. 配置 JAVA_HOME 与 ANDROID_HOME；运行 gradle -p android/android --no-daemon :app:securityTests :app:localStorePolicyTests :app:testReleaseUnitTest :app:assembleRelease。
+5. 默认 release/debug 均没有 signingConfig。输出 android/android/app/build/outputs/apk/release/app-release-unsigned.apk 未签名，不能直接安装。可用 scripts/verify-apk.py 的 --structural-only 模式仅检查其资源与原生库，结果明确不是可安装候选。
+6. 获准并提供四项 ANDROID_* 环境变量后，运行 bash android/scripts/sign-release.sh unsigned.apk signed.apk。脚本只在私密临时目录解码现有密钥；先做16KiB zipalign、用 apksigner v2/v3签名，再独立校验包名/版本/API、非debug构建、签名证书、16KiB ZIP/ELF对齐和当前资源。任何一步失败均不产出最终发布APK。
+
+默认客户端版本为0.1.1/code2。构建可通过 QINGDAN_ANDROID_VERSION_NAME 与 QINGDAN_ANDROID_VERSION_CODE 传入已核对的发布版本，验证器使用同样的值。包名与数据身份不随版本变化。旧 prebuilt 资源清单仅作历史证据，当前发布必须重跑 build:web，不能直接复用旧网页文件。
 
 ## 测试与范围
 

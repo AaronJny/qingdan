@@ -1,6 +1,6 @@
 {
-  "release": "1.1.0-standalone",
-  "at": "2026-10-09T10:41:28.860Z",
+  "release": "1.1.1-standalone",
+  "at": "2026-10-09T11:04:28.581Z",
   "checks": {
     "test": 469,
     "test:ui": 135,
@@ -227,8 +227,8 @@
     "offline/index.html": "fa34a2093352c6a3848e8bcfcf1195411c910033d4ba736e8875fd77dcc2a835",
     "offline/root.tsx": "5bb606e7801535592ffa5d4324a16ce8c3831cd822b89685f715107ffec1f9b3",
     "offline/worker.js": "02049529bd2afe65da05fd085c8bed8c36dade6f39765793aff67c0dae8637d5",
-    "package-lock.json": "85ae5e94439ecb6f6179f42d77742473357dd04e39b5bcd632840b279844aaf6",
-    "package.json": "c621d7b1f4359a64edafd2a69ea7e77964e40b5b151d0c33ccd457ae915d5422",
+    "package-lock.json": "f4409e0a342675d9f1565f5261ed8bb406a569931b0f186ec108a274362e301a",
+    "package.json": "4654c24034add9b04e4d00ae06e2c24760ab2f8ee302ee16d9b8b09a3e22a65a",
     "postcss.config.mjs": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
     "public/favicon.svg": "8bb6f2164b7b8916fee0a5b1db2168746f7d7fc5394f834e157fe717bb61e21f",
     "public/file.svg": "1e0ae4d1a1ddfa36752988647b731e4abf150c414d069ec83c96fb0aaeff0307",
@@ -278,7 +278,7 @@
     "dist/client/qingdan-offline-worker.js": "21f2fa0ebbbf685cb83dacf5d35a3be1c3f9905d759618395b22986fad83af1b",
     "dist/client/window.svg": "decf1cf7bb22b5c99c4857cfcd5718ce5465c4454166317589c83fc73df74b66",
     "dist/server/calendar-worker.mjs": "f24bbd477dfc2bf73b330446f5ff5575e212844eebb4d6c0c23e73dd21e72bf3",
-    "dist/server/main.mjs": "d6d3ff6f9e8d5fd36cbd33b70827eaedc98ab7c7dd17904804c38c24ff604cfe",
+    "dist/server/main.mjs": "4908b362acf04084836a0a8728cb3f23a984688e96e685fcb19429d8eefcb593",
     "dist/server/users.mjs": "a8c41561b91c61c37d8a34a4b1ab6f118d3167fa4ee29741e0f4e4ce317868a6"
   },
   "scope": "Standalone local/accounts normal functional tests and builds; synthetic temporary identities and storage. No production identity, external deployment or independent audit."
