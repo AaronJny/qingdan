@@ -103,7 +103,7 @@ npm run check
 
 本地和账号模式均为持久服务。桌面封装连接本地服务或你选定的 HTTPS 私服，服务需另行启动。
 
-桌面客户端可读取同源GET `/api/app-info`，只返回 `{app:'qingdan',version:'1.0.1',mode:'local'|'accounts'}`；不会建立账号会话，也不包含数据、凭据或运行诊断。
+桌面客户端可读取同源GET `/api/app-info`，只返回 `{app:'qingdan',version:'1.1.0',mode:'local'|'accounts'}`；不会建立账号会话，也不包含数据、凭据或运行诊断。
 
 ## 附件上传结果未知时
 

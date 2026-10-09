@@ -16,7 +16,10 @@
     "check": "node scripts/check.cjs && npm test",
     "package:linux:dir": "node scripts/package.cjs linux --dir",
     "package:win:zip": "node scripts/package.cjs win --zip --x64",
-    "package:mac:dir": "node scripts/package.cjs mac --dir --arm64"
+    "package:mac:dir": "node scripts/package.cjs mac --dir --arm64",
+    "prepare:backend": "node scripts/prepare-backend.cjs",
+    "verify:backend": "node scripts/verify-backend.cjs --smoke",
+    "package:mac:archives": "node scripts/package.cjs mac --arm64 --dmg --zip"
   },
   "devDependencies": {
     "electron": "44.6.0",

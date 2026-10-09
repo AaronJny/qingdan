@@ -1,0 +1,22 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { fork } = require('node:child_process');
+test('smoke IPC invokes the existing backend shutdown handler before a clean exit', { timeout: 10000 }, async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'qingdan-ipc-smoke-test-'));
+  fs.mkdirSync(path.join(root, 'dist/server'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'dist/server/main.mjs'), `import {writeFileSync} from 'node:fs';
+process.on('SIGTERM', () => { writeFileSync(${JSON.stringify(path.join(root, 'closed.txt'))}, 'closed'); process.exit(0); });
+process.send({kind:'fixture-ready'});
+`);
+  const child = fork(path.join(__dirname, '../scripts/backend-smoke-worker.cjs'), [root], { execArgv: [], stdio: ['ignore', 'ignore', 'pipe', 'ipc'] });
+  t.after(() => { if (child.exitCode === null) child.kill('SIGKILL'); fs.rmSync(root, { recursive: true, force: true }); });
+  const exited = new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', (code, signal) => resolve({ code, signal })); });
+  await new Promise((resolve, reject) => { child.once('error', reject); child.on('message', message => { if (message.kind === 'fixture-ready') resolve(); }); });
+  child.send({ kind: 'qingdan-smoke-shutdown' });
+  assert.deepEqual(await exited, { code: 0, signal: null });
+  assert.equal(fs.readFileSync(path.join(root, 'closed.txt'), 'utf8'), 'closed');
+});

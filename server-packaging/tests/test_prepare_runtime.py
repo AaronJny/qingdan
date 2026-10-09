@@ -33,9 +33,9 @@ class PrepareRuntimeTests(unittest.TestCase):
     def write_evidence(self, omit=None):
         checks = {'test': 1, 'test:ui': 1, 'test:server': 1, 'typecheck': True, 'build': True}
         if omit: checks.pop(omit)
-        hashes = {name: hashlib.sha256((self.source / name).read_bytes()).hexdigest()
-                  for name in ['package.json', 'package-lock.json', 'README.md', 'AUTH.md', 'VERIFICATION.md']}
-        (self.source / 'tests/standalone-evidence.json').write_text(json.dumps({'checks': checks, 'sha256': hashes, 'artifact_sha256': {str(path.relative_to(self.source)): hashlib.sha256(path.read_bytes()).hexdigest() for path in (self.source / 'dist').rglob('*') if path.is_file()}}))
+        hashes = {path.relative_to(self.source).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+                  for path in self.source.rglob('*') if path.is_file() and 'dist' not in path.relative_to(self.source).parts and path.relative_to(self.source).as_posix() != 'tests/standalone-evidence.json'}
+        (self.source / 'tests/standalone-evidence.json').write_text(json.dumps({'checks': checks, 'sha256': hashes, 'artifact_sha256': {path.relative_to(self.source).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest() for path in (self.source / 'dist').rglob('*') if path.is_file()}}))
 
     def run_prepare(self):
         return subprocess.run([sys.executable, str(SCRIPT), str(self.source), str(self.output)], capture_output=True, text=True)
@@ -47,6 +47,8 @@ class PrepareRuntimeTests(unittest.TestCase):
         self.assertEqual(manifest['version'], '1.1.0')
         self.assertRegex(manifest['source_snapshot_sha256'], '^[a-f0-9]{64}$')
         self.assertNotIn('source_commit', manifest)
+        self.assertTrue(all('\\' not in name for name in manifest['files_sha256']))
+        self.assertIn('dist/server/main.mjs', manifest['files_sha256'])
         for name, digest in manifest['files_sha256'].items():
             self.assertEqual(hashlib.sha256((self.output / name).read_bytes()).hexdigest(), digest)
 
@@ -63,6 +65,17 @@ class PrepareRuntimeTests(unittest.TestCase):
     def test_changed_build_artifact_is_rejected(self):
         (self.source / 'dist/client/index.html').write_text('Changed after build')
         self.assertNotEqual(self.run_prepare().returncode, 0)
+        self.assertFalse(self.output.exists())
+
+    def test_added_unchecked_migration_is_rejected(self):
+        (self.source / 'drizzle/9999_added_after_checks.sql').write_text('-- not checked')
+        self.assertNotEqual(self.run_prepare().returncode, 0)
+        self.assertFalse(self.output.exists())
+
+    def test_checks_cannot_be_bypassed_by_optimized_python(self):
+        self.write_evidence(omit='test:server')
+        result = subprocess.run([sys.executable, '-O', str(SCRIPT), str(self.source), str(self.output)], capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
         self.assertFalse(self.output.exists())
 
     def test_existing_output_is_never_overwritten(self):

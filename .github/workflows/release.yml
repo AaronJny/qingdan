@@ -2,12 +2,11 @@ name: 青单发布
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    tags: ['v*.*.*']
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
@@ -19,27 +18,10 @@ env:
 jobs:
   verify:
     name: 完整检查
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: application/package-lock.json
-      - name: 检查应用
-        working-directory: application
-        run: |
-          npm ci
-          npm run check
-      - name: 检查桌面封装
-        working-directory: desktop
-        run: |
-          npm ci
-          npm test
+    uses: ./.github/workflows/check.yml
 
   package-server:
-    name: 服务端 Linux
+    name: 独立服务端 Linux 与 macOS 运行时
     needs: verify
     runs-on: ubuntu-24.04
     steps:
@@ -49,37 +31,67 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: application/package-lock.json
-      - name: 构建服务端
-        working-directory: application
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-application
+          path: application
+      - name: 校验发布版本
+        id: version
+        env:
+          RELEASE_REF: ${{ github.ref }}
         run: |
-          npm ci
-          npm run build
-      - name: 打包服务端
+          node -e 'const p=require("./application/package.json");if(process.env.RELEASE_REF.startsWith("refs/tags/")&&process.env.RELEASE_REF!=="refs/tags/v"+p.version)throw Error("Tag and application version differ")'
+          echo "value=$(node -p 'require("./application/package.json").version')" >> "$GITHUB_OUTPUT"
+      - name: 准备当前检查通过的运行目录与锁定依赖
         run: |
-          mkdir -p release
-          cp -a application/dist/server application/dist/client application/dist/offline-build application/package.json application/package-lock.json release/
-          cp -a server-packaging/* release/ 2>/dev/null || true
-          tar -czf "qingdan-server-${GITHUB_REF_NAME}.tar.gz" -C release .
-          sha256sum "qingdan-server-${GITHUB_REF_NAME}.tar.gz" > "qingdan-server-${GITHUB_REF_NAME}.sha256"
+          npm ci --prefix application
+          node desktop/scripts/prepare-backend.cjs application release-build/app
+      - name: 下载并验证官方固定运行时
+        run: |
+          mkdir -p release-build/node-archives
+          for file in SHASUMS256.txt node-v24.19.0-linux-x64.tar.xz node-v24.19.0-darwin-arm64.tar.xz; do
+            curl --fail --location --proto '=https' --tlsv1.2 --retry 3 "https://nodejs.org/dist/v24.19.0/$file" -o "release-build/node-archives/$file"
+          done
+          python3 server-packaging/assemble.py --app release-build/app --nodes release-build/node-archives --output release-build/qingdan-server
+      - name: 生成 ZIP 并独立解压验收
+        env:
+          ASSET_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          python3 server-packaging/zip-release.py release-build/qingdan-server "qingdan-server-v${ASSET_VERSION}.zip"
+          python3 server-packaging/verify-release.py --zip "qingdan-server-v${ASSET_VERSION}.zip" --report "qingdan-server-v${ASSET_VERSION}.verification.json"
+          sha256sum "qingdan-server-v${ASSET_VERSION}.zip" > "qingdan-server-v${ASSET_VERSION}.sha256"
       - uses: actions/upload-artifact@v4
         with:
-          name: server-${{ github.ref_name }}
+          name: server-${{ github.sha }}
+          if-no-files-found: error
           path: |
-            qingdan-server-${{ github.ref_name }}.tar.gz
-            qingdan-server-${{ github.ref_name }}.sha256
+            qingdan-server-v${{ steps.version.outputs.value }}.zip
+            qingdan-server-v${{ steps.version.outputs.value }}.sha256
+            qingdan-server-v${{ steps.version.outputs.value }}.verification.json
 
   package-macos:
     name: macOS arm64
     needs: verify
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: desktop/package-lock.json
-      - name: 构建未签名安装包
+          cache-dependency-path: |
+            application/package-lock.json
+            desktop/package-lock.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-application
+          path: application
+      - name: 准备当前内置后端
+        run: |
+          npm ci --prefix application
+          node desktop/scripts/prepare-backend.cjs
+          node desktop/scripts/verify-backend.cjs desktop/backend backend-verification-macos.json --smoke
+      - name: 构建并校验未签名安装包
         working-directory: desktop
         env:
           ELECTRON_CACHE: ${{ runner.temp }}/electron-cache
@@ -87,15 +99,15 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: |
           npm ci
-          node scripts/package.cjs mac --arm64 --dir
-          npx electron-builder --mac --arm64 --publish never -c.mac.identity=null
+          node scripts/package.cjs mac --arm64 --dmg --zip
           mkdir -p release
-          cp dist/*.dmg release/ 2>/dev/null || true
-          cp dist/*.zip release/ 2>/dev/null || true
-          shasum -a 256 release/* > release/SHA256SUMS.txt
+          cp dist/*.dmg dist/*.zip release/
+          cp dist/verified-mac-arm64.json ../backend-verification-macos.json docs/MAC-START-HERE.txt release/
+          (cd release && shasum -a 256 *.dmg *.zip > SHA256SUMS-macos.txt)
       - uses: actions/upload-artifact@v4
         with:
-          name: macos-${{ github.ref_name }}
+          name: macos-${{ github.sha }}
+          if-no-files-found: error
           path: desktop/release/*
 
   package-windows:
@@ -108,8 +120,20 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: desktop/package-lock.json
-      - name: 构建 Windows 压缩包
+          cache-dependency-path: |
+            application/package-lock.json
+            desktop/package-lock.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-application
+          path: application
+      - name: 准备当前内置后端
+        shell: bash
+        run: |
+          npm ci --prefix application
+          node desktop/scripts/prepare-backend.cjs
+          node desktop/scripts/verify-backend.cjs desktop/backend backend-verification-windows.json --smoke
+      - name: 构建并校验 Windows 压缩包
         working-directory: desktop
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -119,23 +143,31 @@ jobs:
           node scripts/package.cjs win --x64 --zip
           mkdir -p release
           cp dist/*.zip release/
-          sha256sum release/* > release/SHA256SUMS.txt
+          cp dist/verified-win-x64.json ../backend-verification-windows.json docs/WINDOWS-START-HERE.txt release/
+          (cd release && sha256sum *.zip > SHA256SUMS-windows.txt)
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-${{ github.ref_name }}
+          name: windows-${{ github.sha }}
+          if-no-files-found: error
           path: desktop/release/*
 
   publish:
     name: 发布 GitHub Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
     needs: [package-server, package-macos, package-windows]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
         with:
+          pattern: '*-${{ github.sha }}'
           path: release-assets
-      - name: 发布
+          merge-multiple: true
+      - name: 发布通过验收的成品
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          find release-assets -type f -exec cp {} . \;
-          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --generate-notes --title "青单 $GITHUB_REF_NAME" ./*
+          mapfile -d '' assets < <(find release-assets -maxdepth 1 -type f -print0)
+          test "${#assets[@]}" -gt 0
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes --title "青单 $GITHUB_REF_NAME" "${assets[@]}"

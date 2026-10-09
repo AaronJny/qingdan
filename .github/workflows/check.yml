@@ -1,0 +1,88 @@
+name: 青单完整检查
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: 源码与运行包检查
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: |
+            application/package-lock.json
+            desktop/package-lock.json
+      - name: 完整检查应用并记录同快照构建证据
+        working-directory: application
+        run: |
+          npm ci
+          npm run check
+      - name: 检查桌面封装
+        working-directory: desktop
+        run: |
+          npm ci --ignore-scripts
+          npm run check
+      - name: 检查服务端打包脚本
+        run: python3 -m unittest discover -s server-packaging/tests -v
+      - name: 生成并启动验证当前内置后端
+        run: |
+          node desktop/scripts/prepare-backend.cjs
+          node desktop/scripts/verify-backend.cjs desktop/backend backend-verification.json --smoke
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-application
+          if-no-files-found: error
+          path: |
+            application/dist/
+            application/tests/standalone-evidence.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-verification
+          if-no-files-found: error
+          path: backend-verification.json
+
+  native-backend:
+    name: 内置后端原生系统检查 (${{ matrix.platform }})
+    needs: verify
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            os: windows-2022
+          - platform: macos
+            os: macos-15
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: application/package-lock.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-application
+          path: application
+      - name: 校验跨平台源码快照并启动当前后端
+        shell: bash
+        run: |
+          npm ci --prefix application
+          node desktop/scripts/prepare-backend.cjs
+          node desktop/scripts/verify-backend.cjs desktop/backend backend-verification-${{ matrix.platform }}.json --smoke
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-verification-native-${{ matrix.platform }}
+          if-no-files-found: error
+          path: backend-verification-${{ matrix.platform }}.json

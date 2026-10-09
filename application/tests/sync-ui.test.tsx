@@ -157,16 +157,23 @@ test('stalled refresh times out visibly, permits retry, and cannot commit a late
 });
 
 
-test('capability and reminder descriptions match optional offline recovery and visible-page checks',async()=>{
- const f=await setup();
- try{
-  await act(async()=>click(button('能力与边界')));
-  const about=f.host.querySelector('.settings-content')?.textContent||'';
-  assert.match(about,/离线壳可在在线登录后主动启用/);assert.match(about,/首次离线登录/);assert.match(about,/附件文件内容的离线保存/);assert.match(about,/完整后台自动同步/);
-  assert.doesNotMatch(about,/已认证会话完整离线应用壳及后台自动同步/);assert.doesNotMatch(about,/假同步|虚构集成/);
-  assert.match(about,/本地模式保存在本机服务目录，账号模式按服务器账号隔离/);
-  await act(async()=>click(button('提醒与专注')));
-  const reminders=f.host.querySelector('.settings-content')?.textContent||'';
-  assert.match(reminders,/页面打开且可见时检查/);assert.match(reminders,/切到后台、隐藏或关闭页面后不检查提醒/);
- }finally{await f.close()}
+test('account sync and reminder descriptions match optional offline recovery and visible-page checks',async()=>{
+ for(const mode of ['local','accounts']as const){
+  const f=await setup(mode);
+  try{
+   await act(async()=>click(button('账号与同步')));
+   const account=f.host.querySelector('.settings-content')?.textContent||'';
+   assert.match(account,/仅此账号在线同步后主动启用/);assert.match(account,/首次离线登录不支持/);
+   assert.match(account,/不缓存附件字节/);assert.match(account,/不承诺应用关闭后的后台同步/);
+   assert.match(account,/离线时无法获知共享权限变化，联网后由服务器重新核对/);
+   assert.match(account,/本地模式不会自动上传到私服/);
+   assert.doesNotMatch(account,/已认证会话完整离线应用壳及后台自动同步/);assert.doesNotMatch(account,/假同步|虚构集成/);
+   if(mode==='local')assert.match(account,/本地单人模式，数据保存在此服务的本地目录。无需账号密码/);
+   else assert.match(account,/账号模式，使用此部署实例的青单账号登录，服务器数据按账号隔离/);
+   await act(async()=>click(button('提醒与专注')));
+   const reminders=f.host.querySelector('.settings-content')?.textContent||'';
+   assert.match(reminders,/页面打开且可见时检查/);assert.match(reminders,/切到后台、隐藏或关闭页面后不检查提醒/);
+   assert.match(reminders,/没有后台推送、邮件或系统闹钟保证/);
+  }finally{await f.close()}
+ }
 });

@@ -30,3 +30,7 @@ Electron 44.6.0、electron-builder 26.15.3 锁定依赖：npm audit 报告 8 mod
 本记录为2026-10-07对相同Electron44.6.0/electron-builder26.15.3锁定工具链的检查，不声称2026-10-08另作全依赖审计。v3生产ASAR逐文件已核无该构建链。
 
 Linux可选签名工具apple-codesign0.29.0固定locked构建的zip2.2.1涉及RUSTSEC-2025-0168/CVE-2025-29787恶意symlink归档解包告警（2.3修复）；本次只签自己的已生成目录，不提取未知归档、不调用公证/远程签名，该工具及Rust依赖不随应用发布。此为窄路径影响说明，非完整RustSec审计。
+
+## 当前 1.1.0 构建说明（2026-10-09）
+
+以上审计与成品字节检查是历史结果，不能替代当前依赖审计或原生验收。当前 backend 从完整检查通过的 application 快照生成，运行依赖由编译产物导入与 application 锁文件闭包确定；现为 Temporal/polyfill、jsbi、ical.js 三项。顶层桌面构建依赖仍不进入 ASAR。当前逐文件校验由 scripts/verify-packaged.cjs 输出；不再使用旧冻结 backend 清单。

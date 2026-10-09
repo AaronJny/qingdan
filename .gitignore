@@ -19,7 +19,15 @@
 *.jks
 *.keystore
 .DS_Store
-# desktop/backend contains the intentional frozen runtime payload, including
-# two minimal dependency source trees. Do not globally ignore node_modules.
+# Embedded runtime payloads are recreated from verified application source.
+/desktop/backend/
+/desktop/.backend-stage-*/
+/desktop/release/
+/release-build/
+/release-assets/
+/release/
+qingdan-server-*.zip
+qingdan-server-*.sha256
+qingdan-server-*.verification.json
 __pycache__/
 *.pyc

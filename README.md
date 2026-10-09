@@ -44,6 +44,8 @@ npm start
 
 桌面构建见 [桌面说明](desktop/README.md) 和 [构建流程](desktop/docs/BUILD-RELEASE.md)。Android 构建见 [Android 说明](android/README.md)。
 
+1.1.0 的可靠性修复与本次验证见 [修复记录](docs/RELIABILITY-1.1.0.md)。
+
 ## 数据与备份
 
 桌面用户目录稳定为 `QingdanDesktop`，本机数据库与附件位于其中的 `local-data`。正常退出后再复制整个用户目录备份。替换应用程序不应删除该目录。

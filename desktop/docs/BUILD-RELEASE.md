@@ -1,46 +1,35 @@
-# 复现桌面发行资源
+# 青单桌面 1.1.0 构建与验证
 
-本目录构建依赖需要Node24/npm。使用npm ci，随后npm run check、npm test。backend以c319/1.0.1为基线，前端文案在1.0.3更新，后端和依赖仍为原字节；backend/node_modules内两项最小依赖也属于必要源码输入，不能与顶层构建依赖一起删除。其48文件哈希和官方registry integrity见backend/dependency-manifest.json。运行包不包含用户数据。
-
-## Windows单ZIP
+使用 Node.js 24.19.0、Python 3 与锁定的 Electron 44.6.0 / electron-builder 26.15.3。当前 backend 由同仓库 application 的完整检查快照生成，不再要求旧冻结 payload 或手工拷贝依赖。
 
 ```sh
-npm run package:win:zip
-node scripts/verify-packaged.cjs dist/win-unpacked/Qingdan.exe dist/win-unpacked/resources/app.asar windows-asar.json
-python3 scripts/finalize-windows-zip.py dist/Qingdan-1.0.3-win-x64.zip dist/releases/青单-1.0.3-windows-x64.zip docs/WINDOWS-START-HERE.txt
-python3 scripts/verify-windows-zip.py dist/releases/青单-1.0.3-windows-x64.zip dist/win-unpacked windows-zip.json --readme docs/WINDOWS-START-HERE.txt
+cd application
+npm ci
+npm run check
+cd ../desktop
+npm ci
+npm run prepare:backend
+npm run verify:backend
+npm run check
 ```
 
-finalize拒绝覆盖已有成品，且只添加说明；重新构建请使用新的输出路径。EXE没有本项目发布者签名。验证程序仅解析PE、逐文件字节/哈希和ZIP CRC，不运行Windows程序。
+准备命令先调用 server-packaging/prepare-runtime.py，校验全部源文件与编译资源哈希；保留 dist/server、dist/client（包括独立离线壳）、全部 drizzle 迁移。随后通过 esbuild 的编译产物分析取得外部服务依赖，提取 application/package-lock.json 中的精确依赖闭包，用 npm ci --omit=dev --ignore-scripts 安装。当前必需包为 @js-temporal/polyfill、ical.js、jsbi。需要安装脚本、平台限制或未审查下载源的新依赖会阻止准备，不能静默引入。生成的运行与依赖清单记录当前版本、源码快照、官方 npm integrity 和文件 SHA256；不包含用户数据。
 
-## Linux云端Mac工程DMG
+backend/ 全部属于生成文件，不提交到 Git。源码构建者必须先准备后端；package.cjs 会拒绝缺失、陈旧、被修改或超出 1.x 兼容范围的输入。用户数据目录 QingdanDesktop、应用标识 app.qingdan.desktop 与现有登录/服务安全边界保持稳定。
 
-1. npm run package:mac:dir生成arm64 青单.app。afterExtract保留同版本官方Electron许可证；afterPack把四类helper恢复为官方Electron Helper路径，主可执行文件为青单。辅助程序显示名为中文，稳定bundle ID和QingdanDesktop数据目录不变。
-2. 准备从crates.io固定源码编译的apple-codesign 0.29.0，及docs/DMG-TOOLCHAIN.md列明的固定Mozilla源码、UTF-8/UTF-16补丁和可信Debian工具链。RCODESIGN、DMG_TOOLROOT必须是自己的已核来源工具绝对路径；不要使用未知来源二进制。这里不提供系统安装、证书创建、签名凭据发现或安全设置修改。
-3. 对全部修改完成的独立副本做无身份/无时间戳ad-hoc签名，再生成DMG：
+平台打包在对应操作系统运行：
 
 ```sh
-mkdir -p dist/engineering dist/releases
-node scripts/sign-mac-engineering.cjs --rcodesign "$RCODESIGN" --input "$PWD/dist/mac-arm64/青单.app" --output "$PWD/dist/engineering/青单.app"
-python3 scripts/mac/inspect-launch.py dist/engineering/青单.app
-node scripts/verify-packaged.cjs dist/engineering/青单.app/Contents/MacOS/青单 dist/engineering/青单.app/Contents/Resources/app.asar mac-asar.json
-python3 scripts/mac/inspect-bundle.py dist/engineering/青单.app > mac-structure.json
-python3 scripts/mac/inspect-resource-seals.py dist/engineering/青单.app mac-structure.json > mac-resource-seals.json
-python3 scripts/build-dmg-linux.py --app "$PWD/dist/engineering/青单.app" --output "$PWD/dist/releases/青单-1.0.3-mac-arm64.dmg" --toolroot "$DMG_TOOLROOT" --readme "$PWD/docs/MAC-START-HERE.txt"
+node scripts/package.cjs win --x64 --zip
+node scripts/package.cjs mac --arm64 --dmg --zip
+node scripts/package.cjs linux --x64 --dir
 ```
 
-脚本拒绝覆盖原候选，签名环境只含最小系统变量及显式空signer配置，不读取开发者身份、不上传Apple/公证或时间戳服务。不能把rcodesign或自有Python结构校验叫作Apple/macOS签名验证。
+脚本运行桌面语法/单元检查、校验内置后端，然后调用 electron-builder（--publish never）。完成后独立读取成品 app.asar，检查当前源码、后台运行资源、依赖文件与全部既有 Electron fuses；结果写在 dist/verified-平台-架构.json。macOS 保留官方 Electron Helper 名称和中文应用名、许可证复制及既有打包钩子。本流程未配置正式签名或公证身份，成品仍需 macOS 实机启动验收。
 
-4. 用可信7-Zip读取真正Dmg格式（-tDmg），测试全部CRC，解出3.hfsx并逐字节比较build脚本报告的rawHfs，再用scripts/dmg/inspect-hfs.py比較全部stage文件、UTF-16目录、mode和symlink目标。用7-Zip正常解出最终app，重新运行inspect-launch.py、verify-packaged.cjs及签名/资源核验。不要挂载主机镜像，也不要以同一生成库自解压代替独立证据。
+npm run verify:backend 使用普通 Node 在临时合成数据目录检查精确版本握手、前端、迁移、建任务、正常停止/重启持久性。该检查不代表 Electron utilityProcess 或原生 GUI 已通过。GitHub check.yml 在每次分支 push/PR 上运行完整检查及运行后端测试，不发布 Release。release.yml 复用这些已验证构建资源，分别在 macOS/Windows 打包并检查 ASAR；只有匹配 application 版本的 v 标签才进入 GitHub Release 发布。手工运行只生成验收成品。
 
-macOS原生构建可用正常Electron打包工具和系统签名/磁盘镜像工具，在真实macOS检查codesign、挂载和启动。Linux结构通过不代表这些原生检查通过。正式Developer ID签名/Apple公证需要另行取得合法身份与授权。
-
-## 冻结版本验证边界
-
-- Electron44.6.0（其utilityProcess实测Node24.21.0、SQLite3.53.4）/electron-builder26.15.3，锁文件冻结
-- 独立后端c3194463a8cf748242955c61da72969c652ea062、1.0.1，不替换为未验证HEAD
-- 1.0.2桌面82项纯测试通过；当前容器不能创建AF_UNIX socket，未重跑Linux GUI。旧1.0.1的Linux正常sandbox GUI自启、任务、附件、退出/重开证据只作为历史记录
-- 三平台同一ASAR资源。Windows/macOS原生运行、Mac原生挂载和Gatekeeper、真实私服HTTPS账号登录仍未验证；不能从Linux外推
+以下为历史变更说明，不替代当前 1.1.0 成品验收。
 
 ## 1.0.2 Mac 启动修复
 
