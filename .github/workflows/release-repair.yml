@@ -21,13 +21,13 @@ jobs:
       contents: write
       actions: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: 验证原始构建门禁与未改变的应用快照
         id: source
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 .github/release/repair.py
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           github-token: ${{ github.token }}
           run-id: ${{ steps.source.outputs.source-run-id }}

@@ -28,8 +28,8 @@ jobs:
       android-version: ${{ steps.meta.outputs.androidVersion }}
       android-version-code: ${{ steps.meta.outputs.androidVersionCode }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
       - id: meta
@@ -38,19 +38,21 @@ jobs:
   verify:
     name: 完整检查
     uses: ./.github/workflows/check.yml
+    with:
+      release-mode: true
 
   package-server:
     name: 独立服务端 Linux 与 macOS 运行时
     needs: [metadata, verify]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: application/package-lock.json
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: verified-application
           path: application
@@ -79,7 +81,7 @@ jobs:
           python3 server-packaging/zip-release.py release-build/qingdan-server "qingdan-server-v${ASSET_VERSION}.zip"
           python3 server-packaging/verify-release.py --zip "qingdan-server-v${ASSET_VERSION}.zip" --report "qingdan-server-v${ASSET_VERSION}.verification.json"
           sha256sum "qingdan-server-v${ASSET_VERSION}.zip" > "qingdan-server-v${ASSET_VERSION}.sha256"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: server-${{ github.sha }}
           if-no-files-found: error
@@ -93,15 +95,15 @@ jobs:
     needs: [metadata, verify]
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: |
             application/package-lock.json
             desktop/package-lock.json
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: verified-application
           path: application
@@ -124,7 +126,7 @@ jobs:
           cp dist/*.dmg dist/*.zip release/
           cp dist/verified-mac-arm64.json dist/verified-mac-arm64-archives.json ../backend-verification-macos.json docs/MAC-START-HERE.txt release/
           (cd release && shasum -a 256 *.dmg *.zip > SHA256SUMS-macos.txt)
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: macos-${{ github.sha }}
           if-no-files-found: error
@@ -135,15 +137,15 @@ jobs:
     needs: [metadata, verify]
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: |
             application/package-lock.json
             desktop/package-lock.json
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: verified-application
           path: application
@@ -166,7 +168,7 @@ jobs:
           cp dist/*.zip release/
           cp dist/verified-win-x64.json dist/verified-win-x64-archives.json ../backend-verification-windows.json docs/WINDOWS-START-HERE.txt release/
           (cd release && sha256sum *.zip > SHA256SUMS-windows.txt)
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: windows-${{ github.sha }}
           if-no-files-found: error
@@ -177,15 +179,15 @@ jobs:
     needs: [metadata, verify]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: |
             application/package-lock.json
             desktop/package-lock.json
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: verified-application
           path: application
@@ -206,7 +208,7 @@ jobs:
           mkdir -p release
           cp dist/*.AppImage dist/verified-linux-x64.json dist/verified-linux-appimage-x64.json ../backend-verification-linux.json docs/LINUX-START-HERE.txt release/
           (cd release && sha256sum *.AppImage > SHA256SUMS-linux.txt)
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: linux-${{ github.sha }}
           if-no-files-found: error
@@ -217,7 +219,7 @@ jobs:
     needs: metadata
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: 检查用户已安全配置发布签名
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -232,18 +234,19 @@ jobs:
           if missing:
               raise SystemExit('Android installable APK blocked: configure these GitHub Repository Secrets yourself: ' + ', '.join(missing) + '. See android/docs/RELEASE-SIGNING.md. No unsigned APK will be published.')
           PYTHON
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: android/webapp/package-lock.json
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: '21'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           gradle-version: '8.13'
+          cache-provider: basic
       - name: 仅使用已预装授权的 SDK，缺少时停止
         run: |
           test -f "$ANDROID_HOME/platforms/android-36/android.jar"
@@ -272,7 +275,7 @@ jobs:
           mkdir -p android/release
           bash android/scripts/sign-release.sh android/android/app/build/outputs/apk/release/app-release-unsigned.apk "android/release/Qingdan-${QINGDAN_ANDROID_VERSION_NAME}-android.apk"
           (cd android/release && sha256sum *.apk > SHA256SUMS-android.txt)
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: android-${{ github.sha }}
           if-no-files-found: error
@@ -295,8 +298,8 @@ jobs:
     needs: [metadata, package-server, package-macos, package-windows, package-linux, package-android]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: '*-${{ github.sha }}'
           path: release-assets
