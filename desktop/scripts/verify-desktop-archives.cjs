@@ -8,6 +8,7 @@ const crypto = require('node:crypto');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const plist = require('plist');
+const { nativeAsarEntryPath } = require('./asar-entry-path.cjs');
 const root = path.resolve(__dirname, '..');
 const APP = '青单.app';
 const HELPERS = ['', ' (GPU)', ' (Plugin)', ' (Renderer)'];
@@ -170,7 +171,7 @@ function nativeCommands(platform, command = run) {
       command(process.execPath, [path.join(__dirname, 'verify-packaged.cjs'), payload.executable, payload.archive, report]);
       const packaged = JSON.parse(fs.readFileSync(report, 'utf8'));
       const asar = require('@electron/asar');
-      assert(asar.extractFile(payload.archive, 'build/icon.png').equals(fs.readFileSync(path.join(root, 'build/icon.png'))), 'Packaged application icon differs from source');
+      assert(asar.extractFile(payload.archive, nativeAsarEntryPath('build/icon.png')).equals(fs.readFileSync(path.join(root, 'build/icon.png'))), 'Packaged application icon differs from source');
       return { ...packaged, bundledAssetsVerified: ['build/icon.png'] };
     },
   };
