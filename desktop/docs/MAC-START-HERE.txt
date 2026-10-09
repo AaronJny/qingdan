@@ -1,0 +1,10 @@
+青单 1.0.3 · Apple Silicon · macOS 13及以上
+
+1. 先正常退出旧版。如果“应用程序”内还有旧名 Qingdan.app，请先把它移走，避免之后误开旧版；不要删除 Library/Application Support/QingdanDesktop 数据目录。
+2. 在此镜像内把青单.app拖到Applications，之后从“应用程序”打开。
+3. 默认自动启动内置本机服务，直接使用单人清单，无需安装Node、运行命令或设置账号密码。
+4. 如需连接自己的多设备私服，在菜单“连接设置”中选择连接私服，填写准确HTTPS地址。账号由你自己的服务器管理。
+5. 使用“退出青单”正常退出后再备份数据。数据保存在用户目录Library/Application Support/QingdanDesktop；替换应用升级不会主动删除该目录。
+
+此版本使用Electron内置Node24和SQLite，服务只监听127.0.0.1。程序不包含用户数据、预设账号或密码。
+当前为工程候选，仅有自己生成的ad-hoc完整性签名，没有Developer ID签名或Apple公证。云Linux结构/文件检查不能证明macOS原生挂载、拖拽或启动，系统可能阻止运行。请勿关闭Gatekeeper或移除隔离属性来运行软件。

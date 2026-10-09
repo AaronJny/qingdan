@@ -1,0 +1,4 @@
+import type{AppRecord,Bootstrap}from'./types';
+export function normalizeMentions(value:unknown):string[]{if(value===undefined)return[];if(!Array.isArray(value)||value.length>20||value.some(id=>typeof id!=='string'||!id||id.length>160)||new Set(value).size!==value.length)throw new Error('提及成员需要最多20个不重复的有效成员。');return[...value].sort()}
+export function mentionCandidates(record:AppRecord,state:Bootstrap){const members=state.members.filter(m=>m.listId===record.listId).map(m=>({id:m.userId,label:m.email}));if(!members.some(m=>m.id===record.ownerId))members.push({id:record.ownerId,label:record.ownerId===state.user.userId?state.user.displayName:'清单所有者'});return members.filter((m,i,all)=>m.id!==state.user.userId&&all.findIndex(other=>other.id===m.id)===i)}
+export function mentionsMatch(a:unknown,b:unknown){try{return JSON.stringify(normalizeMentions(a))===JSON.stringify(normalizeMentions(b))}catch{return false}}

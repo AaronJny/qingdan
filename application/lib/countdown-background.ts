@@ -1,0 +1,7 @@
+import{operationHash}from'./operations.ts';
+export const backgroundLimit=4*1024*1024;
+export function backgroundMime(bytes:Uint8Array){if(!bytes.length||bytes.length>backgroundLimit)throw new Error('背景图片需要0–4MB。');if(bytes[0]===255&&bytes[1]===216&&bytes[2]===255)return'image/jpeg';if(bytes.length>=8&&[137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v))return'image/png';if(bytes.length>=12&&String.fromCharCode(...bytes.slice(0,4))==='RIFF'&&String.fromCharCode(...bytes.slice(8,12))==='WEBP')return'image/webp';throw new Error('背景仅支持JPEG、PNG或WebP文件，不支持SVG或HTML。')}
+export async function backgroundIdentity(bytes:Uint8Array,ownerId:string,recordId:string){backgroundMime(bytes);const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(bytes).buffer))).map(v=>v.toString(16).padStart(2,'0')).join('');return'bg:'+await operationHash({ownerId,recordId,hash})}
+export type BackgroundPending={userId:string;recordId:string;id:string;name:string;size:number};
+export function backgroundPendingKey(userId:string,recordId:string){return'qingdan:background-upload:'+encodeURIComponent(userId)+':'+recordId}
+export function parseBackgroundPending(raw:string|null,userId:string,recordId:string):BackgroundPending|null{if(!raw)return null;const p=JSON.parse(raw);if(p?.userId!==userId||p.recordId!==recordId||typeof p.id!=='string'||!/^bg:[a-f0-9]{64}$/.test(p.id)||typeof p.name!=='string'||p.name.length>250||!Number.isInteger(p.size)||p.size<1||p.size>backgroundLimit)throw new Error('背景上传输入格式异常，原文仍保留。');return p}

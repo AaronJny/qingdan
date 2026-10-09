@@ -1,0 +1,2 @@
+import{test}from'node:test';import assert from'node:assert/strict';import{validateCheckReminders}from'./check-reminders.ts';
+test('check additional rules reject duplicates, invalid instants, fractional offsets and oversized arrays',()=>{const rule={id:'valid',anchor:'end',offset:0};assert.deepEqual(validateCheckReminders([rule]),[rule]);for(const value of[[rule,rule],[{...rule,offset:-1}],[{...rule,offset:.5}],[{id:'a',anchor:'absolute',at:'bad'}],Array.from({length:11},(_,id)=>({...rule,id:String(id)}))])assert.throws(()=>validateCheckReminders(value))});

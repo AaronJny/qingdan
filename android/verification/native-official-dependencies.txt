@@ -1,0 +1,20 @@
+Native JVM evidence dependencies
+
+AndroidX SQLite bundled JVM 2.6.2 (runtime SQLite 3.50.1)
+Official URL: https://dl.google.com/dl/android/maven2/androidx/sqlite/sqlite-bundled-jvm/2.6.2/sqlite-bundled-jvm-2.6.2.jar
+SHA256: e61efb0647288b486e595950724cc53c4f15eeeca03ce2184751d02de3cfaa17
+
+AndroidX SQLite JVM API 2.6.2
+Official URL: https://dl.google.com/dl/android/maven2/androidx/sqlite/sqlite-jvm/2.6.2/sqlite-jvm-2.6.2.jar
+SHA256: 53b050b80e666228a12a0ae72d49531b3d69615ba8fb62733f697f8fdc7fd6f3
+
+Kotlin standard library 2.0.21
+Official package repository: https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.0.21/kotlin-stdlib-2.0.21.jar
+SHA256: f31cc53f105a7e48c093683bbd5437561d1233920513774b470805641bedbc09
+
+Compiler: Eclipse Temurin JDK 21.0.12.1+1-LTS; tests compiled with Java release 17 where applicable.
+Runtime app dependency: androidx.sqlite:sqlite-bundled:2.6.2 from Google Maven (Android AAR).
+Version reference: https://developer.android.com/jetpack/androidx/releases/sqlite
+
+Only logs, scripts and checksum/version evidence are placed in artifacts/native-*.
+Downloaded JARs, JDK, Android SDK, databases and signing material are intentionally excluded.

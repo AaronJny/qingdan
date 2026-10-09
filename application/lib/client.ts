@@ -1,0 +1,26 @@
+import{invalidateOfflineSession}from'./offline-session';
+let csrfToken='';
+export function configureSession(token:string){csrfToken=token;}
+export function mutationHeaders(expectedAccountId?:string):Record<string,string>{return{'x-qingdan':'1','x-qingdan-csrf':csrfToken,...(expectedAccountId?{'x-qingdan-expected-account':expectedAccountId}:{})};}
+export async function api(path:string,body?:unknown,method='POST',expectedAccountId?:string,timeoutMs=0){
+ const controller=timeoutMs?new AbortController():undefined;
+ const timer=controller?setTimeout(()=>controller.abort(),timeoutMs):undefined;
+ try{
+  let response:Response;
+  try{response=await fetch(path,{method:body===undefined&&method==='POST'?'GET':method,headers:body instanceof FormData?mutationHeaders(expectedAccountId):{'Content-Type':'application/json',...mutationHeaders(expectedAccountId)},body:body===undefined?undefined:body instanceof FormData?body:JSON.stringify(body),...(controller?{signal:controller.signal}:{})});}
+  catch{throw Object.assign(new Error(controller?.signal.aborted?'连接超时，原操作保留，恢复后核对结果。':'连接不可用，未确认输入会保留。'),{code:'NETWORK_ERROR'})}
+  let data:any;
+  try{data=await response.json()}catch{
+   if(controller?.signal.aborted)throw Object.assign(new Error('响应超时，原操作保留，恢复后核对结果。'),{code:'NETWORK_ERROR'});
+   if(typeof window!=='undefined')await invalidateOfflineSession('invalid-server-response',expectedAccountId);
+   throw Object.assign(new Error('服务器响应异常，请重新登录或重试。'),{status:response.status,code:'INVALID_RESPONSE'});
+  }
+  if(typeof window!=='undefined'&&([401,403].includes(response.status)||data.code==='ACCOUNT_CHANGED'))await invalidateOfflineSession('server-denied-or-account-changed',expectedAccountId);
+  if((data.code==='ACCOUNT_CHANGED'||response.status===401)&&typeof window!=='undefined')window.dispatchEvent(new Event('qingdan-account-changed'));
+  if(!response.ok)throw Object.assign(new Error(data.error||'操作失败。'),{status:response.status,code:data.code});
+  if(typeof window!=='undefined'&&response.status<400&&!(body===undefined&&method==='POST'))window.dispatchEvent(new Event('qingdan-mutated'));
+  return data;
+ }finally{if(timer)clearTimeout(timer)}
+}
+export function download(name:string,text:string,type='application/json'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000);}
+export function accountApi(accountId:string,timeoutMs=0){return(path:string,body?:unknown,method='POST')=>api(path,body,method,accountId,timeoutMs)}

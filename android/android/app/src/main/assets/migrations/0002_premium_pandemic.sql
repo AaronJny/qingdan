@@ -1,0 +1,1 @@
+ALTER TABLE `history` ADD `operation_id` text DEFAULT '' NOT NULL;

@@ -1,0 +1,25 @@
+# Local workspaces and generated release archives
+/application/node_modules/
+/application/dist/
+/application/data/
+/desktop/node_modules/
+/desktop/dist/
+/android/webapp/node_modules/
+/android/webapp/dist/
+/android/webapp/data/
+/android/android/.gradle/
+/android/android/build/
+/android/android/app/build/
+/android/android/local.properties
+/android/android/app/src/main/assets/web/
+/coverage/
+*.log
+*.tsbuildinfo
+.env*
+*.jks
+*.keystore
+.DS_Store
+# desktop/backend contains the intentional frozen runtime payload, including
+# two minimal dependency source trees. Do not globally ignore node_modules.
+__pycache__/
+*.pyc

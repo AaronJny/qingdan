@@ -1,0 +1,53 @@
+{
+  "schema": "qingdan-android-clean-copy-evidence-v1",
+  "date": "2026-10-09",
+  "previous_android_source_manifest_sha256": "377a824c30187de2fafa2c6569d1f1214aea5b1b023a92180730b010da299aa1",
+  "production_changes": [
+    {
+      "path": "android/app/src/main/assets/web/assets/dispatch-I_23iGBP.js",
+      "change": "added",
+      "previous_sha256": null,
+      "current_sha256": "d26e2e8a249de4d9fb182ed1eb48dcbeb3809d63cf47d82f22bd7e6e95db5931"
+    },
+    {
+      "path": "android/app/src/main/assets/web/assets/dispatch-WI7uvKr2.js",
+      "change": "removed",
+      "previous_sha256": "31bda9eea660da3276f37e7fe9a26c24de39a7471da5c26a783e81462fc5969b",
+      "current_sha256": null
+    },
+    {
+      "path": "android/app/src/main/assets/web/assets/index-BeYqjtaf.js",
+      "change": "added",
+      "previous_sha256": null,
+      "current_sha256": "a5ce0bb1aa093ef27f994fc764abfdb16c529b02504146971a1880236e97c884"
+    },
+    {
+      "path": "android/app/src/main/assets/web/assets/index-D0Lmyuz7.js",
+      "change": "removed",
+      "previous_sha256": "80dff1a07f46f23a695e07f442dee0952bb7afdefac9899e3b83b50afd153cd4",
+      "current_sha256": null
+    },
+    {
+      "path": "android/app/src/main/assets/web/index.html",
+      "change": "modified",
+      "previous_sha256": "97a833511d3eda0cbc1b9fcbf10b5c1e1858e7e0d490c007b1bfa79c6fd14dfe",
+      "current_sha256": "0a60ede8edf617e6b03e35bcad7f03b493fd30d244feede6b716d53a3f514e3f"
+    },
+    {
+      "path": "webapp/app/workspace-dialogs.tsx",
+      "change": "modified",
+      "previous_sha256": "fcde7e275447288faee720abd3c4d8f998a9303d4724ab5ae73ff0a014ccec81",
+      "current_sha256": "467c10cf0a629fccee3033bb8a683fb5e581baaff8c3d819a2367d526f295e0d"
+    }
+  ],
+  "protected_original_files_verified_unchanged": 206,
+  "same_byte_sql_migrations": 6,
+  "bundled_assets_verified": 19,
+  "second_build_all_assets_identical": true,
+  "forbidden_copy_scan_hits": 0,
+  "scan_includes_sources_docs_prebuilt_assets": true,
+  "scan_case_insensitive": true,
+  "temporary_node_modules_or_symlinks_present": false,
+  "apk_or_signing_identity_created": false,
+  "verification_summary": "SUMMARY.json"
+}

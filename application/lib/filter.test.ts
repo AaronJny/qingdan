@@ -1,0 +1,7 @@
+import{test}from'node:test';import assert from'node:assert/strict';import{compileFilter}from'./filter.ts';
+const r:any={data:{title:'阅读计划',description:'学习',tags:['工作'],priority:3,status:'open',dueDate:'2026-10-07',listId:'work',assignee:'me@test'}};const c={today:'2026-10-07',userEmail:'me@test',listTitles:{work:'工作'}};
+test('implicit AND and explicit OR precedence',()=>{assert.equal(compileFilter('#工作 !3')(r,c),true);assert.equal(compileFilter('#生活 OR #工作 AND !3')(r,c),true);assert.equal(compileFilter('#生活 OR #工作 AND !2')(r,c),false)});test('parentheses, NOT, quoted text and field filters',()=>{assert.equal(compileFilter('(list:工作 OR #生活) AND NOT status:done AND text:"阅读计划"')(r,c),true);assert.equal(compileFilter('assigned:me due:today priority:3')(r,c),true);assert.equal(compileFilter('无日期')(r,c),false)});test('malformed filters fail',()=>{for(const q of ['AND #工作','(#工作','#工作 OR','#工作)'])assert.throws(()=>compileFilter(q));});
+
+test('quoted prefix values and same-day timed overdue',()=>{const task:any={data:{listId:'p',dueDate:'2026-10-07',dueTime:'09:00'}};const ctx={...c,nowTime:'10:00',listTitles:{p:'Project A'}};assert.equal(compileFilter('list:"Project A"')(task,ctx),true);assert.equal(compileFilter('due:overdue')(task,ctx),true)});
+
+test('date ranges and explicit assignee',()=>{assert.equal(compileFilter('due:2026-10-01..2026-10-08 assigned:me@test')(r,c),true);assert.throws(()=>compileFilter('due:2026-10-08..2026-10-01'))});

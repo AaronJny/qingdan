@@ -1,0 +1,6 @@
+html.qingdan-android,html.qingdan-android body{height:100%;overscroll-behavior:none}
+.qingdan-android .app-shell{height:100dvh;min-height:0}
+.qingdan-android input,.qingdan-android textarea,.qingdan-android select{font-size:max(16px,1em)}
+.qingdan-android .modal{max-height:calc(100dvh - 24px);overflow:auto}
+.qingdan-android .signin{min-height:100dvh}
+.qingdan-android .signin-card{width:min(420px,calc(100vw - 32px))}

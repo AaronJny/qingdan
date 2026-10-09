@@ -1,0 +1,5 @@
+import{test}from'node:test';import assert from'node:assert/strict';import{instantLocalDate}from'./instant-local-date.ts';
+function inZone(zone:string,run:()=>void){const original=process.env.TZ;process.env.TZ=zone;try{run()}finally{if(original===undefined)delete process.env.TZ;else process.env.TZ=original}}
+test('Shanghai groups canonical instants on the local side of UTC midnight',()=>inZone('Asia/Shanghai',()=>{assert.equal(instantLocalDate('2026-10-07T15:59:59Z'),'2026-10-07');assert.equal(instantLocalDate('2026-10-07T16:00:00Z'),'2026-10-08');assert.equal(instantLocalDate('2026-10-08T00:30:00Z'),'2026-10-08')}));
+test('Los Angeles groups instants on the previous local date until local midnight',()=>inZone('America/Los_Angeles',()=>{assert.equal(instantLocalDate('2026-10-08T06:59:59Z'),'2026-10-07');assert.equal(instantLocalDate('2026-10-08T07:00:00Z'),'2026-10-08');assert.equal(instantLocalDate('2026-10-08T00:30:00Z'),'2026-10-07')}));
+test('missing or malformed instants cannot create a synthetic reporting day',()=>{assert.equal(instantLocalDate(undefined),'');assert.equal(instantLocalDate(''),'');assert.equal(instantLocalDate('not-a-timestamp'),'')});

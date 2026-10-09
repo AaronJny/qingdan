@@ -1,0 +1,3 @@
+import type{AppRecord}from'./types';
+export function completePomodoros(records:AppRecord[]){return records.filter(r=>r.kind==='focus'&&!r.deleted&&r.data.focusStatus==='finished'&&r.data.mode==='pomodoro'&&(r.data.duration||0)>0&&(r.data.seconds||0)>=r.data.duration!*60).length}
+export function taskFocusEstimate(records:AppRecord[],task:AppRecord|undefined){if(!task)return{completed:0,goal:0,remaining:0,minutes:0};const own=records.filter(r=>r.kind==='focus'&&!r.deleted&&r.data.taskId===task?.id&&r.data.focusStatus==='finished'&&r.data.mode!=='break');const completed=completePomodoros(own),goal=task?.data.estimatedPomodoros||0;return{completed,goal,remaining:Math.max(0,goal-completed),minutes:Math.round(own.reduce((sum,r)=>sum+(r.data.seconds||0),0)/60)}}

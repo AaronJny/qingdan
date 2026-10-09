@@ -1,0 +1,16 @@
+services:
+  qingdan:
+    build: .
+    restart: unless-stopped
+    environment:
+      APP_MODE: accounts
+      APP_ORIGIN: ${APP_ORIGIN:-http://127.0.0.1:4310}
+      HOST: 0.0.0.0
+      PORT: 4310
+      QINGDAN_DATA_DIR: /app/data
+    ports:
+      - "127.0.0.1:4310:4310"
+    volumes:
+      - qingdan-data:/app/data
+volumes:
+  qingdan-data:

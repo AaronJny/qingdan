@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 2,
+  "appName": "青单",
+  "appId": "app.qingdan.desktop",
+  "serverUrl": "http://127.0.0.1:4310/"
+}

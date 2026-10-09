@@ -1,0 +1,8 @@
+青单独立运行包（final）
+精确源码c3194463a8cf748242955c61da72969c652ea062
+本包已含编译Node服务、React页面及离线壳，需要Node.js24。
+在解压目录执行 npm ci --omit=dev，然后 npm start，打开http://127.0.0.1:4310，默认本机local无需账号密码。
+账号模式：部署机器交互终端APP_MODE=accounts npm run users -- init-admin，再以APP_MODE=accounts npm start启动。Windows PowerShell用$env:APP_MODE="accounts"设置本终端变量，切回local须显式设置local。
+不要对本编译包执行npm run build；源码修改和Docker构建使用配套source包。
+私服由实际HTTPS反向代理终止TLS，Node后端自身HTTP并隔离在本机/内部网络。本机免密码不可反代或隧道公开。
+数据默认data/local或data/accounts，目录有模式标记，不能混用，无默认密码或真实账号。验证/限制见VERIFICATION.md。

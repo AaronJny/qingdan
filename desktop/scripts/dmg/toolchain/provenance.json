@@ -1,0 +1,223 @@
+{
+  "createdUTC": "2026-10-09",
+  "mozillaSource": {
+    "url": "https://codeload.github.com/mozilla/libdmg-hfsplus/tar.gz/ec239599c1f234a4e01ae3fe51214d0c77e5baa3",
+    "repository": "https://github.com/mozilla/libdmg-hfsplus",
+    "commit": "ec239599c1f234a4e01ae3fe51214d0c77e5baa3",
+    "file": "downloads/libdmg-hfsplus-ec239599.tar.gz",
+    "sha256": "190e29e4e0bd53e31af1f617b62dcd46b300ffbb0b7cd9e1bf49adb218872763",
+    "authentication": "HTTPS official Mozilla repository at fixed commit; archive hash recorded; no signed-commit claim"
+  },
+  "unicodePatch": {
+    "file": "unicode-utf8.patch",
+    "sha256": "07d6bcafd2599e91b81733ad2540296a9a3e3e6323a93542fbfadbe4d79c43b9",
+    "modifiedFiles": [
+      "hfs/catalog.c",
+      "hfs/utility.c"
+    ],
+    "scope": "strict UTF-8/UTF-16 conversion only; validate stage normalization before import"
+  },
+  "debianPackages": [
+    {
+      "Package": "libbz2-dev",
+      "Version": "1.0.8-6",
+      "Architecture": "amd64",
+      "Filename": "pool/main/b/bzip2/libbz2-dev_1.0.8-6_amd64.deb",
+      "Size": "31368",
+      "SHA256": "b395471bf69087a18a6baa04d68a9d50497b20f8a2602d9729c7069f820bbe6b",
+      "Depends": "libbz2-1.0 (= 1.0.8-6), libc6-dev | libc-dev"
+    },
+    {
+      "Package": "cmake",
+      "Version": "3.31.6-2",
+      "Architecture": "amd64",
+      "Filename": "pool/main/c/cmake/cmake_3.31.6-2_amd64.deb",
+      "Size": "11969144",
+      "SHA256": "dee2fc94973325240604ffbca677a3f16b462fb6520946bd81be1ecbac770a02",
+      "Depends": "cmake-data (= 3.31.6-2), procps, libarchive13t64 (>= 3.3.3), libc6 (>= 2.38), libcurl4t64 (>= 7.16.2), libexpat1 (>= 2.0.1), libgcc-s1 (>= 3.0), libjsoncpp26 (>= 1.9.6), librhash1 (>= 1.2.6), libstdc++6 (>= 14), libuv1t64 (>= 1.38.0), zlib1g (>= 1:1.1.4)"
+    },
+    {
+      "Package": "cmake-data",
+      "Version": "3.31.6-2",
+      "Architecture": "all",
+      "Filename": "pool/main/c/cmake/cmake-data_3.31.6-2_all.deb",
+      "Size": "2268208",
+      "SHA256": "d9060145be892f43cd1888024114ceab019c81479d4b0a3383fe14cebe2295cb",
+      "Depends": null
+    },
+    {
+      "Package": "libuv1t64",
+      "Version": "1.50.0-2",
+      "Architecture": "amd64",
+      "Filename": "pool/main/libu/libuv1/libuv1t64_1.50.0-2_amd64.deb",
+      "Size": "153752",
+      "SHA256": "5fec8035002e0c745b64d1c5b3e1dc42790d1a77574315b976cf3e4aab9ddc0a",
+      "Depends": "libc6 (>= 2.38)"
+    },
+    {
+      "Package": "liblzma-dev",
+      "Version": "5.8.1-1+deb13u1",
+      "Architecture": "amd64",
+      "Filename": "pool/main/x/xz-utils/liblzma-dev_5.8.1-1+deb13u1_amd64.deb",
+      "Size": "348120",
+      "SHA256": "adb39ccf80b0a4347e303920a0b2c4e4f9bbca318f68e8c768dfec8029013c7a",
+      "Depends": "liblzma5 (= 5.8.1-1+deb13u1)"
+    },
+    {
+      "Package": "librhash1",
+      "Version": "1.4.5-1",
+      "Architecture": "amd64",
+      "Filename": "pool/main/r/rhash/librhash1_1.4.5-1_amd64.deb",
+      "Size": "132184",
+      "SHA256": "9bf56d7d8ce3e7680a0dd8e3cfe8acdf50e0aa3b98b0a907cf744a4d1711af72",
+      "Depends": "libc6 (>= 2.34)"
+    },
+    {
+      "Package": "hfsprogs",
+      "Version": "540.1.linux3-6",
+      "Architecture": "amd64",
+      "Filename": "pool/non-free/h/hfsprogs/hfsprogs_540.1.linux3-6_amd64.deb",
+      "Size": "154952",
+      "SHA256": "d4221aa13fa26bf1ec395152a703739ef7b5d091e59c09ef0984b99ace14eddc",
+      "Depends": "libc6 (>= 2.34), libssl3t64 (>= 3.0.0)"
+    },
+    {
+      "Package": "libbz2-1.0",
+      "Version": "1.0.8-6",
+      "Architecture": "amd64",
+      "Filename": "pool/main/b/bzip2/libbz2-1.0_1.0.8-6_amd64.deb",
+      "Size": "37912",
+      "SHA256": "cba4cda04244b5e481bb15524bc3c983a7d1b6f330013b9b381706a2fcb65310",
+      "Depends": "libc6 (>= 2.4)"
+    },
+    {
+      "Package": "7zip",
+      "Version": "25.01+dfsg-1~deb13u2",
+      "Architecture": "amd64",
+      "Filename": "pool/main/7/7zip/7zip_25.01+dfsg-1~deb13u2_amd64.deb",
+      "Size": "1573700",
+      "SHA256": "b2cb210bee3be6a10230b38b8645d71846d19364b157f44fd08e1a54cae1652f",
+      "Depends": "libc6 (>= 2.34), libgcc-s1 (>= 3.0), libstdc++6 (>= 14)"
+    }
+  ],
+  "debianVerification": {
+    "inReleaseSHA256": "0584fba32e13e0ab8285fb16c27adea1ec03a73669c18702821094fd6ca86675",
+    "verificationLog": "logs/debian-release-signature.txt",
+    "trustedKeyring": "/usr/share/keyrings/debian-archive-keyring.gpg",
+    "verifiedAllPinnedPackagesAgainstSignedIndexes": true,
+    "indexes": [
+      "main/binary-amd64/Packages.xz",
+      "non-free/binary-amd64/Packages.xz"
+    ]
+  },
+  "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+  "cmake": "3.31.6",
+  "openssl": "disabled in libdmg-hfsplus",
+  "toolHashes": {
+    "build/hfs/hfsplus": "48a70c0f621d3b46ac5d88b9ef5c15be882373e8b525b84840b8045c7a7bf72f",
+    "build/dmg/dmg": "3fc1fb8f85d9caad010e1ae7dcba15c9b0cc793f6d8c0a7ee0643749ec415c19",
+    "build/hdutil/hdutil": "6c9e07cbdfe14f63232076934c789d2b3d8cd1cf445b9e887a793910d01d0e78",
+    "root/usr/sbin/mkfs.hfsplus": "95c2e2bc015cffa9d1b63c01f52c933197b553d9494882541a4236944d09df02",
+    "root/usr/sbin/fsck.hfsplus": "9abe3c556c5b21117c8238f1c24f5c542cc7e68df7ddbbab0b6b4e8eab29193c",
+    "root/usr/lib/7zip/7z": "244096cca12b8ec2b1330573071a53550f2369da8f2687af183f41ebdf52a9f5",
+    "root/usr/lib/7zip/7z.so": "35f80d9c8770b11e2f80065a26239bb405fbb9b68b53c795ed9bb8ee53734457",
+    "build/libhfs-name-compare.so": "2b482eee49bb1f33ffe0c515bac392e8a325b12b37c08146b32d14f1668e49b5"
+  },
+  "fixture": {
+    "dmg": "fixture/青单-Unicode-fixture.dmg",
+    "sha256": "043b6e018ecec533829f173ce9fb6d1302a3c77f35d258edc0d828a5fe983cf7",
+    "stageEntries": 17,
+    "symlinks": 4,
+    "independentVerificationLog": "logs/fixture-independent-catalog.json",
+    "nativeMacMounted": false
+  },
+  "downloadInputs": [
+    {
+      "url": "https://codeload.github.com/mozilla/libdmg-hfsplus/tar.gz/ec239599c1f234a4e01ae3fe51214d0c77e5baa3",
+      "repository": "https://github.com/mozilla/libdmg-hfsplus",
+      "commit": "ec239599c1f234a4e01ae3fe51214d0c77e5baa3",
+      "file": "downloads/libdmg-hfsplus-ec239599.tar.gz",
+      "sha256": "190e29e4e0bd53e31af1f617b62dcd46b300ffbb0b7cd9e1bf49adb218872763",
+      "authentication": "HTTPS official Mozilla repository at fixed commit; archive hash recorded; no signed-commit claim"
+    },
+    {
+      "file": "downloads/trixie.InRelease",
+      "url": "https://deb.debian.org/debian/dists/trixie/InRelease",
+      "snapshotUrl": "https://snapshot.debian.org/archive/debian/20260925T181338Z/dists/trixie/InRelease",
+      "sha256": "0584fba32e13e0ab8285fb16c27adea1ec03a73669c18702821094fd6ca86675"
+    },
+    {
+      "file": "downloads/trixie-main-Packages.xz",
+      "url": "https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.xz",
+      "snapshotUrl": "https://snapshot.debian.org/archive/debian/20260925T181338Z/dists/trixie/main/binary-amd64/Packages.xz",
+      "sha256": "7778d3e3f303b7ddb8ce0fe7c8d57473a076c6bf2e8f241f75421d2396352498"
+    },
+    {
+      "file": "downloads/trixie-non-free-Packages.xz",
+      "url": "https://deb.debian.org/debian/dists/trixie/non-free/binary-amd64/Packages.xz",
+      "snapshotUrl": "https://snapshot.debian.org/archive/debian/20260925T181338Z/dists/trixie/non-free/binary-amd64/Packages.xz",
+      "sha256": "873a1152a9641bbbd32ae06d9bea40c0eb9486caeea340a786d4ab84cb6de6c5"
+    },
+    {
+      "file": "downloads/libbz2-dev_1.0.8-6_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/b/bzip2/libbz2-dev_1.0.8-6_amd64.deb",
+      "snapshotUrl": "https://snapshot.debian.org/archive/debian/20260925T181338Z/pool/main/b/bzip2/libbz2-dev_1.0.8-6_amd64.deb",
+      "sha256": "b395471bf69087a18a6baa04d68a9d50497b20f8a2602d9729c7069f820bbe6b"
+    },
+    {
+      "file": "downloads/cmake_3.31.6-2_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/c/cmake/cmake_3.31.6-2_amd64.deb",
+      "snapshotUrl": "https://snapshot.debian.org/archive/debian/20260925T181338Z/pool/main/c/cmake/cmake_3.31.6-2_amd64.deb",
+      "sha256": "dee2fc94973325240604ffbca677a3f16b462fb6520946bd81be1ecbac770a02"
+    },
+    {
+      "file": "downloads/cmake-data_3.31.6-2_all.deb",
+      "url": "https://deb.debian.org/debian/pool/main/c/cmake/cmake-data_3.31.6-2_all.deb",
+      "snapshotUrl": "https://snapshot.debian.org/archive/debian/20260925T181338Z/pool/main/c/cmake/cmake-data_3.31.6-2_all.deb",
+      "sha256": "d9060145be892f43cd1888024114ceab019c81479d4b0a3383fe14cebe2295cb"
+    },
+    {
+      "file": "downloads/libuv1t64_1.50.0-2_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/libu/libuv1/libuv1t64_1.50.0-2_amd64.deb",
+      "snapshotUrl": "https://snapshot.debian.org/archive/debian/20260925T181338Z/pool/main/libu/libuv1/libuv1t64_1.50.0-2_amd64.deb",
+      "sha256": "5fec8035002e0c745b64d1c5b3e1dc42790d1a77574315b976cf3e4aab9ddc0a"
+    },
+    {
+      "file": "downloads/liblzma-dev_5.8.1-1+deb13u1_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/x/xz-utils/liblzma-dev_5.8.1-1+deb13u1_amd64.deb",
+      "snapshotUrl": "https://snapshot.debian.org/archive/debian/20260925T181338Z/pool/main/x/xz-utils/liblzma-dev_5.8.1-1+deb13u1_amd64.deb",
+      "sha256": "adb39ccf80b0a4347e303920a0b2c4e4f9bbca318f68e8c768dfec8029013c7a"
+    },
+    {
+      "file": "downloads/librhash1_1.4.5-1_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/r/rhash/librhash1_1.4.5-1_amd64.deb",
+      "snapshotUrl": "https://snapshot.debian.org/archive/debian/20260925T181338Z/pool/main/r/rhash/librhash1_1.4.5-1_amd64.deb",
+      "sha256": "9bf56d7d8ce3e7680a0dd8e3cfe8acdf50e0aa3b98b0a907cf744a4d1711af72"
+    },
+    {
+      "file": "downloads/hfsprogs_540.1.linux3-6_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/non-free/h/hfsprogs/hfsprogs_540.1.linux3-6_amd64.deb",
+      "snapshotUrl": "https://snapshot.debian.org/archive/debian/20260925T181338Z/pool/non-free/h/hfsprogs/hfsprogs_540.1.linux3-6_amd64.deb",
+      "sha256": "d4221aa13fa26bf1ec395152a703739ef7b5d091e59c09ef0984b99ace14eddc"
+    },
+    {
+      "file": "downloads/libbz2-1.0_1.0.8-6_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/b/bzip2/libbz2-1.0_1.0.8-6_amd64.deb",
+      "snapshotUrl": "https://snapshot.debian.org/archive/debian/20260925T181338Z/pool/main/b/bzip2/libbz2-1.0_1.0.8-6_amd64.deb",
+      "sha256": "cba4cda04244b5e481bb15524bc3c983a7d1b6f330013b9b381706a2fcb65310"
+    },
+    {
+      "file": "downloads/7zip_25.01+dfsg-1~deb13u2_amd64.deb",
+      "url": "https://deb.debian.org/debian/pool/main/7/7zip/7zip_25.01+dfsg-1~deb13u2_amd64.deb",
+      "snapshotUrl": "https://snapshot.debian.org/archive/debian/20260925T181338Z/pool/main/7/7zip/7zip_25.01+dfsg-1~deb13u2_amd64.deb",
+      "sha256": "b2cb210bee3be6a10230b38b8645d71846d19364b157f44fd08e1a54cae1652f"
+    }
+  ],
+  "limitations": [
+    "Not an Apple Developer ID signing or notarization tool.",
+    "No native macOS mount, Finder, LaunchServices, Gatekeeper or app launch claim.",
+    "HFS+ canonical decomposition is preflight-validated, not automatically applied by C conversion.",
+    "Full application DMG must repeat all independent checks.",
+    "Timestamps and UDIF identifiers can vary; no bit-for-bit image reproducibility claim."
+  ]
+}

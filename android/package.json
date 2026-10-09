@@ -1,0 +1,11 @@
+{
+  "name": "qingdan-android",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=24 <25"},
+  "scripts": {
+    "build:web": "node scripts/build-web.mjs",
+    "test:android": "node --import ./webapp/node_modules/tsx/dist/loader.mjs scripts/build-native-api-tests.mjs && node --import ./webapp/node_modules/tsx/dist/loader.mjs --test tests/*.test.mjs"
+  }
+}

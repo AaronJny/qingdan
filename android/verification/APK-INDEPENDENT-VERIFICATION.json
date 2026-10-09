@@ -1,0 +1,51 @@
+{
+  "apk": "Qingdan-0.1.0-android.apk",
+  "bytes": 6131182,
+  "sha256": "64f0341c608addc0a297ed7899e9ce62a8780bd4cab91d92d06fb07521b0dc49",
+  "apk_assets_matched_current_source": 19,
+  "crc_all_entries_passed": true,
+  "abis": {
+    "arm64-v8a": {
+      "jni": "lib/arm64-v8a/libsqliteJni.so",
+      "elf_class": 64,
+      "load_alignment": [
+        16384,
+        16384,
+        16384
+      ],
+      "sha256": "d99e44569c5417c191c3eb7927cde1cd1309713113e049dfb343db89f107a16e"
+    },
+    "armeabi-v7a": {
+      "jni": "lib/armeabi-v7a/libsqliteJni.so",
+      "elf_class": 32,
+      "load_alignment": [
+        16384,
+        16384,
+        16384
+      ],
+      "sha256": "b305f063c74569ab6cfb6061c9e29b60a0265fcdda0fdcd2bd6ca82fc2157c58"
+    },
+    "x86": {
+      "jni": "lib/x86/libsqliteJni.so",
+      "elf_class": 32,
+      "load_alignment": [
+        16384,
+        16384,
+        16384
+      ],
+      "sha256": "116a29cd8bb8a40fca84446c9fbc795b6b748813bb101ee53e3908ad18cb2562"
+    },
+    "x86_64": {
+      "jni": "lib/x86_64/libsqliteJni.so",
+      "elf_class": 64,
+      "load_alignment": [
+        16384,
+        16384,
+        16384
+      ],
+      "sha256": "073b2c1b391f913e422923d6bbf69fa2779c08e260b05fa2e1d9691259695ae1"
+    }
+  },
+  "no_private_key_files": true,
+  "no_node_sqlite_dependency_in_bundled_js": true
+}

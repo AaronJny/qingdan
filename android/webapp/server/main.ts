@@ -1,0 +1,11 @@
+import{resolve}from'node:path';import{fileURLToPath}from'node:url';import{initializeStorage,closeStorage}from'../lib/storage';import{createAppServer}from'./http';import{appMode}from'../lib/auth';
+const mode=appMode();process.env.APP_MODE=mode;
+const port=Number(process.env.PORT||4310),host=process.env.HOST||'127.0.0.1';if(!Number.isInteger(port)||port<1||port>65535)throw Error('Invalid PORT');
+process.env.APP_ORIGIN??=process.env.PUBLIC_URL||`http://127.0.0.1:${port}`;
+if(mode==='local'&&!['127.0.0.1','::1','localhost'].includes(host))throw Error('Local mode must bind a literal loopback address');
+const origin=new URL(process.env.APP_ORIGIN);if(origin.pathname!=='/'||origin.search||origin.hash||origin.username||origin.password)throw Error('APP_ORIGIN must be an exact origin');if(origin.protocol!=='https:'&&!(origin.protocol==='http:'&&['localhost','127.0.0.1','[::1]'].includes(origin.hostname)))throw Error('Non-loopback APP_ORIGIN requires HTTPS');
+if(mode==='local'&&!['localhost','127.0.0.1','[::1]'].includes(origin.hostname))throw Error('Local mode APP_ORIGIN must be loopback');
+const packaged=import.meta.url.endsWith('/dist/server/main.mjs');const projectDir=packaged?fileURLToPath(new URL('../../',import.meta.url)):fileURLToPath(new URL('../',import.meta.url));
+await initializeStorage({dataDir:process.env.QINGDAN_DATA_DIR||resolve(projectDir,'data',mode),mode:mode as 'local'|'accounts',migrationsDir:resolve(projectDir,'drizzle')});
+const app=createAppServer({origin:origin.origin,staticDir:resolve(projectDir,'dist/client')});app.listen(port,host,()=>console.log(`青单 ${origin.origin}`));
+for(const signal of ['SIGINT','SIGTERM']as const)process.on(signal,()=>{app.close(()=>{closeStorage();process.exit(0)});app.closeIdleConnections();setTimeout(()=>process.exit(1),10000).unref()});

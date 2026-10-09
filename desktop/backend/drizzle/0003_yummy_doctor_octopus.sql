@@ -1,0 +1,1 @@
+ALTER TABLE `notification_receipts` ADD `claim_until` text;

@@ -1,0 +1,116 @@
+--- a/hfs/catalog.c
++++ b/hfs/catalog.c
+@@ -322,15 +322,40 @@
+   return (BTKey*)record;
+ }
+ 
++/* Retain the public legacy name, but filenames on POSIX are UTF-8.
++ * Input must already use HFS+ canonical decomposition (see TN1150).
++ * Reject malformed input and names over 255 UTF-16 code units, never truncate.
++ */
+ void ASCIIToUnicode(const char* ascii, HFSUniStr255* unistr) {
+-  int count;
+-
+-  count = 0;
+-  while(ascii[count] != '\0') {
+-    unistr->unicode[count] = ascii[count];
+-    count++;
++  const unsigned char* p = (const unsigned char*) ascii;
++  unsigned int count = 0;
++  while(*p) {
++    uint32_t cp, minimum;
++    unsigned int more, i;
++    unsigned char lead = *p++;
++    if(lead < 0x80) { cp = lead; more = 0; minimum = 0; }
++    else if(lead >= 0xc2 && lead <= 0xdf) { cp = lead & 0x1f; more = 1; minimum = 0x80; }
++    else if(lead >= 0xe0 && lead <= 0xef) { cp = lead & 0x0f; more = 2; minimum = 0x800; }
++    else if(lead >= 0xf0 && lead <= 0xf4) { cp = lead & 0x07; more = 3; minimum = 0x10000; }
++    else { hfs_panic("Invalid UTF-8 filename"); return; }
++    for(i = 0; i < more; i++) {
++      if((*p & 0xc0) != 0x80) { hfs_panic("Invalid UTF-8 filename"); return; }
++      cp = (cp << 6) | (*p++ & 0x3f);
++    }
++    if(cp < minimum || cp > 0x10ffff || (cp >= 0xd800 && cp <= 0xdfff)) {
++      hfs_panic("Invalid UTF-8 filename"); return;
++    }
++    if(count + (cp >= 0x10000 ? 2 : 1) > 255) {
++      hfs_panic("Filename exceeds 255 UTF-16 code units"); return;
++    }
++    if(cp >= 0x10000) {
++      cp -= 0x10000;
++      unistr->unicode[count++] = 0xd800 | (cp >> 10);
++      unistr->unicode[count++] = 0xdc00 | (cp & 0x3ff);
++    } else {
++      unistr->unicode[count++] = (uint16_t) cp;
++    }
+   }
+-
+   unistr->length = count;
+ }
+ 
+--- a/hfs/utility.c
++++ b/hfs/utility.c
+@@ -7,24 +7,47 @@
+   exit(1);
+ }
+ 
+-void printUnicode(HFSUniStr255* str) {
+-  int i;
+-  
++/* Retain the public legacy name, returning a real UTF-8 POSIX name. */
++char* unicodeToAscii(HFSUniStr255* str) {
++  unsigned int i;
++  size_t n = 0;
++  char* out;
++  if(str->length > 255) { hfs_panic("Invalid HFS+ filename length"); return NULL; }
++  /* A UTF-16 code unit requires at most three UTF-8 bytes. */
++  out = (char*) malloc((size_t) str->length * 3 + 1);
++  if(!out) { hfs_panic("Cannot allocate UTF-8 filename"); return NULL; }
+   for(i = 0; i < str->length; i++) {
+-    printf("%c", (char)(str->unicode[i] & 0xff));
++    uint32_t cp = str->unicode[i];
++    if(cp >= 0xd800 && cp <= 0xdbff) {
++      uint32_t low;
++      if(i + 1 >= str->length) { free(out); hfs_panic("Unpaired UTF-16 surrogate"); return NULL; }
++      low = str->unicode[++i];
++      if(low < 0xdc00 || low > 0xdfff) { free(out); hfs_panic("Unpaired UTF-16 surrogate"); return NULL; }
++      cp = 0x10000 + ((cp - 0xd800) << 10) + (low - 0xdc00);
++    } else if(cp >= 0xdc00 && cp <= 0xdfff) {
++      free(out); hfs_panic("Unpaired UTF-16 surrogate"); return NULL;
++    }
++    if(cp < 0x80) { out[n++] = (char) cp; }
++    else if(cp < 0x800) {
++      out[n++] = (char) (0xc0 | (cp >> 6));
++      out[n++] = (char) (0x80 | (cp & 0x3f));
++    } else if(cp < 0x10000) {
++      out[n++] = (char) (0xe0 | (cp >> 12));
++      out[n++] = (char) (0x80 | ((cp >> 6) & 0x3f));
++      out[n++] = (char) (0x80 | (cp & 0x3f));
++    } else {
++      out[n++] = (char) (0xf0 | (cp >> 18));
++      out[n++] = (char) (0x80 | ((cp >> 12) & 0x3f));
++      out[n++] = (char) (0x80 | ((cp >> 6) & 0x3f));
++      out[n++] = (char) (0x80 | (cp & 0x3f));
++    }
+   }
++  out[n] = '\0';
++  return out;
+ }
+ 
+-char* unicodeToAscii(HFSUniStr255* str) {
+-  int i;
+-  char* toReturn;
+-  
+-  toReturn = (char*) malloc(sizeof(char) * (str->length + 1));
+-  
+-  for(i = 0; i < str->length; i++) {
+-    toReturn[i] = (char)(str->unicode[i] & 0xff);
+-  }
+-  toReturn[i] = '\0';
+-  
+-  return toReturn;
++void printUnicode(HFSUniStr255* str) {
++  char* utf8 = unicodeToAscii(str);
++  fputs(utf8, stdout);
++  free(utf8);
+ }

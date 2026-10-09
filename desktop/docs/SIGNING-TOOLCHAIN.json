@@ -1,0 +1,78 @@
+{
+  "package": "apple-codesign",
+  "version": "0.29.0",
+  "binaryName": "rcodesign",
+  "preparation": "crates.io source build with locked dependencies; no release binary used",
+  "source": {
+    "url": "https://static.crates.io/crates/apple-codesign/apple-codesign-0.29.0.crate",
+    "sha256": "f24e9ebdb70a2aee3ca1cea217009fb50776955f0d7678c31d22e48c1524667f",
+    "Cargo.lock.sha256": "e62a7e1ba61cd875c6eb22f3c42353e63458452c226e2d989f9ece0ea6ab7118",
+    "pinMatches": "desktop/docs/BUILD-TOOLS.json signing.crateSha256 and signing.cargoLockSha256"
+  },
+  "rust": {
+    "version": "1.85.1",
+    "manifestUrl": "https://static.rust-lang.org/dist/channel-rust-1.85.1.toml",
+    "manifestSha256": "1e7dae690cd12e27405a97e64704917489a27c650201bf47780a936055d67909",
+    "componentArtifacts": {
+      "rustc": {
+        "url": "https://static.rust-lang.org/dist/2025-03-18/rustc-1.85.1-x86_64-unknown-linux-gnu.tar.xz",
+        "sha256": "92a5c532b9e87912190128704e0d65825912e3b08a6ee9203c4068d6d1df62c4"
+      },
+      "cargo": {
+        "url": "https://static.rust-lang.org/dist/2025-03-18/cargo-1.85.1-x86_64-unknown-linux-gnu.tar.xz",
+        "sha256": "7373132c13e394755d15f01bda4374af59b4daef01b12a83cb3df3f3be38e289"
+      },
+      "rust-std": {
+        "url": "https://static.rust-lang.org/dist/2025-03-18/rust-std-1.85.1-x86_64-unknown-linux-gnu.tar.xz",
+        "sha256": "0aaeffba85359503f874315cd08e0ae8490275d14b41470d36d4fa57fd085916"
+      }
+    }
+  },
+  "upstreamReference": {
+    "documentation": "https://gregoryszorc.com/docs/apple-codesign/0.29.0/apple_codesign_getting_started.html",
+    "repository": "https://github.com/indygreg/apple-platform-rs",
+    "tag": "apple-codesign/0.29.0",
+    "commit": "2312b1e5bd77322c019613e0ca624e222c6c6e08",
+    "releaseApiUrl": "https://api.github.com/repos/indygreg/apple-platform-rs/releases/tags/apple-codesign%2F0.29.0",
+    "releaseJsonSha256": "94ab731f0f4d2c771f78355ac7f2dccdb72d2b694012a8291731c1b34d11e241"
+  },
+  "build": {
+    "command": "./build-rcodesign.sh",
+    "cargoCommand": "cargo build --manifest-path apple-codesign-0.29.0/Cargo.toml --release --locked --bin rcodesign",
+    "features": "default (notarize); unchanged from upstream",
+    "jobs": 3,
+    "environment": "PATH: isolated official Rust 1.85.1 followed by /usr/bin:/bin; HOME,CARGO_HOME,TMPDIR,CARGO_TARGET_DIR inside toolchain-sign",
+    "state": "complete",
+    "duration": "6m 14s",
+    "logSha256": "f7b218904035552bad6f11912728ec7a9b24c7161d076f5584730ea7e8c349dd",
+    "warnings": "5 upstream dead_code warnings in src/remote_signing/mod.rs; build completed successfully"
+  },
+  "constraints": {
+    "applicationArtifactsModified": false,
+    "signingPerformed": false,
+    "macosAcceptanceVerified": false,
+    "identitySourcesUsed": false,
+    "systemToolchainInstalled": false,
+    "securitySettingsModified": false
+  },
+  "preparedUtc": "2026-10-09T03:11:35.569875+00:00",
+  "binary": {
+    "relativePath": "bin/rcodesign",
+    "sha256": "4a505700e3bdaa83611256adbc15c45ab84327fcd3b0b990b2ec80cfdb133f9d",
+    "bytes": 29719704,
+    "version": "apple-codesign 0.29.0",
+    "matchesPreviousBuildBinary": false,
+    "explanation": "Fresh build path/system libraries differ. Source archive and lockfile match the pinned historical build; byte-for-byte reproducibility is not claimed."
+  },
+  "verification": {
+    "isolatedVersion": "pass",
+    "isolatedSignHelp": "pass",
+    "timestampUrlOptionPresent": true,
+    "CargoLockUnchanged": "pass",
+    "dependencyArchiveChecksums": "374 cached crates match frozen Cargo.lock",
+    "dynamicDependenciesResolved": "pass",
+    "signingPerformed": false,
+    "nativeMacValidation": false
+  },
+  "completedUtc": "2026-10-09T03:17:57.695230+00:00"
+}

@@ -1,0 +1,1 @@
+import{build}from'esbuild';await build({entryPoints:{main:'server/main.ts',users:'scripts/users.ts'},outdir:'dist/server',outExtension:{'.js':'.mjs'},bundle:true,platform:'node',target:'node24',format:'esm',packages:'external',sourcemap:false});

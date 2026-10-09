@@ -1,0 +1,25 @@
+{
+  "name": "qingdan-desktop-bundled",
+  "productName": "Qingdan",
+  "version": "1.1.0",
+  "private": true,
+  "main": "src/main.cjs",
+  "author": "Independent Qingdan project",
+  "description": "Qingdan desktop with automatic embedded local backend and optional private server",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.cjs",
+    "check": "node scripts/check.cjs && npm test",
+    "package:linux:dir": "node scripts/package.cjs linux --dir",
+    "package:win:zip": "node scripts/package.cjs win --zip --x64",
+    "package:mac:dir": "node scripts/package.cjs mac --dir --arm64"
+  },
+  "devDependencies": {
+    "electron": "44.6.0",
+    "electron-builder": "26.15.3"
+  }
+}

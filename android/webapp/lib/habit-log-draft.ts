@@ -1,0 +1,4 @@
+import type{AppRecord,RecordData}from'./types';
+export function habitLogRecordId(habitId:string,date:string){return'habitlog:'+habitId+':'+date}
+export function habitLogFields(record:AppRecord):RecordData{return{habitId:record.data.habitId||'',date:record.data.date||'',value:record.data.value??0,note:record.data.note||'',mood:record.data.mood||'neutral'}}
+export function habitLogPayload(fields:RecordData,habitId:string,date:string):RecordData{if(fields.habitId!==habitId||fields.date!==date)throw new Error('日志习惯/日期与当前上下文不一致，请导出并核对草稿。');if(typeof fields.value!=='number'||!Number.isFinite(fields.value)||fields.value<0||fields.value>100000)throw new Error('记录数量需要0–100000。');if(!['great','good','neutral','low','bad'].includes(fields.mood||''))throw new Error('请选择有效心情。');return{habitId,date,value:fields.value,note:fields.note||'',mood:fields.mood}}

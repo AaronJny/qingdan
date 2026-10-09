@@ -1,0 +1,65 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'cn.qingdan.android'
+    compileSdk 36
+    useLibrary 'android.test.runner', false
+    useLibrary 'android.test.base', false
+    defaultConfig {
+        applicationId 'cn.qingdan.android'
+        minSdk 26
+        targetSdk 36
+        versionCode 1
+        versionName '0.1.0'
+        testInstrumentationRunner 'android.test.InstrumentationTestRunner'
+    }
+    // This deliverable is intentionally unsigned. Do not generate a debug key.
+    buildTypes {
+        debug { signingConfig = null }
+        release {
+            signingConfig = null
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+tasks.register('verifyBundledWeb') {
+    doLast {
+        def root = file('src/main/assets/web')
+        if (!new File(root, 'index.html').isFile() || !new File(root, 'assets').isDirectory()) {
+            throw new GradleException('Bundle the Android SPA into app/src/main/assets/web before building. See README.md.')
+        }
+    }
+}
+tasks.named('preBuild').configure { dependsOn 'verifyBundledWeb' }
+
+tasks.register('compileSecurityPolicy', JavaCompile) {
+    source = files('src/main/java/cn/qingdan/android/OriginPolicy.java', 'src/main/java/cn/qingdan/android/ExportPayload.java', 'src/main/java/cn/qingdan/android/ExportBuffer.java', 'src/test/java/cn/qingdan/android/SecurityPolicyTest.java')
+    classpath = files()
+    destinationDirectory = layout.buildDirectory.dir('security-tests/classes')
+    options.release = 17
+}
+tasks.register('securityTests', JavaExec) {
+    dependsOn 'compileSecurityPolicy'
+    classpath = files(layout.buildDirectory.dir('security-tests/classes'))
+    mainClass = 'cn.qingdan.android.SecurityPolicyTest'
+}
+
+dependencies { implementation 'androidx.sqlite:sqlite-bundled:2.6.2' }
+
+tasks.register('compileLocalStorePolicy', JavaCompile) {
+    source = files('src/main/java/cn/qingdan/android/LocalStorePolicy.java', 'src/test/java/cn/qingdan/android/LocalStorePolicyTest.java')
+    classpath = files()
+    destinationDirectory = layout.buildDirectory.dir('local-store-policy/classes')
+    options.release = 17
+}
+tasks.register('localStorePolicyTests', JavaExec) {
+    dependsOn 'compileLocalStorePolicy'
+    classpath = files(layout.buildDirectory.dir('local-store-policy/classes'))
+    mainClass = 'cn.qingdan.android.LocalStorePolicyTest'
+    args file('../../webapp/drizzle').absolutePath
+}

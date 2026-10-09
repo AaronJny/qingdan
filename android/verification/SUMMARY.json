@@ -1,0 +1,106 @@
+{
+  "schema": "qingdan-android-clean-source-verification-v1",
+  "date": "2026-10-09",
+  "scope": "source copy cleanup and rebuilt bundled web assets only; no new APK",
+  "android_client_version": "0.1.0",
+  "application_id": "cn.qingdan.android",
+  "version_code": 1,
+  "changed_application_source": {
+    "path": "webapp/app/workspace-dialogs.tsx",
+    "sha256": "467c10cf0a629fccee3033bb8a683fb5e581baaff8c3d819a2367d526f295e0d"
+  },
+  "pass": {
+    "typescript": true,
+    "android_web_build": true,
+    "second_build_identical_bundled_assets": 19,
+    "web_assets": 11,
+    "application_pure_tests": 395,
+    "react_ui_tests_rerun": 106,
+    "original_node_server_tests": 3,
+    "android_js_tests": 7,
+    "native_host_policy_assertions_java21": 85,
+    "native_store_policy_checks_java21": 60
+  },
+  "react_ui_first_run": {
+    "passed": 105,
+    "failed": 1,
+    "failed_test": "unknown v2 restore keeps file marker across reopening and exact-content retry confirms one copy",
+    "focused_rerun_passed": 1,
+    "full_rerun_passed": 106,
+    "source_or_tests_changed_between_runs": false,
+    "cause": "not established; timing-sensitive observation"
+  },
+  "dependencies": {
+    "reused_application_node_modules": true,
+    "package_lock_sha256": "5164278c6805e8ce818e580c2200d28eb0b752190c5c703267556035347a9556",
+    "independent_npm_ci_this_revision": false,
+    "temporary_dependency_symlink_removed": true
+  },
+  "bundled_assets_manifest": "../artifacts/BUNDLED-ASSETS.json",
+  "unchanged_migration_files": 6,
+  "license_bytes_unchanged": true,
+  "external_brand_scan": {
+    "hits": 0,
+    "scope": "all delivered Android source, documentation and prebuilt assets, excluding dependencies and temporary build outputs"
+  },
+  "not_verified_this_revision": [
+    "Android SDK/Gradle build",
+    "APK signing or install/upgrade",
+    "SQLite bundled JVM engine rerun",
+    "Android system boot/install/launch and filesystem instrumentation",
+    "Xiaomi 14 Ultra runtime",
+    "real HTTPS account login and offline reopen"
+  ],
+  "signing": {
+    "new_apk_generated": false,
+    "new_signing_key_generated": false,
+    "original_signing_key_available": false,
+    "in_place_upgrade_claimed": false
+  },
+  "native_test_environment": {
+    "java": "21.0.12.1",
+    "compiler": "java -m jdk.compiler/com.sun.tools.javac.Main",
+    "release_17_attempt": "unavailable ct.sym; failed before compilation",
+    "fallback": "current Java 21 compiler and runtime; host-independent policy tests only"
+  },
+  "warnings": [
+    "large Vite main chunk",
+    "ineffective dynamic import",
+    "first UI run had one failure; focused and full reruns passed"
+  ],
+  "historical_baseline": {
+    "android_client_version": "0.1.0",
+    "compile_sdk": 36,
+    "min_sdk": 26,
+    "target_sdk": 36,
+    "pass": {
+      "application_pure_tests": 395,
+      "react_ui_tests": 106,
+      "original_node_server_tests": 3,
+      "android_js_tests": 7,
+      "native_host_policy_assertions": 85,
+      "native_store_policy_checks": 60,
+      "real_androidx_bundled_sqlite_jvm_checks": 30
+    },
+    "not_verified": [
+      "Android system boot/install/launch",
+      "Android filesystem instrumentation execution",
+      "Xiaomi 14 Ultra runtime",
+      "real HTTPS account login and offline reopen"
+    ],
+    "emulator": {
+      "vmx_svm_acceleration_available": false,
+      "attempts_result": "API36 entered Android kernel but guest process was SIGKILLed in software 2GiB and 1GiB attempts. Root cause not established. No install or launch pass.",
+      "booted": false,
+      "transient_debug_keys_cleaned": true
+    },
+    "notifications": "foreground-only; no background/exact guarantee",
+    "source_modules": "old application/server-packaging/desktop unchanged, Android independently adapted",
+    "fresh_source_reproduction": {
+      "fresh_npm_ci": true,
+      "borrowed_dependencies": false,
+      "web_files_hash_matched": 11,
+      "android_js_tests_passed": 7
+    }
+  }
+}
