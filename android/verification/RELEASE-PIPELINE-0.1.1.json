@@ -6,7 +6,7 @@
   "application_id": "cn.qingdan.android",
   "application_baseline_version": "1.0.1",
   "local_pass": {
-    "synthetic_apk_verifier_unit_tests": 24,
+    "synthetic_apk_verifier_unit_tests": 25,
     "shell_syntax": true,
     "python_compile_and_cli": true,
     "native_security_policy_java21_assertions": 85,

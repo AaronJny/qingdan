@@ -39,15 +39,18 @@ function within(directory, candidate) {
 }
 function snapshot(directory, unixModes) {
   realDirectory(directory);
+  // macOS /var and /tmp are ancestor aliases for /private/var and
+  // /private/tmp. Compare lexical and resolved link targets in one root.
+  directory = fs.realpathSync(directory);
   const entries = [];
   const keys = new Set(), links = [];
   const walk = current => {
     for (const name of fs.readdirSync(current).sort()) {
-      const file = path.join(current, name), value = fs.lstatSync(file);
+      const file = path.join(current, name);
       const relative = path.relative(directory, file).split(path.sep).join('/').normalize('NFC');
       const key = relative.toLowerCase();
       assert(!keys.has(key), `Case/Unicode-colliding payload path: ${relative}`); keys.add(key);
-      const entry = { path: relative };
+      const value = fs.lstatSync(file), entry = { path: relative };
       if (value.isSymbolicLink()) {
         assert(unixModes, `Unexpected Windows symlink: ${relative}`);
         entry.type = 'symlink'; entry.target = fs.readlinkSync(file).normalize('NFC');

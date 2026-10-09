@@ -22,15 +22,37 @@ function run(command, args, cwd) {
   const result = spawnSync(command, args, { cwd, stdio: 'inherit', shell: process.platform === 'win32' && command.endsWith('.cmd') });
   if (result.error || result.status !== 0) throw result.error || Error(`${command} failed (${result.status})`);
 }
+function canonicalDestination(destination) {
+  let existing = path.resolve(destination);
+  const missing = [];
+  for (;;) {
+    try {
+      // lstat distinguishes a broken symlink from a genuinely missing path.
+      fs.lstatSync(existing);
+      if (missing.length && !fs.statSync(existing).isDirectory()) throw Error('Backend destination parent must be a real directory.');
+      return path.join(fs.realpathSync(existing), ...missing.reverse());
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      // An existing broken symlink must never be treated as a missing suffix.
+      try { fs.lstatSync(existing); throw Error('Broken symlink in backend destination.'); }
+      catch (probe) { if (probe.code !== 'ENOENT') throw probe; }
+      const parent = path.dirname(existing);
+      if (parent === existing) throw error;
+      missing.push(path.basename(existing)); existing = parent;
+    }
+  }
+}
 function validateDestination(application, destination) {
-  application = fs.realpathSync(path.resolve(application)); destination = path.resolve(destination);
+  application = fs.realpathSync(path.resolve(application));
+  const requestedDestination = path.resolve(destination);
+  destination = canonicalDestination(requestedDestination);
   function within(parent, child) {
     const relative = path.relative(parent, child);
     return !relative || !relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative);
   }
   if (within(application, destination) || within(destination, application)) throw Error('Application and backend destination must not overlap.');
-  if (fs.existsSync(destination)) {
-    const stat = fs.lstatSync(destination);
+  if (fs.existsSync(requestedDestination)) {
+    const stat = fs.lstatSync(requestedDestination);
     if (!stat.isDirectory() || stat.isSymbolicLink()) throw Error('Existing backend destination must be a real generated directory.');
     const manifest = JSON.parse(fs.readFileSync(path.join(destination, 'RUNTIME-MANIFEST.json')));
     if (manifest.product !== 'qingdan-standalone') throw Error('Existing destination is not a generated Qingdan backend.');
@@ -45,8 +67,11 @@ function validateDestination(application, destination) {
   }
 }
 async function prepareBackend(application, destination) {
-  application = path.resolve(application); destination = path.resolve(destination);
+  application = fs.realpathSync(path.resolve(application)); destination = path.resolve(destination);
   validateDestination(application, destination);
+  // Keep staging/replacement on the validated physical path rather than an
+  // ancestor alias that could resolve differently from the source path.
+  destination = canonicalDestination(destination);
   const parent = path.dirname(destination);
   fs.mkdirSync(parent, { recursive: true });
   const stageParent = fs.mkdtempSync(path.join(parent, '.backend-stage-'));
@@ -95,4 +120,4 @@ if (require.main === module) {
   if (args.length > 2) throw Error('Usage: node scripts/prepare-backend.cjs [application-directory] [fresh-or-generated-backend-directory]');
   void prepareBackend(args[0] || path.join(__dirname, '../../application'), args[1] || path.join(__dirname, '../backend')).catch(error => { console.error(error); process.exitCode = 1; });
 }
-module.exports = { prepareBackend, hashFiles, validateDestination };
+module.exports = { prepareBackend, hashFiles, validateDestination, canonicalDestination };

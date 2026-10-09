@@ -10,8 +10,9 @@ android {
         applicationId 'cn.qingdan.android'
         minSdk 26
         targetSdk 36
-        versionCode (System.getenv('QINGDAN_ANDROID_VERSION_CODE') ?: '2').toInteger()
-        versionName System.getenv('QINGDAN_ANDROID_VERSION_NAME') ?: '0.1.1'
+        // Explicit assignment avoids Groovy command-call/Elvis precedence.
+        versionCode = (System.getenv('QINGDAN_ANDROID_VERSION_CODE') ?: '2').toInteger()
+        versionName = (System.getenv('QINGDAN_ANDROID_VERSION_NAME') ?: '0.1.1')
         testInstrumentationRunner 'android.test.InstrumentationTestRunner'
     }
     // This deliverable is intentionally unsigned. Do not generate a debug key.

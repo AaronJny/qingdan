@@ -29,12 +29,13 @@ async function flush() {
   for (let i = 0; i < 12; i++) await Promise.resolve();
 }
 
-async function harness({ platform = 'darwin', initialSelection, initialEnsure, hangPrivateLoad = false } = {}) {
+async function harness({ platform = 'darwin', runtimePath = path, initialSelection, initialEnsure, hangPrivateLoad = false } = {}) {
   const windows = [], handlers = new Map(), sessions = new Map();
   const externalOpens = [], fetches = [], dialogs = [], exits = [], loadTimers = new Set();
   const files = new Map(), moduleCache = new Map();
-  const profile = '/mock-app-data/QingdanDesktop';
-  const connectionFile = path.join(profile, 'connection.json');
+  const appData = runtimePath.join(runtimePath.sep, 'mock-app-data');
+  const profile = runtimePath.join(appData, 'QingdanDesktop');
+  const connectionFile = runtimePath.join(profile, 'connection.json');
   if (initialSelection) files.set(connectionFile, JSON.stringify({ schemaVersion: 3, ...initialSelection }));
   let menu, deferDialogs = false, synchronousChoice = 0, writeFailure = false, probeFailure = false;
 
@@ -45,7 +46,7 @@ async function harness({ platform = 'darwin', initialSelection, initialEnsure, h
         const value = files.get(file);
         return encoding ? value : Buffer.from(value);
       }
-      if (file === path.join(root, 'src/defaults.json')) return fs.readFileSync(file, encoding);
+      if (file === runtimePath.join(root, 'src', 'defaults.json')) return fs.readFileSync(path.join(root, 'src', 'defaults.json'), encoding);
       throw Object.assign(new Error('Not found in mock filesystem'), { code: 'ENOENT' });
     },
     writeFileSync(file, value) {
@@ -92,7 +93,7 @@ async function harness({ platform = 'darwin', initialSelection, initialEnsure, h
 
   const app = new EventEmitter();
   Object.assign(app, {
-    isPackaged: true, paths: { appData: '/mock-app-data' }, quitCalls: 0,
+    isPackaged: true, paths: { appData }, quitCalls: 0,
     enableSandbox() { this.sandboxEnabled = true; }, setName() {}, setAppUserModelId() {},
     getPath(key) { return this.paths[key]; }, setPath(key, value) { this.paths[key] = value; },
     requestSingleInstanceLock: () => true, isReady: () => true,
@@ -185,6 +186,7 @@ async function harness({ platform = 'darwin', initialSelection, initialEnsure, h
     const localRequire = name => {
       if (name === 'electron') return electron;
       if (name === 'node:fs') return memoryFs;
+      if (name === 'node:path') return runtimePath;
       if (['node:net', 'node:http', 'node:https', 'node:child_process'].includes(name)) throw new Error(`Real IO module forbidden: ${name}`);
       if (name === './backend-manager.cjs') return { createBackendManager: () => backend };
       if (name === '../package.json') return { qingdanReleaseChannel: 'preview' };
@@ -208,7 +210,7 @@ async function harness({ platform = 'darwin', initialSelection, initialEnsure, h
   const event = window => ({ sender: window.webContents, senderFrame: window.webContents.mainFrame });
   return {
     app, backend, windows, sessions, externalOpens, fetches, dialogs, exits, files, connectionFile,
-    event, menuItem, liveMain: () => windows.filter(window => !window.destroyed && window.options.webPreferences.preload?.endsWith('/service-preload.cjs')),
+    event, menuItem, liveMain: () => windows.filter(window => !window.destroyed && window.options.webPreferences.preload && runtimePath.basename(window.options.webPreferences.preload) === 'service-preload.cjs'),
     openSettings() { menuItem('服务器连接').click(); return windows.at(-1); },
     get(window) { return handlers.get('qingdan-connection:get')(event(window)); },
     save(window, value) { return handlers.get('qingdan-connection:save')(event(window), value); },
@@ -226,13 +228,28 @@ async function harness({ platform = 'darwin', initialSelection, initialEnsure, h
 
 test('default builtin selection ensures owned backend before loading UI and never forks a real process', async () => {
   const h = await harness();
-  assert.equal(h.app.getPath('userData'), '/mock-app-data/QingdanDesktop');
+  assert.equal(h.app.getPath('userData'), path.join(h.app.getPath('appData'), 'QingdanDesktop'));
   assert.equal(h.backend.ensureCalls, 1);
   const main = h.liveMain()[0];
   assert.ok(main); assert.equal(main.lastUrl, `${ownedOrigin}/`);
   assert.equal(main.options.webPreferences.preload, path.join(root, 'src/service-preload.cjs'));
   assert.equal(main.options.webPreferences.sandbox, true);
   assert.ok(h.fetches.every(item => item.url === `${ownedOrigin}/api/app-info` && item.options.credentials === 'omit'));
+});
+
+test('REGRESSION: Windows path separators preserve profile, stored selection and main-window discovery', async () => {
+  const h = await harness({ platform: 'win32', runtimePath: path.win32, initialSelection: { mode: 'server', serverUrl: privateUrl } });
+  assert.equal(h.app.getPath('userData'), path.win32.join(path.win32.sep, 'mock-app-data', 'QingdanDesktop'));
+  assert.equal(h.connectionFile, path.win32.join(h.app.getPath('userData'), 'connection.json'));
+  const original = h.liveMain()[0], settings = h.openSettings();
+  assert.ok(original); assert.equal(original.lastUrl, privateUrl);
+  assert.equal(original.options.webPreferences.preload, path.win32.join(root, 'src', 'service-preload.cjs'));
+  assert.equal(h.backend.ensureCalls, 0);
+  assert.equal(h.liveMain().length, 1, 'Settings preload must not be mistaken for the service preload');
+  assert.equal((await h.save(settings, { mode: 'builtin' })).ok, true);
+  assert.equal(original.destroyed, true); assert.equal(settings.destroyed, false);
+  assert.equal(h.liveMain().length, 1); assert.equal(h.liveMain()[0].lastUrl, `${ownedOrigin}/`);
+  assert.deepEqual(JSON.parse(h.files.get(h.connectionFile)), { schemaVersion: 3, mode: 'builtin', serverUrl: '' });
 });
 
 test('explicit server selection does not start builtin backend and settings IPC rejects remote/forged senders', async () => {

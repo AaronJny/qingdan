@@ -16,7 +16,7 @@ if (windows) {
   const originalLstat = fs.lstatSync;
   test.mock.method(fs, 'lstatSync', function(file, ...args) {
     const value = originalLstat.call(fs, file, ...args);
-    if (String(file).includes('qingdan-artifact-unit-') && String(file).includes(path.sep + 'MacOS' + path.sep) && value.isFile()) value.mode |= 0o111;
+    if ((String(file).includes('qingdan-artifact-unit-') || String(file).includes('qingdan-archive-verify-')) && String(file).includes(path.sep + 'MacOS' + path.sep) && value.isFile()) value.mode |= 0o111;
     return value;
   });
 }
@@ -81,11 +81,38 @@ test('full payload comparison checks nested resources, permissions and framework
   assert.deepEqual(verifier.snapshot(app, true), before);
 });
 test('payload inventory rejects collisions, unsupported files and unexpected Windows links', t => {
-  const directory = fixture(t); put(directory, 'First'); put(directory, 'first');
+  const directory = fixture(t); put(directory, 'First');
+  // A case-insensitive filesystem cannot physically retain both names.
+  // Inject enumeration to exercise collision rejection on macOS and NTFS too.
+  const canonical = fs.realpathSync(directory), readDirectory = fs.readdirSync;
+  const listing = t.mock.method(fs, 'readdirSync', function(current, ...args) {
+    return String(current) === canonical ? ['First', 'first'] : readDirectory.call(fs, current, ...args);
+  });
   assert.throws(() => verifier.snapshot(directory, false), /colliding payload/);
+  listing.mock.restore();
   if (!windows) {
-    fs.unlinkSync(path.join(directory, 'first')); fs.symlinkSync('First', path.join(directory, 'link'));
+    fs.symlinkSync('First', path.join(directory, 'link'));
     assert.throws(() => verifier.snapshot(directory, false), /Unexpected Windows symlink/);
+  }
+});
+
+test('archive snapshots canonicalize ancestor aliases without allowing lexical or resolved bundle escapes', t => {
+  const directory = fixture(t), original = path.join(directory, 'original');
+  const app = macFixture(original), alias = path.join(directory, 'alias');
+  fs.symlinkSync(original, alias, windows ? 'junction' : 'dir');
+  const aliasedApp = path.join(alias, '青单.app');
+  assert.deepEqual(verifier.snapshot(aliasedApp, true), verifier.snapshot(app, true));
+  assert.equal(verifier.comparePayload(app, aliasedApp, true).allFileBytesMatched, true);
+  if (!windows) {
+    const resources = path.join(app, 'Contents', 'Resources');
+    const outside = path.join(directory, 'outside'); put(outside, 'secret', 'fixture secret');
+    fs.symlinkSync(outside, path.join(resources, 'outside'));
+    assert.throws(() => verifier.snapshot(aliasedApp, true), /External bundle symlink/);
+    fs.unlinkSync(path.join(resources, 'outside'));
+    // Ancestor alias resolves outside although the link text is inside the app.
+    fs.symlinkSync(outside, path.join(resources, 'chain'));
+    fs.symlinkSync('chain/secret', path.join(resources, 'first-chain'));
+    assert.throws(() => verifier.snapshot(aliasedApp, true), /External bundle symlink/);
   }
 });
 test('macOS verifies Chinese identity, helpers, icon, version, executable permissions and runtime notices', t => {

@@ -70,3 +70,33 @@ test('known old generated backend can be regenerated, but user data blocks repla
   assert.throws(() => validateDestination(source, destination), /user data/);
   assert(fs.existsSync(path.join(destination, 'data')));
 });
+
+
+test('backend destination canonicalization rejects overlap through ancestor aliases and missing suffixes', t => {
+  const { validateDestination, canonicalDestination } = require('../scripts/prepare-backend.cjs');
+  const base = fixture(t), source = path.join(base, 'application'), alias = path.join(base, 'alias');
+  fs.mkdirSync(source); fs.symlinkSync(base, alias, process.platform === 'win32' ? 'junction' : 'dir');
+  const sourceAlias = path.join(alias, 'application');
+  assert.equal(canonicalDestination(path.join(sourceAlias, 'missing', 'backend')), path.join(fs.realpathSync(source), 'missing', 'backend'));
+  assert.throws(() => validateDestination(source, sourceAlias), /overlap/);
+  assert.throws(() => validateDestination(source, path.join(sourceAlias, 'missing', 'backend')), /overlap/);
+  assert.throws(() => validateDestination(sourceAlias, source), /overlap/);
+  assert.throws(() => validateDestination(sourceAlias, alias), /overlap/);
+  assert.doesNotThrow(() => validateDestination(sourceAlias, path.join(alias, 'separate', 'missing', 'backend')));
+  assert(!fs.existsSync(path.join(base, 'separate')), 'validation must not create any paths');
+});
+test('backend canonicalization fails closed for broken links, non-directory parents and terminal directory links', t => {
+  const { validateDestination, canonicalDestination } = require('../scripts/prepare-backend.cjs');
+  const source = fixture(t), base = fixture(t);
+  const ordinaryFile = path.join(base, 'file'); fs.writeFileSync(ordinaryFile, 'fixture');
+  assert.throws(() => canonicalDestination(path.join(ordinaryFile, 'child')));
+  const generated = path.join(base, 'generated'); fs.mkdirSync(generated);
+  fs.writeFileSync(path.join(generated, 'RUNTIME-MANIFEST.json'), JSON.stringify({ product: 'qingdan-standalone' }));
+  const linked = path.join(base, 'linked'); fs.symlinkSync(generated, linked, process.platform === 'win32' ? 'junction' : 'dir');
+  assert.throws(() => validateDestination(source, linked), /real generated directory/);
+  if (process.platform !== 'win32') {
+    const broken = path.join(base, 'broken'); fs.symlinkSync(path.join(base, 'absent'), broken);
+    assert.throws(() => canonicalDestination(broken), /Broken symlink/);
+    assert.throws(() => canonicalDestination(path.join(broken, 'new', 'backend')), /Broken symlink/);
+  }
+});

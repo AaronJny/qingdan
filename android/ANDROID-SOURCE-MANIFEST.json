@@ -105,8 +105,8 @@
     },
     {
       "path": "VERIFICATION.md",
-      "bytes": 7953,
-      "sha256": "0753a9d7167ed67b97f060095cc82f6eafaaada3b8a9e2d8c7f236e246035a3c"
+      "bytes": 8527,
+      "sha256": "029deea5b9e6998196a2171021db3c80408f551be154cabc8c0b87b9e8e4f97d"
     },
     {
       "path": "android/.gitignore",
@@ -125,8 +125,8 @@
     },
     {
       "path": "android/app/build.gradle",
-      "bytes": 2668,
-      "sha256": "4984351c35903baffee2fa66b760c189e59fd3c58e6555376fae31f8c6864538"
+      "bytes": 2750,
+      "sha256": "6ef9abbcb31fda67a487fd98d43feb16fd9fa4e459c9b87ff5ba71298f0d360b"
     },
     {
       "path": "android/app/src/androidTest/AndroidManifest.xml",
@@ -330,8 +330,8 @@
     },
     {
       "path": "scripts/verify-apk.py",
-      "bytes": 11877,
-      "sha256": "8529d4c960f7b0bccb92926ab287468359e8880cb6d9b3e58075862605144a2b"
+      "bytes": 12130,
+      "sha256": "97facd610861f2c6aed2acb1cbce9f93ada492e22bbbca0e82d5227e8a6cb458"
     },
     {
       "path": "tests/android-adapter.test.mjs",
@@ -345,8 +345,8 @@
     },
     {
       "path": "tests/test_apk_verification.py",
-      "bytes": 11601,
-      "sha256": "95047c5aab10ef306fb358cdab1d076700af0bf58a4a0d4aa8c7e52ef6a38cc6"
+      "bytes": 12431,
+      "sha256": "a2136be1e05275208a962ae485a918f0ae3bef635208c6efae568dbcf678bbd2"
     },
     {
       "path": "verification/APK-INDEPENDENT-VERIFICATION.json",
@@ -371,7 +371,7 @@
     {
       "path": "verification/RELEASE-PIPELINE-0.1.1.json",
       "bytes": 1254,
-      "sha256": "733bd4dc952b66c7c8f5f7b263f894c4d87cea7f7b5746f9ce3a1aeb237cc703"
+      "sha256": "6bab9bc60e7f02871eb14a5229a77c1aab3d29d8c992ec9deb83ca5e4da1ac6d"
     },
     {
       "path": "verification/SUMMARY.json",
@@ -1498,6 +1498,6 @@
   "source_revision": "2026-10-09-release-pipeline",
   "source_scope": "Android0.1.1 release source and signing/verification pipeline; generated current web assets and signed APK require the actual Actions run",
   "inventory_sha256_method": "SHA256 of UTF-8 lines: <sha256><two spaces><relative path><LF>, ordered lexicographically by path; includes every non-ignored delivered source file except this manifest.",
-  "inventory_sha256": "2971bd057d4509cbc5e5bfbbb9ce5904ef9c73fffa5e9f831217ad0ba90a62cf",
+  "inventory_sha256": "62c56ca7734a6a09c277ca5019268b86096deb8eb3e47eedd3367e8481aece21",
   "version_code": 2
 }

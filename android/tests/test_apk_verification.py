@@ -200,6 +200,18 @@ class ApkVerificationTests(unittest.TestCase):
             identity = verifier.source_identity()
             self.assertEqual((identity["version_name"], identity["version_code"]), ("0.1.2", 3))
 
+    def test_groovy_version_properties_require_explicit_assignment(self):
+        # Regression guard for the actual Actions evaluation failure. This is
+        # a source-syntax guard, not a substitute for a real Gradle invocation.
+        source = (ROOT / "android/app/build.gradle").read_text()
+        config = self.root / "android/app/build.gradle"
+        config.parent.mkdir(parents=True, exist_ok=True)
+        for property_name in ("versionCode", "versionName"):
+            config.write_text(source.replace(property_name + " =", property_name, 1))
+            with self.subTest(property_name=property_name), patch.object(verifier, "ROOT", self.root):
+                with self.assertRaisesRegex(verifier.VerificationError, property_name + " must use explicit assignment"):
+                    verifier.source_identity()
+
     def test_signing_missing_gate_reports_names_without_values(self):
         environment = {name: value for name, value in os.environ.items() if name not in SIGNING_NAMES}
         result = subprocess.run(["bash", str(ROOT / "scripts/sign-release.sh"), "--check-env"], env=environment, text=True, capture_output=True)

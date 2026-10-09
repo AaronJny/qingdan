@@ -33,6 +33,9 @@ def require(condition, message):
 
 def source_identity():
     text = (ROOT / "android/app/build.gradle").read_text()
+    for property_name in ("versionCode", "versionName"):
+        require(re.search(r"^\s*" + property_name + r"\s*=", text, re.MULTILINE) is not None,
+                f"{property_name} must use explicit assignment to avoid Groovy command-call parsing")
     patterns = {
         "application_id": r"applicationId\s+['\"]([^'\"]+)['\"]",
         "version_name": r"versionName[^\n]*\?:\s*['\"]([^'\"]+)['\"]",
