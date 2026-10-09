@@ -1,0 +1,42 @@
+name: 青单发布恢复
+
+on:
+  push:
+    branches: ['main']
+    paths: ['.github/release/repair-request.json']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  publish-verified:
+    name: 仅恢复已通过五平台验收的原始成品发布
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: 验证原始构建门禁与未改变的应用快照
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/release/repair.py
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.source.outputs.source-run-id }}
+          pattern: '*-${{ steps.source.outputs.source-commit }}'
+          path: release-assets
+          merge-multiple: true
+      - name: 精确核验原始成品并恢复正式 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_COMMIT: ${{ steps.source.outputs.source-commit }}
+          SOURCE_RUN_ID: ${{ steps.source.outputs.source-run-id }}
+        run: python3 .github/release/publish.py --assets release-assets --android-result success --source-commit "$SOURCE_COMMIT" --source-run-id "$SOURCE_RUN_ID"
