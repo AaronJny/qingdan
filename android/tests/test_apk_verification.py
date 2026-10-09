@@ -6,6 +6,7 @@ cryptographic verification, install or device launch.
 import importlib.util
 import os
 from pathlib import Path
+import re
 import struct
 import subprocess
 import tempfile
@@ -211,6 +212,25 @@ class ApkVerificationTests(unittest.TestCase):
             with self.subTest(property_name=property_name), patch.object(verifier, "ROOT", self.root):
                 with self.assertRaisesRegex(verifier.VerificationError, property_name + " must use explicit assignment"):
                     verifier.source_identity()
+
+    def test_android_test_fixtures_avoid_newer_jdk_library_apis(self):
+        # These main-method policy tests also compile against the Android
+        # bootclasspath in testReleaseUnitTest. Guard the observed missing API
+        # and similar JDK conveniences, without claiming an actual SDK compile.
+        unsupported = re.compile(
+            r"\bFiles\.(?:readString|writeString)\s*\("
+            r"|\bPath\.of\s*\("
+            r"|\b(?:List|Map|Set)\.of\s*\("
+            r"|\.(?:repeat|strip|stripLeading|stripTrailing|isBlank)\s*\("
+            r"|(?<!Collectors)\.toList\s*\("
+        )
+        sources = sorted((ROOT / "android/app/src/test").rglob("*.java"))
+        self.assertGreater(len(sources), 0)
+        for path in sources:
+            with self.subTest(path=path.name):
+                self.assertIsNone(unsupported.search(path.read_text()))
+        local_store = (ROOT / "android/app/src/test/java/cn/qingdan/android/LocalStorePolicyTest.java").read_text()
+        self.assertIn("new String(Files.readAllBytes(path), StandardCharsets.UTF_8)", local_store)
 
     def test_signing_missing_gate_reports_names_without_values(self):
         environment = {name: value for name, value in os.environ.items() if name not in SIGNING_NAMES}

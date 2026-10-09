@@ -2,7 +2,10 @@ package cn.qingdan.android;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /** Run with javac/java without Android SDK; no mock Android behavior is claimed. */
 public final class LocalStorePolicyTest {
@@ -11,7 +14,7 @@ public final class LocalStorePolicyTest {
         for (String key : new String[]{"local:0123/att:abc", "背景/图片.png", "plain", "emoji/😀"}) {
             LocalStorePolicy.validateObjectKey(key); checks++;
         }
-        for (String key : new String[]{"", "/etc/passwd", "../x", "x/..", "x/./y", "x//y", "x/", "a\\b", "a\0b", "x\n", "x\u007f", "\ud800", "\udc00", "😀".repeat(257)}) {
+        for (String key : new String[]{"", "/etc/passwd", "../x", "x/..", "x/./y", "x//y", "x/", "a\\b", "a\0b", "x\n", "x\u007f", "\ud800", "\udc00", repeat("😀", 257)}) {
             rejects(() -> LocalStorePolicy.validateObjectKey(key));
         }
         LocalStorePolicy.Sql read = LocalStorePolicy.inspectSql("/* safe */ SELECT ?, NULL, 1.5, 'semi; ? _qingdan_runtime' FROM records WHERE id=?;");
@@ -33,9 +36,9 @@ public final class LocalStorePolicyTest {
         check(split.get(1).contains("'a;''b'"));
         if (arguments.length == 1) {
             int total = 0;
-            try (var files = Files.list(Path.of(arguments[0]))) {
-                for (Path path : files.filter(p -> p.toString().endsWith(".sql")).sorted().toList()) {
-                    String sql = Files.readString(path);
+            try (var files = Files.list(Paths.get(arguments[0]))) {
+                for (Path path : files.filter(p -> p.toString().endsWith(".sql")).sorted().collect(Collectors.toList())) {
+                    String sql = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
                     List<String> statements = LocalStorePolicy.splitStatements(sql);
                     check(!statements.isEmpty()); total += statements.size();
                 }
@@ -46,4 +49,9 @@ public final class LocalStorePolicyTest {
     }
     private static void check(boolean condition) { checks++; if (!condition) throw new AssertionError("Check " + checks + " failed"); }
     private static void rejects(Runnable action) { checks++; try { action.run(); } catch (IllegalArgumentException expected) { return; } throw new AssertionError("Rejection " + checks + " failed"); }
+    private static String repeat(String value, int count) {
+        StringBuilder result = new StringBuilder(value.length() * count);
+        for (int i = 0; i < count; i++) result.append(value);
+        return result.toString();
+    }
 }

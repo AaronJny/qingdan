@@ -9,6 +9,10 @@ const { EventEmitter } = require('node:events');
 const { createBackendManager, buildBackendEnvironment, validPort, reserveLoopbackPort } = require('../src/backend-manager.cjs');
 
 const info = Object.freeze({ app: 'qingdan', version: '1.0.0', mode: 'local' });
+const immutableRoot = path.resolve(path.sep, 'immutable');
+const backendRoot = path.join(immutableRoot, 'backend');
+const bootstrapPath = path.join(immutableRoot, 'src', 'backend-bootstrap.cjs');
+const dataDir = path.resolve(path.sep, 'profile', 'local-data');
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 class FakeChild extends EventEmitter {
@@ -36,7 +40,7 @@ function fixture(t, options = {}) {
   const children = [], reservations = [], forks = [];
   let nextPort = 51000;
   const manager = createBackendManager({
-    userData, backendRoot: '/immutable/backend', bootstrapPath: '/immutable/src/backend-bootstrap.cjs',
+    userData, backendRoot, bootstrapPath,
     utilityProcess: { fork(file, args, childOptions) {
       forks.push({ file, args, options: childOptions });
       const child = new FakeChild(args, childOptions, options.childBehaviour);
@@ -58,16 +62,16 @@ function fixture(t, options = {}) {
 test('closed environment keeps runtime necessities and fixes local configuration', () => {
   const env = buildBackendEnvironment({ HOME: '/owner', SystemRoot: 'C:\\Windows', TEMP: '/tmp', LANG: 'en_US', TZ: 'UTC',
     PATH: '/secret/bin', API_KEY: 'secret', NODE_OPTIONS: '--inspect', NODE_INSPECT_RESUME_ON_START: '1',
-    ELECTRON_RUN_AS_NODE: '1', QINGDAN_MODE: 'accounts', APP_MODE: 'accounts', APP_ORIGIN: 'https://bad', PUBLIC_URL: 'https://bad' }, 43210, '/profile/local-data');
+    ELECTRON_RUN_AS_NODE: '1', QINGDAN_MODE: 'accounts', APP_MODE: 'accounts', APP_ORIGIN: 'https://bad', PUBLIC_URL: 'https://bad' }, 43210, dataDir);
   assert.deepEqual(env, { HOME: '/owner', SystemRoot: 'C:\\Windows', TEMP: '/tmp', LANG: 'en_US', TZ: 'UTC',
     APP_MODE: 'local', QINGDAN_MODE: 'local', HOST: '127.0.0.1', PORT: '43210',
-    APP_ORIGIN: 'http://127.0.0.1:43210', QINGDAN_DATA_DIR: '/profile/local-data' });
+    APP_ORIGIN: 'http://127.0.0.1:43210', QINGDAN_DATA_DIR: dataDir });
 });
 
 test('invalid and zero ports or relative data paths are rejected', () => {
   for (const port of [0, -1, 65536, 1.1, '4310', NaN, Infinity]) {
     assert.equal(validPort(port), false);
-    assert.throws(() => buildBackendEnvironment({}, port, '/profile/local-data'), { code: 'INVALID_PORT' });
+    assert.throws(() => buildBackendEnvironment({}, port, dataDir), { code: 'INVALID_PORT' });
   }
   assert.throws(() => buildBackendEnvironment({}, 4310, './data'), { code: 'INVALID_DATA_DIR' });
 });
@@ -84,8 +88,8 @@ test('duplicate ensure shares one startup, exact owned readiness, immutable fork
   assert.equal(await first, 'http://127.0.0.1:51000');
   assert.equal(await f.manager.ensureLocal(), 'http://127.0.0.1:51000');
   assert.equal(f.children.length, 1);
-  assert.equal(f.forks[0].file, '/immutable/src/backend-bootstrap.cjs');
-  assert.deepEqual(f.forks[0].args.slice(1), ['/immutable/backend']);
+  assert.equal(f.forks[0].file, bootstrapPath);
+  assert.deepEqual(f.forks[0].args.slice(1), [backendRoot]);
   assert.deepEqual(Object.keys(f.forks[0].options).sort(), ['env', 'serviceName', 'stdio']);
   assert.equal(f.forks[0].options.stdio, 'ignore');
   assert.equal(f.forks[0].options.env.QINGDAN_DATA_DIR, path.join(f.userData, 'local-data'));
@@ -93,6 +97,20 @@ test('duplicate ensure shares one startup, exact owned readiness, immutable fork
   assert.equal(f.forks[0].options.env.API_KEY, undefined);
   assert.deepEqual(JSON.parse(fs.readFileSync(path.join(f.userData, 'local-backend.json'))), { version: 1, port: 51000 });
   assert.deepEqual(fs.readdirSync(f.userData).sort(), ['local-backend.json', 'local-data']);
+  await f.manager.stop();
+});
+
+test('REGRESSION: native absolute Unicode paths remain exact fork filenames and arguments', async t => {
+  const expectedRoot = path.join(immutableRoot, '青单 backend #100%');
+  const expectedBootstrap = path.join(immutableRoot, '青单 src #100%', 'backend-bootstrap.cjs');
+  const f = fixture(t, {
+    manager: { backendRoot: expectedRoot, bootstrapPath: expectedBootstrap },
+    onFork: child => setImmediate(() => child.ready()),
+  });
+  await f.manager.ensureLocal();
+  assert.equal(path.isAbsolute(f.forks[0].file), true);
+  assert.equal(f.forks[0].file, expectedBootstrap);
+  assert.deepEqual(f.forks[0].args.slice(1), [expectedRoot]);
   await f.manager.stop();
 });
 

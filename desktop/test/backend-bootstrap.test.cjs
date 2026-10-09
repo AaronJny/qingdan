@@ -2,37 +2,43 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const path = require('node:path');
+const { pathToFileURL, fileURLToPath } = require('node:url');
 const { EventEmitter } = require('node:events');
 const { buildBackendEnvironment } = require('../src/backend-manager.cjs');
 const { launchConfiguration, observeStartupListen, probeLocalInfo, startBootstrap } = require('../src/backend-bootstrap.cjs');
 
 const info = { app: 'qingdan', version: '1.0.0', mode: 'local' };
+const immutableRoot = path.resolve(path.sep, 'immutable');
+const defaultBackendRoot = path.join(immutableRoot, 'backend');
+const bootstrapPath = path.join(immutableRoot, 'src', 'backend-bootstrap.cjs');
+const dataDir = path.resolve(path.sep, 'profile', 'local-data');
 const tick = () => new Promise(resolve => setImmediate(resolve));
-function bootstrapFixture() {
+function bootstrapFixture({ backendRoot = defaultBackendRoot } = {}) {
   class Server extends EventEmitter {
     listen(port, host) { this.bound = { address: host, port }; setImmediate(() => this.emit('listening')); return this; }
     address() { return this.bound; }
   }
   const process_ = new EventEmitter();
-  process_.env = buildBackendEnvironment({ HOME: '/owner' }, 54000, '/profile/local-data');
-  process_.argv = ['electron', '/immutable/src/backend-bootstrap.cjs', 'launch-123', '/immutable/backend'];
+  process_.env = buildBackendEnvironment({ HOME: '/owner' }, 54000, dataDir);
+  process_.argv = ['electron', bootstrapPath, 'launch-123', backendRoot];
   process_.exits = []; process_.exit = code => process_.exits.push(code);
   const parentPort = new EventEmitter(); parentPort.messages = [];
   parentPort.postMessage = message => parentPort.messages.push(message);
-  return { http: { Server }, process: process_, parentPort, probe: async () => info };
+  return { backendRoot, http: { Server }, process: process_, parentPort, probe: async () => info };
 }
 
 test('launch arguments require exact nonzero literal loopback local configuration', () => {
-  const env = buildBackendEnvironment({}, 54000, '/profile/local-data');
-  assert.deepEqual(launchConfiguration(['launch-123', '/immutable/backend'], env), {
-    launchId: 'launch-123', backendRoot: '/immutable/backend', port: 54000, origin: 'http://127.0.0.1:54000',
+  const env = buildBackendEnvironment({}, 54000, dataDir);
+  assert.deepEqual(launchConfiguration(['launch-123', defaultBackendRoot], env), {
+    launchId: 'launch-123', backendRoot: defaultBackendRoot, port: 54000, origin: 'http://127.0.0.1:54000',
   });
   for (const patch of [{ PORT: '0' }, { PORT: '054000' }, { PORT: '54000.0' }, { PORT: '65536' },
     { HOST: 'localhost' }, { HOST: '0.0.0.0' }, { APP_MODE: 'accounts' }, { QINGDAN_MODE: 'accounts' },
     { APP_ORIGIN: 'http://127.0.0.1:54000/' }, { QINGDAN_DATA_DIR: 'data' }]) {
-    assert.throws(() => launchConfiguration(['launch-123', '/immutable/backend'], { ...env, ...patch }), { code: 'INVALID_CONFIGURATION' });
+    assert.throws(() => launchConfiguration(['launch-123', defaultBackendRoot], { ...env, ...patch }), { code: 'INVALID_CONFIGURATION' });
   }
-  for (const args of [['launch-123', 'relative'], ['launch with spaces', '/immutable/backend'], ['launch-123', '/immutable/backend', 'extra']]) {
+  for (const args of [['launch-123', 'relative'], ['launch with spaces', defaultBackendRoot], ['launch-123', defaultBackendRoot, 'extra']]) {
     assert.throws(() => launchConfiguration(args, env), { code: 'INVALID_CONFIGURATION' });
   }
 });
@@ -62,7 +68,7 @@ test('readiness requires own listening event, completed import and compatible ap
   const f = bootstrapFixture(); const original = f.http.Server.prototype.listen;
   let imported = false, probes = 0;
   f.importMain = async url => {
-    assert.equal(url, 'file:///immutable/backend/dist/server/main.mjs');
+    assert.equal(url, pathToFileURL(path.join(f.backendRoot, 'dist', 'server', 'main.mjs')).href);
     const server = new f.http.Server(); server.listen(54000, '127.0.0.1');
     await tick(); assert.equal(f.parentPort.messages.length, 0);
     imported = true; f.process.on('SIGTERM', () => {});
@@ -71,6 +77,22 @@ test('readiness requires own listening event, completed import and compatible ap
   await startBootstrap(f);
   assert.equal(probes, 1); assert.equal(f.http.Server.prototype.listen, original);
   assert.deepEqual(f.parentPort.messages, [{ kind: 'qingdan-backend-ready', address: '127.0.0.1', port: 54000, info, launchId: 'launch-123' }]);
+});
+
+test('REGRESSION: native absolute backend paths become escaped file URLs before import', async () => {
+  const f = bootstrapFixture({ backendRoot: path.join(immutableRoot, '青单 backend #100%') });
+  let importedUrl;
+  f.importMain = async url => {
+    importedUrl = url;
+    assert.equal(fileURLToPath(url), path.join(f.backendRoot, 'dist', 'server', 'main.mjs'));
+    assert.ok(url.includes('%20')); assert.ok(url.includes('%23')); assert.ok(url.includes('%25'));
+    assert.equal(new URL(url).hash, '');
+    f.process.on('SIGTERM', () => {});
+    new f.http.Server().listen(54000, '127.0.0.1'); await tick();
+  };
+  await startBootstrap(f);
+  assert.ok(importedUrl);
+  assert.equal(f.parentPort.messages[0].kind, 'qingdan-backend-ready');
 });
 
 test('finished import or a compatible foreign HTTP response alone cannot produce readiness', async () => {

@@ -56,8 +56,8 @@ public final class SecurityPolicyTest {
         for (String invalid : new String[]{"https://export?filename=x&mime=x&data=YQ==", "qingdanapp://other?filename=x&mime=x&data=YQ==", "qingdanapp://export:1?filename=x&mime=x&data=YQ==", "qingdanapp://user@export?filename=x&mime=x&data=YQ==", "qingdanapp://export/path?filename=x&mime=x&data=YQ==", "qingdanapp://export?filename=x&mime=x&data=YQ==#a", "qingdanapp://export?filename=x&mime=x&data=@@", "qingdanapp://export?filename=x&mime=x&data=YQ==&data=Yg==", "qingdanapp://export?filename=x&data=YQ==", "qingdanapp://export?filename=x&mime=x&data=YQ==&other=x", "qingdanapp://export?filename=%GG&mime=x&data=YQ=="}) invalidExport(invalid);
         check("_etc_passwd".equals(ExportPayload.safeFilename("../etc/passwd")), "filename traversal removed");
         check("application/octet-stream".equals(ExportPayload.safeMime("text/html\r\nX-Header: bad")), "MIME header injection blocked");
-        check(ExportPayload.safeFilename("x".repeat(500)).length() == 120, "filename bounded");
-        invalidExport("qingdanapp://export?filename=x&mime=x&data=" + "A".repeat(((ExportPayload.MAX_URL_BYTES + 2) / 3) * 4 + 4));
+        check(ExportPayload.safeFilename(repeat("x", 500)).length() == 120, "filename bounded");
+        invalidExport("qingdanapp://export?filename=x&mime=x&data=" + repeat("A", ((ExportPayload.MAX_URL_BYTES + 2) / 3) * 4 + 4));
         ExportBuffer buffer = new ExportBuffer();
         check(buffer.begin("x", "text/plain", -1).isEmpty(), "negative export rejected");
         check(buffer.begin("x", "text/plain", ExportPayload.MAX_BYTES + 1L).isEmpty(), "oversize chunk transfer rejected");
@@ -84,5 +84,10 @@ public final class SecurityPolicyTest {
         nonce = buffer.begin("empty", "text/plain", 0);
         check(buffer.complete(nonce).bytes.length == 0, "empty export supported");
         System.out.println("Security policy: " + checks + " assertions passed");
+    }
+    private static String repeat(String value, int count) {
+        StringBuilder result = new StringBuilder(value.length() * count);
+        for (int i = 0; i < count; i++) result.append(value);
+        return result.toString();
     }
 }

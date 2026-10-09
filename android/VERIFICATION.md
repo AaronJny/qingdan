@@ -9,7 +9,7 @@
 
 ## 本地实际完成
 
-- Python验证器与签名环境门禁单元测试25/25通过（包括发布后发现的Groovy版本赋值语法回归门禁）。测试使用合成ZIP/ELF和工具输出字符串，只证明校验逻辑；不把模拟输出当作真实APK或密码学验证。
+- Python验证器与签名环境门禁单元测试26/26通过（包括Groovy版本赋值语法和Android测试编译库API回归门禁）。测试使用合成ZIP/ELF和工具输出字符串，只证明校验逻辑；不把模拟输出当作真实APK或密码学验证。
 - bash -n签名脚本语法、Python编译与CLI帮助通过。
 - 当前Java21 runtime compiler编译并执行原生安全策略85项、本地存储策略60项通过。此环境没有javac启动器和完整--release17工具链，不把Java21纯JVM运行当作Android构建或跨版本通过。
 - 本次本地未执行SDK/Gradle构建、生成签名身份、解码真实密钥、APK签名、设备安装/启动或覆盖升级。用户自行在本机生成并安全配置签名输入；Actions须实际运行并留下成品验收报告。
@@ -19,6 +19,8 @@ SDK构建、独立npm ci、当前网页重建、真实签名及成品SHA256以�
 ### 首次发布任务与修复
 
 首次Actions任务37922359500已通过独立npm ci、当前网页构建、Android JS测试7项、原验证器24项以及预装SDK门禁，但Gradle配置阶段因Groovy命令式调用的解析顺序在versionCode处出现Value is null。已改为显式属性赋值versionCode = (...) .toInteger()和versionName = (...)，保留0.1.1/code2。新增回归门禁拒绝重新引入命令式版本赋值；真正SDK构建/签名仍须由修复后的Actions任务重新验证。
+
+第二次Actions任务37923275007已通过实际release Java代码编译、安全策略85项及存储策略60项；testReleaseUnitTest编译因Android bootclasspath缺少Files.readString而失败，尚未到APK打包或签名。已将测试迁移读取改为Files.readAllBytes加显式UTF8解码；同时将测试里的Path.of、Stream.toList、String.repeat换为较早的标准库调用/等价循环，保留24条迁移语句与所有原断言。新增静态回归门禁，不跳过testReleaseUnitTest；修复后的Android测试编译与APK/签名仍需后续真实Actions验证。
 
 ---
 

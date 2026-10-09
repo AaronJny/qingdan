@@ -105,8 +105,8 @@
     },
     {
       "path": "VERIFICATION.md",
-      "bytes": 8527,
-      "sha256": "029deea5b9e6998196a2171021db3c80408f551be154cabc8c0b87b9e8e4f97d"
+      "bytes": 9123,
+      "sha256": "6d86be9175ecd18fe2ff0f144808d21641b1b997f4685a64a8d936e96484061d"
     },
     {
       "path": "android/.gitignore",
@@ -240,13 +240,13 @@
     },
     {
       "path": "android/app/src/test/java/cn/qingdan/android/LocalStorePolicyTest.java",
-      "bytes": 3961,
-      "sha256": "63d424766815814141debc801d97ab3b651d273a88a5727e55a20c34fe066c00"
+      "bytes": 4364,
+      "sha256": "1230de84b314430ccedaea1916e129dc020513a98f124d2bc038917e6cc7b3c8"
     },
     {
       "path": "android/app/src/test/java/cn/qingdan/android/SecurityPolicyTest.java",
-      "bytes": 8113,
-      "sha256": "76fc27817ad51d7a2a8a3b6d871eab352945619f1a0f189e3853902c34ede6d6"
+      "bytes": 8351,
+      "sha256": "f5b4bf57ead74207fa17dc3722c1ef0090e13f5a39f972db20eb0e0b4b3b984a"
     },
     {
       "path": "android/build.gradle",
@@ -345,8 +345,8 @@
     },
     {
       "path": "tests/test_apk_verification.py",
-      "bytes": 12431,
-      "sha256": "a2136be1e05275208a962ae485a918f0ae3bef635208c6efae568dbcf678bbd2"
+      "bytes": 13523,
+      "sha256": "1959fe017d588021e31d1fa9eae7da013745c2489448f24c89eec6319ff6c814"
     },
     {
       "path": "verification/APK-INDEPENDENT-VERIFICATION.json",
@@ -371,7 +371,7 @@
     {
       "path": "verification/RELEASE-PIPELINE-0.1.1.json",
       "bytes": 1254,
-      "sha256": "6bab9bc60e7f02871eb14a5229a77c1aab3d29d8c992ec9deb83ca5e4da1ac6d"
+      "sha256": "b5ee92235fc3323ddc3ddb4066d353e4052bcaf70339ca4ceeb836c12e850189"
     },
     {
       "path": "verification/SUMMARY.json",
@@ -1498,6 +1498,6 @@
   "source_revision": "2026-10-09-release-pipeline",
   "source_scope": "Android0.1.1 release source and signing/verification pipeline; generated current web assets and signed APK require the actual Actions run",
   "inventory_sha256_method": "SHA256 of UTF-8 lines: <sha256><two spaces><relative path><LF>, ordered lexicographically by path; includes every non-ignored delivered source file except this manifest.",
-  "inventory_sha256": "62c56ca7734a6a09c277ca5019268b86096deb8eb3e47eedd3367e8481aece21",
+  "inventory_sha256": "ff668867585beb24576f22cd74aec379842c67e342a463f0dc1d5a696e8e609c",
   "version_code": 2
 }
