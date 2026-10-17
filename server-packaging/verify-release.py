@@ -178,7 +178,7 @@ def verify_structure(root):
         require(magic.startswith(b'\x7fELF\x02\x01') if arch == 'linux-x64' else magic.startswith(b'\xcf\xfa\xed\xfe'),
                 f'Unexpected Node executable format: {arch}')
     readme = (root / '先读我.txt').read_text(encoding='utf-8')
-    require(manifest['version'] in readme and snapshot in readme and '{{' not in readme, 'Stale server readme provenance')
+    require(manifest['version'] in readme and '{{' not in readme, 'Stale server readme version')
     return manifest
 
 

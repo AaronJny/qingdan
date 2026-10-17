@@ -279,7 +279,7 @@ else {
       platform: process.platform, packaged: app.isPackaged, settings: openSettings,
       reconnect: () => { if (!quitting && !switching) void openConfiguredConnection(); },
       openWeb: () => confirmExternal(current.serverUrl), quit: () => app.quit(),
-      explain: () => dialog.showMessageBox(mainWindow || undefined, { type: 'info', title: '独立服务与数据', message: '桌面端连接你选定的青单服务。', detail: '服务器可使用local本机单人模式或accounts自有账号模式，由服务器决定；localhost也可能要求自有账号登录。任务与附件保存在服务器的数据目录，桌面端只保留本机连接设置、会话和缓存。不同服务器origin使用独立会话；不会导入旧云服务的登录信息。本机模式自带服务与运行时，自动启动，任务保存在本机用户资料目录，升级应用不会删除数据；私服需由你自己的服务器提供。程序不创建私服账号或保存密码。退出应用会正常停止内置服务。关闭窗口不会删除会话；macOS可从Dock重新打开。' }),
+      explain: () => dialog.showMessageBox(mainWindow || undefined, { type: 'info', title: '使用方式与数据', message: '青单可在本机使用，也可连接自建服务器。', detail: '本机模式会自动启动内置服务，任务和附件保存在本机用户资料目录，升级应用会保留数据。连接自建服务器时，数据保存在该服务器；是否需要登录由服务器设置决定。切换使用方式不会搬移或合并数据，各服务器的登录状态相互独立。退出应用会停止内置服务；macOS 关闭窗口后可从 Dock 重新打开。' }),
     })));
     void openConfiguredConnection();
   }).catch(error => { console.error('Standalone desktop startup failed:', error.message); dialog.showErrorBox('青单无法启动', '请检查应用文件与连接配置。'); app.quit(); });

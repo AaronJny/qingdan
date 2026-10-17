@@ -1,16 +1,20 @@
-青单 Linux x64 客户端
+青单 · Linux x64
 
-下载 Qingdan-版本-linux-x64.AppImage，在文件属性中允许作为程序执行，再打开。也可以运行 chmod +x ./Qingdan-版本-linux-x64.AppImage 后启动该文件。
+安装
+下载 Qingdan-版本-linux-x64.AppImage，在文件属性中允许作为程序执行，再打开。也可以运行：
+chmod +x ./Qingdan-版本-linux-x64.AppImage
 
-需要 x86-64 Linux 图形桌面，以及能正常初始化 Electron 沙箱的系统环境。本项目不自动关闭沙箱，不提供关闭系统安全限制的步骤。
+需要 x86-64 Linux 图形桌面，并能正常启用 Electron 沙箱。
 
-不支持 FUSE 的系统可以在单独的空目录执行：
+不支持 FUSE 时，可在空目录中执行：
 ./Qingdan-版本-linux-x64.AppImage --appimage-extract
 ./squashfs-root/AppRun
-保留整个 squashfs-root 目录，不要单独取出 qingdan 可执行文件。
+保留整个 squashfs-root 目录。
 
-打开后自动运行内置本机服务，无需另装 Node。服务只监听 127.0.0.1，数据保存在 ${XDG_CONFIG_HOME:-~/.config}/QingdanDesktop。升级替换 AppImage 不会主动删除数据。备份前正常退出，再复制完整 QingdanDesktop 目录。
+使用与私服
+打开即进入本机工作台，无需安装 Node.js。通过“文件 → 服务器连接”可连接自己的 HTTPS 私服；本机数据不会自动上传或合并。
 
-设置中可以选择连接自己的 HTTPS 私服。本机数据不会上传或合并到私服。
+备份与升级
+正常退出应用后，完整复制 ${XDG_CONFIG_HOME:-~/.config}/QingdanDesktop。升级时替换 AppImage，保留数据目录。
 
-构建检查会在新临时目录独立解出 AppImage，校验应用/运行库字节、ASAR、安全启动器和 fuses，并用普通 Node 验证归档内后端及重启持久性。这不是 Electron utilityProcess 或 Linux 原生 GUI 验收；窗口、X11/Wayland、菜单、桌面通知和发行版兼容性尚待实机验证。
+如果系统无法启用 Electron 沙箱，请使用兼容的系统环境，保留系统安全设置。

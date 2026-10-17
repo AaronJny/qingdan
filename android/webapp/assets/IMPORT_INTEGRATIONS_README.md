@@ -1,6 +1,6 @@
 # Qingdan snapshot import and server integration utilities
 
-Implementation verified 2026-10-07. These assets are dependency-free TypeScript. No Site tools, package changes, app/API routes, OAuth application, real provider credentials, account data, or external provider test calls were used.
+These dependency-free TypeScript utilities support snapshot import/export and server-side provider adapters.
 
 ## Status
 

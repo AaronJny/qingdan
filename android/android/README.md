@@ -1,15 +1,15 @@
 # 青单 Android 主机
 
-第一阶段：Java Activity + APK 内置 SPA；默认本地免账号，另可连接用户自建 HTTPS 私服。最低 Android 8.0 / API 26，compile/target API 36。默认应用 ID：`cn.qingdan.android`。
+Android 客户端使用 Java Activity 和 APK 内置网页界面；默认本地免账号，另可连接用户自建 HTTPS 私服。最低 Android 8.0 / API 26，compile/target API 36。默认应用 ID：`cn.qingdan.android`。
 
 ## 构建
 
 需要 JDK 17+（发布流水线使用21）、Gradle 8.13、已预装并已接受许可的 Android SDK Platform 36 / Build Tools 36.0.0。插件固定为 AGP 8.12.0。构建禁用 SDK 自动下载，不接受 SDK 许可、不生成签名密钥。客户端默认版本0.1.1 / versionCode2，应用 ID 和数据身份保持不变。
 
 1. 在仓库根按项目 Android 打包脚本生成 SPA。输出仅放入 `app/src/main/assets/web/`，必须包含 `index.html`、`assets/`、favicon。
-2. 将上游 `webapp/drizzle/*.sql` 原字节复制到 `app/src/main/assets/migrations/`。不更写 SQL 或篡改迁移 hash。
+2. 将上游 `webapp/drizzle/*.sql` 原字节复制到 `app/src/main/assets/migrations/`。请保留 SQL 原文，以免迁移校验失败。
 3. 在 `local.properties` 指定已有 SDK 的 `sdk.dir`，或使用环境变量 `ANDROID_HOME`。
-4. 在此目录运行 `gradle :app:assembleRelease`。产物 `app/build/outputs/apk/release/app-release-unsigned.apk` **未签名，不能直接安装**。用户须用其已批准的签名身份完成签名；debug 也明确不签名。仓库根的 android/scripts/sign-release.sh 只使用用户安全配置的四项 ANDROID_* 输入，签名后必须通过独立验收才输出最终APK。参见 ../docs/RELEASE-SIGNING.md。
+4. 在此目录运行 `gradle :app:assembleRelease`。产物 `app/build/outputs/apk/release/app-release-unsigned.apk` **未签名，不能直接安装**。安装前须使用自己的签名密钥完成签名；debug 也明确不签名。仓库根的 android/scripts/sign-release.sh 只使用用户安全配置的四项 ANDROID_* 输入，签名后必须通过独立验收才输出最终APK。参见 ../docs/RELEASE-SIGNING.md。
 5. 纯 JVM 安全测试：`JAVA_HOME=/path/to/jdk ./test-security.sh`，无需 SDK。
 
 未包含未经验证的 wrapper JAR；`gradle/wrapper/gradle-wrapper.properties` 固定官方 8.13 分发地址，构建使用已有 Gradle 8.13。

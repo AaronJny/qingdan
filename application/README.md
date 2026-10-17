@@ -1,10 +1,10 @@
-# 青单：独立运行
+# 青单服务端与网页端
 
-这是自托管的任务、日历、专注与习惯应用。最终运行在你的本机或私人服务器，不依赖 ChatGPT 登录、Sites、Cloudflare 或第三方账号。旧的托管工程与数据没有自动搬入这里。
+青单将任务、日历、习惯和专注计时放在同一个工作台。可在本机免登录使用，也可部署到自己的服务器，供多台设备或多人使用。
 
-## 本地单人模式
+## 本机使用
 
-安装 Node.js 24，然后在本项目目录运行：
+需要 Node.js 24。在 `application/` 目录运行：
 
 ```sh
 npm ci
@@ -12,9 +12,11 @@ npm run build
 npm start
 ```
 
-打开 http://127.0.0.1:4310。默认 `APP_MODE=local`，直接进入自己的工作台，无账号密码，也不需要初始化管理员。数据在 `data/local`；仅本机回环监听。不能把此模式配置为 `0.0.0.0` 或非回环来源，也不能反向代理或隧道公开。服务拒绝携带Forwarded/X-Forwarded-*的本地模式请求；这不能阻止操作者主动剥掉头并转发，免登录模式不具有面向网络的账号隔离保证。需要网络访问请使用accounts模式。
+打开 http://127.0.0.1:4310 即可使用，无需账号密码。默认模式为 `APP_MODE=local`，数据保存在 `data/local`。
 
-`PORT` 可改端口；`HOST` 默认 `127.0.0.1`。使用 localhost、IPv6 或其他端口时，`APP_ORIGIN` 必须是浏览器实际访问的完整来源。例如：
+本机模式只允许回环地址访问。不要通过反向代理、隧道或公网端口公开免登录服务；需要网络访问时，请使用账号模式。
+
+`PORT` 可修改端口，`HOST` 默认是 `127.0.0.1`。修改访问地址或端口时，将 `APP_ORIGIN` 设为浏览器实际访问的完整来源，例如：
 
 ```sh
 HOST=localhost PORT=4311 APP_ORIGIN=http://localhost:4311 npm start
@@ -22,16 +24,18 @@ HOST=localhost PORT=4311 APP_ORIGIN=http://localhost:4311 npm start
 
 ## 账号模式
 
-适合私人服务器、多设备或多人使用。先在部署机器自己的交互终端初始化管理员；密码会隐藏输入，不接受参数/环境变量或管道，不存在默认密码：
+适合自有服务器、多设备同步或多人使用。在部署机器的交互终端初始化管理员，然后启动服务：
 
 ```sh
 APP_MODE=accounts npm run users -- init-admin
 APP_MODE=accounts npm start
 ```
 
-本机仍打开 http://127.0.0.1:4310，输入你创建的邮箱和密码。管理员可在设置→账号管理创建账号、停用/启用、改角色或重设密码；最后一个启用管理员受保护。没有公开注册。管理员身份不赋予查看其他账号私人任务的权限。
+按提示设置邮箱、姓名和密码。密码会隐藏输入，不接受命令参数、环境变量或管道传入。没有默认密码或公开注册。
 
-Windows PowerShell中设置本次终端环境再执行（不要把密码写入环境）：
+打开 http://127.0.0.1:4310，使用刚创建的账号登录。管理员可在“设置 → 账号管理”中创建账号、启用或停用账号、调整角色和重设密码。不能停用或降级最后一位启用的管理员；管理员也不能因此查看其他账号的私人任务。
+
+Windows PowerShell 需要先设置当前终端的环境变量：
 
 ```powershell
 $env:APP_MODE = "accounts"
@@ -39,7 +43,32 @@ npm run users -- init-admin
 npm start
 ```
 
-私服HTTPS来源由实际TLS代理提供时：
+账号模式的数据默认保存在 `data/accounts`。本机与账号模式使用独立数据目录，不能共用。需要切换使用方式时，通过应用导出数据，再导入新实例。
+
+### 配置 HTTPS 私服
+
+对外访问必须使用有效证书的 HTTPS。将 `APP_ORIGIN` 设为实际域名，由反向代理提供 TLS，后端继续监听本机地址。初始化管理员时也要使用相同的 `APP_MODE` 和 `QINGDAN_DATA_DIR`；已在默认目录创建的账号不会自动迁移到新目录：
+
+```sh
+APP_MODE=accounts QINGDAN_DATA_DIR=/srv/qingdan-data npm run users -- init-admin
+APP_MODE=accounts HOST=127.0.0.1 PORT=4310 APP_ORIGIN=https://tasks.example.com QINGDAN_DATA_DIR=/srv/qingdan-data npm start
+```
+
+`APP_ORIGIN` 只指定访问来源，不会为 Node.js 服务启用 TLS。不要把 4310 的 HTTP 端口直接暴露到外网。反向代理应保留配置的 Host，网页与 API 必须同源。
+
+同机 Caddy 配置示例，将域名替换为自己的域名，并设置相同的 `APP_ORIGIN`：
+
+```text
+tasks.example.com {
+    reverse_proxy 127.0.0.1:4310 {
+        header_up Host tasks.example.com
+    }
+}
+```
+
+使用前请完成域名解析并确认 Caddy 证书正常。更多认证配置和会话规则见 [账号说明](AUTH.md)。
+
+Windows PowerShell 的私服配置示例：
 
 ```powershell
 $env:APP_MODE = "accounts"
@@ -50,63 +79,40 @@ $env:QINGDAN_DATA_DIR = "C:\qingdan-data"
 npm start
 ```
 
-切回免登录模式设置 `$env:APP_MODE = "local"`，并清除/重设APP_ORIGIN为准确本机来源及DATA_DIR为独立local目录，不复用accounts目录。
-
-数据默认在 `data/accounts`。所有业务共用相同的真实 SQLite 与文件存储；两个模式的数据目录有持久模式标记，本地身份与目录绑定。错误模式打开已有目录会拒绝，不能通过改环境变量让多账号数据免登录展示。迁移请明确导出并导入新目录，不暗改数据所有权。
-
-私服对外访问必须 HTTPS，配置实际来源、由你的反向代理提供 TLS：
-
-```sh
-APP_MODE=accounts HOST=127.0.0.1 PORT=4310 APP_ORIGIN=https://tasks.example.com QINGDAN_DATA_DIR=/srv/qingdan-data npm start
-```
-
-APP_ORIGIN只定义浏览器来源，不会给Node的HTTP监听添加TLS。示例后端绑定127.0.0.1，实际HTTPS由反向代理终止；不要把4310裸HTTP端口暴露到外网。服务只接受配置的 Host/Origin；反向代理须保留该 Host。会话 Cookie 为 HttpOnly、SameSite=Strict，HTTPS启用Secure；业务写入验证同源和CSRF。没有跨域API配置，不信任任意代理身份头。HTTP仅允许回环浏览器来源。
-
-同机Caddy的最小配置示例（把示例域名换成自己的实际域名，先设置同一APP_ORIGIN）：
-
-```text
-tasks.example.com {
-    reverse_proxy 127.0.0.1:4310 {
-        header_up Host tasks.example.com
-    }
-}
-```
-
-Caddy负责证书与TLS，部署者须自行确认域名/证书和网络；本项目不会配置你的域名。Node不采纳任意X-Forwarded-*身份或来源。
+切回本机模式时，将 `APP_MODE` 改为 `local`，同时将 `APP_ORIGIN` 改为本机访问地址，`QINGDAN_DATA_DIR` 改为独立的本机数据目录。
 
 ## Docker Compose
 
-示例默认是账号模式；宿主端口只绑定127.0.0.1，适合本机测试或同机HTTPS代理：
+仓库提供的 Compose 配置默认使用账号模式，宿主端口只绑定 `127.0.0.1`：
 
 ```sh
 docker compose up -d --build
 docker compose exec qingdan node dist/server/users.mjs init-admin
 ```
 
-第一次命令会建立持久命名卷；第二次必须在交互终端输入管理员信息。私服启动前设置 `APP_ORIGIN=https://你的实际域名`，再由同机代理转发到127.0.0.1:4310。示例不替你申请证书、改防火墙、设置公网或创建真实账号。Docker构建/运行验证状态见 `VERIFICATION.md`。
+第一个命令创建持久化数据卷；第二个命令在终端中初始化管理员。对外部署前，将 `APP_ORIGIN` 设为实际 HTTPS 域名，再由同机反向代理转发到 `127.0.0.1:4310`。
 
 ## 数据与备份
 
-`QINGDAN_DATA_DIR` 指定实例数据目录。内容为SQLite（运行时可能有-wal/-shm）和 `objects/*.qobj` 附件。不要在运行时只复制sqlite主文件；停止服务后完整备份整个目录，再恢复到新路径。目录模式标记和本地identity必须一起保留。
+`QINGDAN_DATA_DIR` 可指定实例数据目录，包含 SQLite 数据库、附件对象和模式标记。
 
-应用内JSON可恢复为新副本。v1不含文件字节；v2按已有预算包含附件与历史。账号、密码与会话不进入任务备份。恢复账号库/密码会话的实例目录备份应由部署者安全保管，不公开分享。
+- 备份实例前先停止服务，再完整复制整个数据目录。运行中可能存在 SQLite 的 `-wal`、`-shm` 文件，不要只复制数据库主文件。
+- 恢复时使用独立目录，保留目录内的模式标记和身份信息。不要让多个进程同时使用同一目录。
+- 应用内完整备份可恢复为新副本，包含附件与历史；旧版 v1 备份不含附件内容。单包最多 1000 条记录、10000 条历史、100 个附件，附件合计 8 MiB、元数据 5 MiB。超限时请保留原实例，先另行保存所需记录和附件。
+- 任务备份不包含账号、密码和会话；完整实例目录可能包含这些私密信息，请妥善保管。
 
-SQLite 与文件对象分别持久化；文件写入采用临时文件、fsync 和原子替换，业务数据库写入使用事务。数据库迁移按 checksum 记录，已应用迁移不修改。
+## 附件上传中断
 
-## 运行与检查
+连接中断后，重新打开原任务详情，选择“核对原附件上传”。已上传成功的附件会恢复显示；尚未完成时，重新选择同一文件继续上传。若文件内容、名称或类型已改变，请先核对原上传，或放弃原选择后重新上传。
+
+放弃未确认的选择不会删除已上传文件。浏览器只保存待核对的文件信息，不保存附件内容，因此重试时需要重新选择文件。
+
+## 开发与检查
 
 ```sh
 npm run check
 ```
 
-这依次运行模块、模拟DOM、真实本机HTTP集成、TypeScript、前端/Node/独立离线壳构建；任何一步失败立即停止。`npm run dev` 运行源码Node服务，先运行build生成前端（它不是Vite热更新入口）。
+运行模块测试、界面测试、HTTP 集成测试、类型检查和构建。`npm run dev` 启动源码服务；前端需先运行 `npm run build` 生成，该命令不提供 Vite 热更新。
 
-本地和账号模式均为持久服务。桌面封装连接本地服务或你选定的 HTTPS 私服，服务需另行启动。
-
-桌面客户端可读取同源GET `/api/app-info`，只返回 `{app:'qingdan',version:'1.1.0',mode:'local'|'accounts'}`；不会建立账号会话，也不包含数据、凭据或运行诊断。
-
-## 附件上传结果未知时
-
-任务附件在发送前记录账号/任务专属操作ID、文件元数据与SHA-256指纹；不保存文件字节。连接中断或关闭详情后，重开可选择“核对原附件上传”。服务已有完成回执时直接恢复文件列表；尚未完成时请主动重选同一份文件，继续原操作。文件内容、名称或类型改变会提示冲突；先核对或明确放弃原选择后才开始新上传。放弃选择不会删除已上传文件。已删除附件的旧上传操作不会重新创建它。
-
-操作预约持久保存到SQLite，成功的附件元数据与完成回执在同一事务提交。文件系统写入与数据库不是统一事务；失败可能留下暂未引用的对象，保留操作ID重试会复用该对象。不会自动上传其他文件或离线保存文件字节。账号切换不显示另一个账号的未确认选择。
+桌面端会自动启动自己的内置服务，也可以连接这里部署的私服。版本和运行模式可通过同源的 `GET /api/app-info` 查询。

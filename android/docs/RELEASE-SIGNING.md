@@ -31,4 +31,4 @@ bash android/scripts/create-release-key-macos.sh "$HOME/你的私密备份目录
 
 工作流只在 runner 临时目录解码密钥，密码通过环境变量交给 `apksigner`，不打印秘密，不把密钥收进 APK 或 artifact，并在结束时清理临时密钥。只有通过 APK 签名、版本、资源和原生库检查的成品才进入 Release；不会发布不可安装的 unsigned APK。
 
-Android 独立客户端版本为 0.1.1，内置业务代码基准为 1.0.1。它不是桌面/服务器 1.1.1 的等同实现，也不宣称完成真机测试。
+Android 独立客户端版本为 0.1.1，内置业务代码基准为 1.0.1。与桌面和服务器版本独立维护。发布前仍需完成真机验证。

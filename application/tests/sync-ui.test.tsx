@@ -163,17 +163,17 @@ test('account sync and reminder descriptions match optional offline recovery and
   try{
    await act(async()=>click(button('账号与同步')));
    const account=f.host.querySelector('.settings-content')?.textContent||'';
-   assert.match(account,/仅此账号在线同步后主动启用/);assert.match(account,/首次离线登录不支持/);
-   assert.match(account,/不缓存附件字节/);assert.match(account,/不承诺应用关闭后的后台同步/);
+   assert.match(account,/启用前请先联网同步/);assert.match(account,/首次登录仍需联网/);
+   assert.match(account,/不缓存附件字节/);assert.match(account,/保持应用打开且可见，连接恢复后会自动同步/);
    assert.match(account,/离线时无法获知共享权限变化，联网后由服务器重新核对/);
-   assert.match(account,/本地模式不会自动上传到私服/);
+   assert.match(account,/本机数据不会自动上传到私服/);
    assert.doesNotMatch(account,/已认证会话完整离线应用壳及后台自动同步/);assert.doesNotMatch(account,/假同步|虚构集成/);
    if(mode==='local')assert.match(account,/本地单人模式，数据保存在此服务的本地目录。无需账号密码/);
    else assert.match(account,/账号模式，使用此部署实例的青单账号登录，服务器数据按账号隔离/);
    await act(async()=>click(button('提醒与专注')));
    const reminders=f.host.querySelector('.settings-content')?.textContent||'';
-   assert.match(reminders,/页面打开且可见时检查/);assert.match(reminders,/切到后台、隐藏或关闭页面后不检查提醒/);
-   assert.match(reminders,/没有后台推送、邮件或系统闹钟保证/);
+   assert.match(reminders,/应用页面打开且可见/);assert.match(reminders,/切到后台、隐藏或关闭后会暂停检查/);
+   assert.match(reminders,/重新打开时，计时器会恢复进度/);
   }finally{await f.close()}
  }
 });

@@ -1,6 +1,6 @@
 # 青单 Linux DMG toolchain with real Unicode HFS+ names
 
-This is a narrowly scoped Unicode repair for Mozilla libdmg-hfsplus commit `ec239599c1f234a4e01ae3fe51214d0c77e5baa3`. It writes actual HFS+ catalog UTF-16 names. It does not rename a ZIP to DMG or merely change displayed labels.
+This is a narrowly scoped Unicode repair for Mozilla libdmg-hfsplus commit `ec239599c1f234a4e01ae3fe51214d0c77e5baa3`. It writes actual HFS+ catalog UTF-16 names.
 
 The upstream tool and its two-file patch have scoped GPLv3 [source notices](THIRD-PARTY-NOTICES.md) and a retained [license](LICENSE-libdmg-hfsplus.txt).
 
@@ -87,6 +87,6 @@ Important evidence files:
 - `logs/unicode-codec-tests.json`: 31 sanitizer-tested conversion cases
 - `logs/fixture-stage-names.json`: read-only name gate result
 
-Repeat the full independent sequence for every final real app image. This fixture is not evidence of native macOS mounting, Finder dragging, LaunchServices, app launching, Gatekeeper, Developer ID signing, or Apple notarization. No Mac connection, mounts, quarantine changes or system security changes were used. Image timestamps and UDIF identifiers can vary; no bit-for-bit DMG reproducibility claim is made.
+Repeat the full independent sequence for every final real app image. This fixture is not evidence of native macOS mounting, Finder dragging, LaunchServices, app launching, Gatekeeper, Developer ID signing, or Apple notarization. Image timestamps and UDIF identifiers can vary; no bit-for-bit DMG reproducibility claim is made.
 
 Format references: [Apple TN1150](https://developer.apple.com/library/archive/technotes/tn/tn1150.html), [Mozilla libdmg-hfsplus](https://github.com/mozilla/libdmg-hfsplus).

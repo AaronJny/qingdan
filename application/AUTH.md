@@ -1,6 +1,6 @@
 # 本地账号与会话
 
-两种模式都不依赖 ChatGPT、OpenAI 或 OAuth。`APP_MODE=local`（默认）为本机免账号模式；`APP_MODE=accounts` 为带账号和管理员管理的私有服务器模式。没有默认密码或公开注册接口。
+`APP_MODE=local`（默认）为本机免账号模式；`APP_MODE=accounts` 为带账号和管理员管理的私有服务器模式。没有默认密码或公开注册接口。
 
 本机模式只允许回环地址访问，自动使用数据目录中持久的 `local:<uuid>` 身份，不创建密码账号，不需要初始化管理员，也不开放账号管理。`/api/auth/me` 返回本地主体和每次服务启动新生成的 CSRF 值，不设置认证 Cookie。服务同时校验来源、Host、自定义请求头和 CSRF；重启后打开的页面需刷新更新 CSRF。
 
@@ -18,7 +18,7 @@ APP_MODE=accounts node --experimental-strip-types scripts/users.ts reset-passwor
 APP_MODE=accounts node --experimental-strip-types scripts/users.ts disable-user
 ```
 
-首次运行按提示输入邮箱、姓名和密码。密码不回显，必须输入两次；不接受命令参数、环境变量或管道中的密码。请勿通过聊天发送密码。`init-admin` 只能在没有任何账号时运行。创建其他账号需要已有启用的管理员。不能停用或降低最后一位启用管理员的角色。重设密码、停用账号和调整角色都会撤销该账号已有会话。CLI 是拥有服务器文件访问权限的部署者管理入口；账号模式中已登录管理员还可以在应用账号管理界面进行常规操作。
+首次运行按提示输入邮箱、姓名和密码。密码不回显，必须输入两次；不接受命令参数、环境变量或管道中的密码。`init-admin` 只能在没有任何账号时运行。创建其他账号需要已有启用的管理员。不能停用或降低最后一位启用管理员的角色。重设密码、停用账号和调整角色都会撤销该账号已有会话。CLI 是拥有服务器文件访问权限的部署者管理入口；账号模式中已登录管理员还可以在应用账号管理界面进行常规操作。
 
 共享存储 provider 首次使用时执行 `drizzle/0000` 至 `0005` 迁移；认证表为 `auth_users`、`auth_sessions`、`auth_login_limits`。设置 `QINGDAN_DATA_DIR` 可指定部署数据目录，保持与服务进程的设置相同。真实数据目录及备份应仅供部署者访问。
 
@@ -47,6 +47,6 @@ APP_MODE=accounts node --experimental-strip-types scripts/users.ts disable-user
 - POST `/api/auth/users` 发送 `{operation:'create',email,displayName,password,role?}` 创建账号，默认 user；或 `{operation:'disable'|'enable'|'role'|'password',userId,role?,password?}` 操作现有账号。新密码由管理员主动输入，不预置。
 - 该接口所有写操作也要求同源和 CSRF。响应为 `{ok:true,user}`。管理员只能管理账号，业务记录的 owner/member 授权保持独立。
 
-验证：`node --experimental-strip-types --test lib/auth.test.ts` 使用临时目录、合成账号和合成密码，不读生产数据、不访问网络、不初始化真实账号。
+运行 `node --experimental-strip-types --test lib/auth.test.ts` 检查账号与会话逻辑。测试使用独立临时目录。
 
 依据：[Node.js 24 crypto.scrypt](https://nodejs.org/docs/latest-v24.x/api/crypto.html#cryptoscryptpassword-salt-keylen-options-callback)、[OWASP 密码存储](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)、[OWASP 会话管理](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)、[OWASP CSRF 防护](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)。这些是认证功能的设计依据；不代表整个产品已经过独立安全审计。

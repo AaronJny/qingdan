@@ -203,6 +203,16 @@ class ServerReleaseTests(unittest.TestCase):
         path.write_text(json.dumps(dependency))
         self.refresh_manifest()
 
+    def test_user_guide_omits_internal_snapshot_but_manifests_stay_bound(self):
+        self.make_zip()
+        extracted = verifier.extract_archive(self.zip, self.root / 'reader guide extraction')
+        manifest = verifier.verify_structure(extracted)
+        snapshot = manifest['application_source_snapshot_sha256']
+        self.assertNotIn(snapshot, (extracted / '先读我.txt').read_text())
+        self.assertIn('SERVER-MANIFEST.json', (extracted / '先读我.txt').read_text())
+        runtime = json.loads((extracted / 'app/RUNTIME-MANIFEST.json').read_text())
+        self.assertEqual(snapshot, runtime['source_snapshot_sha256'])
+
     def test_nested_dependency_closure_and_independent_extraction(self):
         self.nest_transitive()
         self.make_zip()

@@ -1,45 +1,44 @@
-青单 {{VERSION}} 独立服务端 / 网页端
-已检查应用源码快照SHA256：{{SOURCE_SNAPSHOT_SHA256}}
+青单 {{VERSION}} 服务端 / 网页端
 
-本包已包含 Node 24.19.0、网页、服务与生产依赖。无需安装 Node、npm，也无需构建。运行时不会下载Node或依赖。
-支持 Apple Silicon Mac（macOS 13.5 以上）和 Linux x64（glibc 2.28、内核4.18以上）。不包含 Intel Mac、Linux ARM 或 Alpine/musl 运行时。Mac 实机启动尚未验证。
+本包包含 Node.js 运行时、网页和服务，解压即可运行，无需安装 Node.js 或 npm。
+支持 Apple Silicon Mac（macOS 13.5 及以上）和 Linux x64（glibc 2.28、内核 4.18 及以上）。暂不支持 Intel Mac、Linux ARM 或 Alpine/musl。
 
-本机免密码：
-Mac 双击 start.command；Linux 运行 start.sh。浏览器会打开 http://127.0.0.1:4310。
-这是本机单人模式，不能反代或通过隧道公开。保持启动窗口运行；正常停止用 stop.command / stop.sh。
-默认数据放在用户目录，更新或移动程序文件夹不会删掉数据。
+本机使用
+Mac 双击 start.command，Linux 运行 start.sh，然后在浏览器打开 http://127.0.0.1:4310。
+本机模式无需账号密码，只能在本机访问。不要通过反向代理或隧道公开此模式。
+保持启动窗口运行，停止服务使用 stop.command 或 stop.sh。
 
-自有账号模式：
-首次先双击 init-admin.command（Linux init-admin.sh），按提示设置首个管理员。口令在交互终端不回显；没有默认密码或公开自助注册。
-再双击 start-accounts.command（Linux start-accounts.sh）。管理员登录后可在账号管理中新增/停用用户、改变角色或重设密码。
-两个模式使用不同数据目录，不能通过改模式直接把多账号数据变成免密码数据。账户初始化不会自动转移本地任务。
+账号模式
+切换前先停止正在运行的服务。首次运行 init-admin.command（Linux 为 init-admin.sh），按提示设置管理员邮箱、姓名和密码。密码输入时隐藏，没有默认密码或公开注册。
+再运行 start-accounts.command（Linux 为 start-accounts.sh）。管理员登录后，可在“设置 → 账号管理”中管理账号。
+本机与账号模式使用独立数据目录，切换不会自动迁移任务。需要迁移时，通过应用导出并导入。
 
-配置位置：
+配置
 Mac：~/Library/Application Support/Qingdan Server/config.json
 Linux：${XDG_DATA_HOME:-~/.local/share}/qingdan-server/config.json
-首次启动自动建立配置。mode为local或accounts；默认host=127.0.0.1、port=4310；origin为空时使用http://127.0.0.1:端口；dataDir为空时按模式建立用户目录下data/local或data/accounts。
-高级部署可用QINGDAN_SERVER_HOME选择另一配置根目录；QINGDAN_DATA_DIR可指定完整数据目录。不要让两个进程同时占用同一目录。修改配置前先停止服务。
-启动时若端口已占用或模式目录不符，会明确失败，不连接其他服务、不自动认领其他数据。
 
-Linux私服 / 多设备网页访问：
-仅accounts模式可用于私服。设置实际HTTPS origin，由你自己的TLS反向代理转发到本机HTTP端口，保留配置的Host；后端默认绑定127.0.0.1。origin写成https本身不会给Node监听加密。不要把裸HTTP端口直接公开。
-需要同源网页与API；不使用GPT登录或GPT平台。
-本包不配置真实域名、证书、第三方账号或外部AI凭据。
+首次启动会自动创建配置：
+- mode：local 为本机模式，accounts 为账号模式。
+- host：默认 127.0.0.1。
+- port：默认 4310。
+- origin：浏览器访问来源；留空时使用 http://127.0.0.1:端口。
+- dataDir：数据目录；留空时按模式使用配置根目录下的 data/local 或 data/accounts。
 
-备份：
-先stop并确认服务停止，再完整复制用户数据目录（含SQLite、对象文件、模式标记）。不要在服务运行时只复制sqlite主文件。恢复时保持目录模式一致。账号库/会话的目录备份由部署者自行妥善保管。
-应用内任务JSON备份不含账号口令或会话；不同模式数据迁移应由用户明确导出/导入。
+高级部署可通过 QINGDAN_SERVER_HOME 指定配置根目录，通过 QINGDAN_DATA_DIR 指定数据目录。修改配置前先停止服务，不要让多个进程使用同一数据目录。
 
-附件上传未知结果：
-原任务详情保留操作ID与文件指纹，关闭详情重开后点“核对原附件上传”。已完成的回执恢复同一文件，不追加上传；尚未确认时主动重选同一文件继续。不同文件会提示冲突。放弃未确认选择不会删除已上传文件。浏览器不保存附件字节。
+多设备与私服访问
+使用 accounts 模式，将 origin 设为实际 HTTPS 域名，再由 TLS 反向代理转发到本机 HTTP 端口，并保留配置的 Host。网页与 API 必须同源。
+origin 写成 https 不会为后端启用加密，不要直接公开后端 HTTP 端口。
 
-验证边界：
-应用完整检查证据、编译资源及运行依赖与当前快照绑定；文件SHA256见SERVER-MANIFEST.json和app/RUNTIME-MANIFEST.json。
-当前发行ZIP必须独立解压，并由包内Node进行合成本地/账号模式HTTP复测；具体结果见该发行版外附的JSON验证报告。源码测试通过不等于成品解压或实机验收通过。
-Mac实机、Docker镜像、真实私服HTTPS/账号原生Cookie、关闭页面可靠提醒、外部AI/OAuth等尚未全部验收或配置。
+备份与升级
+先停止服务，再完整复制数据目录，包括 SQLite 数据库、附件对象和模式标记。不要在运行中只复制数据库主文件。备份可能包含账号和会话信息，请妥善保管。
+应用内任务备份不含账号密码或会话。
+升级时，将新包解压到独立目录，再启动服务。默认数据位于用户目录，移动或替换程序文件夹不影响数据；请保留并备份数据目录。
 
-更新：
-停止旧包服务，解压新包到独立目录，再启动。数据默认在用户目录；保留并备份它，不要混用local/accounts数据。后台迁移校验已应用SQL，拒绝变化过的迁移。
-app目录里的README/运行包说明是应用源基线的开发资料；本发行包使用根目录启动入口，不要照内部资料安装npm或重新build。
-如macOS或浏览器出现安全来源提示，请按系统正常流程核实，不绕过安全警告或删除隔离属性。
-Node官方来源/校验与许可证见runtime目录；依赖许可证随app/node_modules保留。
+附件上传中断
+重新打开原任务详情，选择“核对原附件上传”。已成功上传的附件会恢复显示；尚未完成时，重新选择同一文件继续。放弃未确认选择不会删除已上传文件。
+
+更多说明
+本发行包请使用根目录启动脚本，无需在 app 目录安装依赖或重新构建。
+文件校验清单见 SERVER-MANIFEST.json，Node.js 来源与许可证见 runtime 目录，依赖许可证随 app/node_modules 保留。
+遇到系统或浏览器安全警告时，请先核实来源，保留系统安全设置。

@@ -1,4 +1,4 @@
-# 青单桌面 1.1.0 构建与验证
+# 青单桌面构建与发布
 
 使用 Node.js 24.19.0、Python 3 与锁定的 Electron 44.6.0 / electron-builder 26.15.3。当前 backend 由同仓库 application 的完整检查快照生成，不再要求旧冻结 payload 或手工拷贝依赖。
 
@@ -28,7 +28,7 @@ node scripts/package.cjs linux --x64 --dir
 
 脚本运行桌面语法/单元检查、校验内置后端，然后调用 electron-builder（--publish never）。完成后独立读取成品 app.asar，检查当前源码、后台运行资源、依赖文件与全部既有 Electron fuses；结果写在 dist/verified-平台-架构.json。macOS 保留官方 Electron Helper 名称和中文应用名、许可证复制及既有打包钩子。本流程未配置正式签名或公证身份，成品仍需 macOS 实机启动验收。
 
-npm run verify:backend 使用普通 Node 在临时合成数据目录检查精确版本握手、前端、迁移、建任务、正常停止/重启持久性。该检查不代表 Electron utilityProcess 或原生 GUI 已通过。GitHub check.yml 在每次分支 push/PR 上运行完整检查及运行后端测试，不发布 Release。release.yml 复用这些已验证构建资源，分别在 macOS/Windows/Linux 打包并检查 ASAR；只有匹配 application 版本的 v 标签才进入 GitHub Release 发布。手工运行只生成验收成品。
+npm run verify:backend 使用普通 Node 在临时合成数据目录检查精确版本握手、前端、迁移、建任务、正常停止/重启持久性。该检查不代表 Electron utilityProcess 或原生 GUI 已通过。GitHub check.yml 在每次分支 push/PR 上运行完整检查及运行后端测试，不发布 Release。release.yml 复用这些已验证构建资源，分别在 macOS/Windows/Linux 打包并检查 ASAR；发布请求由 `.github/release/request.json` 指定；修改该文件、推送匹配版本的标签或手动运行“青单发布”工作流可触发构建。发布条件和平台成品要求见工作流配置。
 
 ## Linux x64 AppImage
 
@@ -48,7 +48,7 @@ package.cjs 生成 Qingdan-版本-linux-x64.AppImage 后自动调用 verify-linu
 
 结果写入 dist/verified-linux-appimage-x64.json，明确记录 electronUtilityProcessTested=false、nativeGuiTested=false。此流程验证 AppImage 结构及归档后端，不代表 Linux 窗口、Electron utilityProcess、图形菜单、桌面通知、X11/Wayland 或发行版兼容性已实机验收。
 
-以下为历史变更说明，不替代当前 1.1.0 成品验收。
+## 历史变更说明
 
 ## 1.0.2 Mac 启动修复
 

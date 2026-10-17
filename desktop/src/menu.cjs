@@ -6,7 +6,7 @@ function menuTemplate({ platform, packaged, reconnect, settings, openWeb, explai
   menu.push({ label: '编辑', submenu: [{ role: 'undo', label: '撤销' }, { role: 'redo', label: '重做' }, { type: 'separator' }, { role: 'cut', label: '剪切' }, { role: 'copy', label: '复制' }, { role: 'paste', label: '粘贴' }, { role: 'selectAll', label: '全选' }] });
   menu.push({ label: '视图', submenu: [{ role: 'reload', label: '重新载入' }, { type: 'separator' }, { role: 'resetZoom', label: '实际大小' }, { role: 'zoomIn', label: '放大' }, { role: 'zoomOut', label: '缩小' }, { type: 'separator' }, { role: 'togglefullscreen', label: '全屏' }, ...(!packaged ? [{ role: 'toggleDevTools', label: '开发者工具（仅开发版）' }] : [])] });
   menu.push({ label: '窗口', submenu: [{ role: 'minimize', label: '最小化' }, { role: 'zoom', label: '缩放窗口' }, ...(mac ? [{ role: 'front', label: '前置全部窗口' }] : [])] });
-  menu.push({ label: '帮助', submenu: [{ label: '独立服务与数据说明', click: explain }] });
+  menu.push({ label: '帮助', submenu: [{ label: '使用方式与数据', click: explain }] });
   return menu;
 }
 module.exports = { menuTemplate };

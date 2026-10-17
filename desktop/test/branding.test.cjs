@@ -31,5 +31,5 @@ test('web and Android use the existing green clipboard identity', () => {
       assert.equal(existsSync(resolve(root, project, 'public', file)), false, file);
     }
   }
-  assert.match(read('android/webapp/app/workspace-dialogs.tsx'), /<img src="\/favicon.svg" alt="" aria-hidden="true"\/>/);
+  assert.doesNotMatch(read('android/webapp/app/workspace-dialogs.tsx'), /能力与边界|没有用于展示的假同步/);
 });

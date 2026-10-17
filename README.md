@@ -1,6 +1,6 @@
 # 青单
 
-青单是可在本机或自有服务器运行的任务与时间管理应用，把清单、日历、习惯和专注计时放在一个工作台。数据由自己的实例保存，独立运行不依赖 ChatGPT 登录或第三方托管账号。
+青单是可在本机或自有服务器运行的任务与时间管理应用，把清单、日历、习惯和专注计时放在一个工作台。支持免登录的本机使用，也可部署私服，在多台设备间同步。
 
 [下载发行版](https://github.com/AaronJny/qingdan/releases/latest) · [界面截图](#界面截图) · [从源码运行](#从源码运行) · [部署与开发文档](#部署与开发文档)
 
@@ -17,11 +17,9 @@
 
 ## 界面截图
 
-以下图片是 **2026-10-17 从主分支 `1459f5f` 源码构建并实际运行的网页前端截图**，使用独立本机实例和应用自带的“示例”数据，不含真实用户资料。它们展示当前源码界面，不代表各平台安装包已经完成实机验收。[截图来源与复现步骤](docs/screenshots/README.md)
-
 ### 任务工作台
 
-按日期组织任务，统一查看清单、标签和保存状态。
+按日期安排任务，用清单和标签整理工作与生活。
 
 ![青单任务工作台：所有任务、工作与生活清单、标签和日期分组](docs/screenshots/tasks.jpg)
 
@@ -44,32 +42,29 @@
 
 查看每日目标、当周记录、连续次数与近 30 天完成情况。
 
-![青单习惯：示例阅读目标、打卡记录与完成率](docs/screenshots/habits.jpg)
+![青单习惯：阅读目标、打卡记录与完成率](docs/screenshots/habits.jpg)
 
 </details>
 
 ## 下载与安装
 
-前往 [Releases](https://github.com/AaronJny/qingdan/releases/latest) 下载系统对应的成品。当前已发布版本为 [v1.1.1](https://github.com/AaronJny/qingdan/releases/tag/v1.1.1)：桌面与服务端版本为 **1.1.1**，Android 独立客户端为 **0.1.1**，其业务源码基准为 **1.0.1**，两者并非完全相同的实现。
+前往 [Releases](https://github.com/AaronJny/qingdan/releases/latest) 下载适合自己系统的版本。当前发行版为 [v1.1.1](https://github.com/AaronJny/qingdan/releases/tag/v1.1.1)，包含桌面端、服务端和 Android 客户端。
 
 | 平台 | 下载 | 使用方式与要求 |
 | --- | --- | --- |
-| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.1.1/Qingdan-1.1.1-mac-arm64.dmg) | macOS 13 及以上；正常退出旧版后，将应用拖入 Applications。没有 Intel Mac 成品 |
+| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.1.1/Qingdan-1.1.1-mac-arm64.dmg) | macOS 13 及以上；正常退出旧版后，将应用拖入 Applications。暂不支持 Intel Mac |
 | Windows · x64 | [便携 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.1.1/Qingdan-1.1.1-win-x64.zip) | 完整解压后运行 `Qingdan.exe`，不要只复制 EXE |
 | Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.1.1/Qingdan-1.1.1-linux-x64.AppImage) | 需要图形桌面与正常可用的 Electron 沙箱；添加可执行权限后运行，FUSE 替代启动方式见[桌面说明](desktop/README.md) |
 | 自托管服务端 / 网页端 | [含运行时 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.1.1/qingdan-server-v1.1.1.zip) | 内置 Linux x64 / macOS arm64 运行时和启动脚本，无需另外安装 Node.js 或 npm |
 | Android | [0.1.1 APK](https://github.com/AaronJny/qingdan/releases/download/v1.1.1/Qingdan-0.1.1-android.apk) | Android 8.0 及以上，并需保持系统 WebView 更新；安装与签名注意事项见[Android 说明](android/README.md) |
 
-下载后请核对同一发行版附带的 SHA256 文件与验证报告。
-
-**版本区别**：上述 v1.1.1 安装包早于当前主分支的绿色剪贴板图标统一等更改。更新 README 或推送普通代码不会替换旧发行包；截图中的最新界面应以对应主分支源码构建为准。
+下载后可使用发行版附带的 SHA256 校验文件检查文件完整性。
 
 ### 已知平台限制
 
-- macOS 成品没有 Developer ID 签名或 Apple 公证，Windows 成品未签名，系统可能阻止运行。请保留系统安全机制，不关闭 Gatekeeper、不删除隔离属性、不关闭 Electron 沙箱。
+- macOS 版本尚无 Developer ID 签名或 Apple 公证，Windows 版本尚无发布者签名，系统可能阻止运行。遇到安全警告时，请先核实下载来源，保留系统安全设置。
 - Android 新签名不能覆盖旧签名安装。升级前先在旧应用中导出完整备份；不要直接卸载旧应用，卸载会删除其私有数据。
-- Android 通知目前只支持应用前台核对后的通知，不保证后台推送或准点闹钟。网页关闭后的提醒与计时铃声也没有后台必达保证。
-- 构建、归档与后端检查不等同于 macOS、Windows、Linux 桌面 GUI 或 Android 真机验收；具体范围以发行版附带的报告为准。
+- 提醒和计时铃声需要保持应用页面打开且可见。Android 暂不支持后台推送或准点闹钟。
 
 ## 本机模式与私服模式
 
@@ -106,7 +101,7 @@ npm start
 npm run check --prefix application
 ```
 
-该命令包含模块、模拟 DOM、真实本机 HTTP 集成、TypeScript 和构建检查。私服配置、环境变量、Docker Compose 和备份说明见 [application/README.md](application/README.md)。
+私服配置、环境变量、Docker Compose 和开发说明见 [application/README.md](application/README.md)。
 
 ## 数据与备份
 
@@ -122,8 +117,7 @@ npm run check --prefix application
 | [application/](application/README.md) · [账号说明](application/AUTH.md) | React 前端、Node.js 服务、数据库迁移、账号与部署配置 |
 | [desktop/](desktop/README.md) · [构建流程](desktop/docs/BUILD-RELEASE.md) | Electron 桌面封装、内置后端和各平台打包 |
 | [android/](android/README.md) · [签名设置](android/docs/RELEASE-SIGNING.md) | Android 原生容器、独立网页源码、构建与签名 |
-| [server-packaging/](server-packaging/) | 含运行时的服务端 ZIP、启动脚本与独立验收 |
-| [可靠性修复记录](docs/RELIABILITY-1.1.0.md) | 1.1.0 可靠性修复与验证范围 |
+| [server-packaging/](server-packaging/BUILD.md) | 含运行时的服务端 ZIP 与启动脚本 |
 | [品牌资源](docs/BRANDING.md) | 网页、桌面与 Android 绿色剪贴板图标 |
 | [前端第三方声明](application/docs/THIRD-PARTY-NOTICES.md) · [DMG 工具链声明](desktop/scripts/dmg/toolchain/THIRD-PARTY-NOTICES.md) | 分发时需要保留的第三方许可与声明 |
 
@@ -131,10 +125,10 @@ npm run check --prefix application
 
 推送到 `main` 会运行[完整检查工作流](.github/workflows/check.yml)。发布请求通过 [.github/release/request.json](.github/release/request.json) 指定版本；修改发布请求、推送对应版本 tag 或手动触发“青单发布”工作流才会构建发行，普通提交只做检查。
 
-发行流水线要求 macOS、Windows、Linux、服务器和 Android 五类成品齐备，并附 SHA256 和独立检查报告。Android 签名未配置时只保留明确标注缺少 APK 的草稿。签名密钥与密码应通过安全配置提供，不要写入源码、聊天或构建产物。
+发行流水线要求 macOS、Windows、Linux、服务器和 Android 五类成品齐备，并附 SHA256 和独立检查报告。Android 签名未配置时，发行版会保留为草稿。签名密钥与密码应通过安全配置提供，不要写入源码、聊天或构建产物。
 
 ## 许可证
 
-当前主分支的项目自身代码采用 **AGPL-3.0-only**，许可全文见 [LICENSE](LICENSE)。允许商业使用与合规分发；分发本软件（包括二进制）或提供修改后的网络服务时，应按许可证要求向相应接收者或网络用户提供对应源码。它不禁止收费运营，也不要求把所有私有代码公开到 GitHub。部署与分发前请阅读[许可范围与源码交付说明](application/docs/LICENSING.md)。
+项目源码采用 **AGPL-3.0-only**，许可全文见 [LICENSE](LICENSE)。允许商业使用与合规分发；分发本软件（包括二进制）或提供修改后的网络服务时，应按许可证要求向相应接收者或网络用户提供对应源码。部署与分发前请阅读[许可范围与源码交付说明](application/docs/LICENSING.md)。
 
-第三方依赖、图标库和构建工具继续遵循各自原有许可证，不被本项目许可证替换。分发时请同时保留相关许可与声明。仓库当前的访问权限与许可义务是两回事，私有仓库链接不能替代对接收者或网络用户可用的对应源码。
+第三方依赖、图标库和构建工具继续遵循各自原有许可证，不被本项目许可证替换。分发时请同时保留相关许可与声明。对应源码应可供软件接收者或网络用户访问。
