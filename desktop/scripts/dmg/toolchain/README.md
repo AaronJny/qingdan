@@ -2,6 +2,8 @@
 
 This is a narrowly scoped Unicode repair for Mozilla libdmg-hfsplus commit `ec239599c1f234a4e01ae3fe51214d0c77e5baa3`. It writes actual HFS+ catalog UTF-16 names. It does not rename a ZIP to DMG or merely change displayed labels.
 
+The upstream tool and its two-file patch have scoped GPLv3 [source notices](THIRD-PARTY-NOTICES.md) and a retained [license](LICENSE-libdmg-hfsplus.txt).
+
 ## Verified result
 
 - Fixture volume: `青单安装`, actual catalog UTF-16BE `975253555b8988c5`.

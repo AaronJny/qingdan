@@ -44,6 +44,8 @@ npm start
 
 桌面构建见 [桌面说明](desktop/README.md) 和 [构建流程](desktop/docs/BUILD-RELEASE.md)。Android 构建见 [Android 说明](android/README.md)。
 
+跨端图标见 [品牌资源](docs/BRANDING.md)；分发构建应保留 [前端第三方声明](application/docs/THIRD-PARTY-NOTICES.md) 和相应平台已有的依赖许可。
+
 1.1.0 的可靠性修复与本次验证见 [修复记录](docs/RELIABILITY-1.1.0.md)。
 
 ## 数据与备份

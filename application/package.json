@@ -14,6 +14,7 @@
     "test": "node --import tsx --test assets/*.test.ts lib/*.test.ts",
     "test:ui": "node --import tsx --test tests/*ui.test.tsx",
     "test:server": "node --import tsx --test server/*.test.ts",
+    "test:licenses": "node --test scripts/license-plugin.test.mjs",
     "check": "node scripts/check-release.mjs"
   },
   "dependencies": {

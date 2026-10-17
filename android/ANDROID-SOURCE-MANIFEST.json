@@ -5,7 +5,7 @@
   "application_baseline_version": "1.0.1",
   "application_baseline_commit": "c3194463a8cf748242955c61da72969c652ea062",
   "application_baseline_source_zip_sha256": "3cf3e87df0fcbceda9a1053524ad0c1fdc2a595b36712a8d583a58fc5359372d",
-  "unchanged_baseline_webapp_files": 204,
+  "unchanged_baseline_webapp_files": 197,
   "android_adaptations": [
     {
       "path": "webapp/vite.android.config.ts",
@@ -40,7 +40,7 @@
       "path": "webapp/app/workspace.tsx",
       "change": "android-adapted",
       "baseline_sha256": "a733f26f899acf3982098758e7157626bf4b68bdca27db69b78db3da0215f012",
-      "sha256": "2d606913c2291b40ef540169abd33581aff88f2169e9f98d2ef1ca28894f437d"
+      "sha256": "ce6de0ed4e3e7a448943897c5daf8d142367a92c14f02f994cf766ef03a2d9ca"
     },
     {
       "path": "webapp/app/offline-shell-settings.tsx",
@@ -52,7 +52,7 @@
       "path": "webapp/web/app.tsx",
       "change": "android-adapted",
       "baseline_sha256": "49f2729836159a4e8f4b696a767f09d3b4d449c31eb6022e7aa9fcd5031879bd",
-      "sha256": "31d320616bf22e1bfb4d8268d000d497fb3d05f8dc26a7a331d0b7b8947c1c8b"
+      "sha256": "0ffaea01687579244178dfeae5606a140a55e4a8051671bb85f476de47838cce"
     },
     {
       "path": "webapp/web/android-adapter.ts",
@@ -94,7 +94,40 @@
       "path": "webapp/app/workspace-dialogs.tsx",
       "change": "copy-only cleanup",
       "baseline_sha256": "fcde7e275447288faee720abd3c4d8f998a9303d4724ab5ae73ff0a014ccec81",
-      "sha256": "467c10cf0a629fccee3033bb8a683fb5e581baaff8c3d819a2367d526f295e0d"
+      "sha256": "05bc6775c32d347527300ff93c641a879240a4bf72b8044f9c3161d332530993"
+    },
+    {
+      "path": "webapp/app/globals.css",
+      "change": "shared Qingdan clipboard branding",
+      "baseline_sha256": "a90bc78b5fbe7db562b44f1f7d25a4dccb65c789c9d9261a9f0a088a6d9e7380",
+      "sha256": "e7a0ce4c1c968a728898cbf63ca43b033eaf10621ee00eed72cb57198d3051b8"
+    },
+    {
+      "path": "webapp/public/favicon.svg",
+      "change": "shared Qingdan clipboard branding",
+      "baseline_sha256": "8bb6f2164b7b8916fee0a5b1db2168746f7d7fc5394f834e157fe717bb61e21f",
+      "sha256": "8042594ee7d7361ad22984c9e26d88f66cf4863d4da81651b9e68199e57ea86d"
+    },
+    {
+      "path": "webapp/public/manifest.webmanifest",
+      "change": "shared Qingdan clipboard branding",
+      "baseline_sha256": "84998a85319da6edcf8184aea35f74a27b1ff43591a1aa6278f9b6fd737e0806",
+      "sha256": "1293292f418061571123216715b33ed6e57ee5295c7cfdef4488a46dfe4d7b4a"
+    },
+    {
+      "path": "webapp/public/file.svg",
+      "change": "removed unused starter-template asset",
+      "baseline_sha256": "1e0ae4d1a1ddfa36752988647b731e4abf150c414d069ec83c96fb0aaeff0307"
+    },
+    {
+      "path": "webapp/public/globe.svg",
+      "change": "removed unused starter-template asset",
+      "baseline_sha256": "d051a8c47936990a9085693d307bb7cea1bc1b6d7ed956bcbaacf674f4ec96b9"
+    },
+    {
+      "path": "webapp/public/window.svg",
+      "change": "removed unused starter-template asset",
+      "baseline_sha256": "decf1cf7bb22b5c99c4857cfcd5718ce5465c4454166317589c83fc73df74b66"
     }
   ],
   "files": [
@@ -215,8 +248,8 @@
     },
     {
       "path": "android/app/src/main/res/drawable/ic_qingdan.xml",
-      "bytes": 529,
-      "sha256": "72f2fc9dee95dc565107c0224a6edfc7555cef4c19d102b5fefb5f9eda624476"
+      "bytes": 1574,
+      "sha256": "bde746b37d5b1e524b169f8313b93972497e84cd068967ebc346b1e99854aa6b"
     },
     {
       "path": "android/app/src/main/res/values/strings.xml",
@@ -525,8 +558,8 @@
     },
     {
       "path": "webapp/app/globals.css",
-      "bytes": 67830,
-      "sha256": "a90bc78b5fbe7db562b44f1f7d25a4dccb65c789c9d9261a9f0a088a6d9e7380"
+      "bytes": 67742,
+      "sha256": "e7a0ce4c1c968a728898cbf63ca43b033eaf10621ee00eed72cb57198d3051b8"
     },
     {
       "path": "webapp/app/habit-editor.tsx",
@@ -610,8 +643,8 @@
     },
     {
       "path": "webapp/app/workspace-dialogs.tsx",
-      "bytes": 62452,
-      "sha256": "467c10cf0a629fccee3033bb8a683fb5e581baaff8c3d819a2367d526f295e0d"
+      "bytes": 62500,
+      "sha256": "05bc6775c32d347527300ff93c641a879240a4bf72b8044f9c3161d332530993"
     },
     {
       "path": "webapp/app/workspace-views.tsx",
@@ -620,8 +653,8 @@
     },
     {
       "path": "webapp/app/workspace.tsx",
-      "bytes": 67938,
-      "sha256": "2d606913c2291b40ef540169abd33581aff88f2169e9f98d2ef1ca28894f437d"
+      "bytes": 67986,
+      "sha256": "ce6de0ed4e3e7a448943897c5daf8d142367a92c14f02f994cf766ef03a2d9ca"
     },
     {
       "path": "webapp/assets/IMPORT_INTEGRATIONS_README.md",
@@ -1345,28 +1378,13 @@
     },
     {
       "path": "webapp/public/favicon.svg",
-      "bytes": 241,
-      "sha256": "8bb6f2164b7b8916fee0a5b1db2168746f7d7fc5394f834e157fe717bb61e21f"
-    },
-    {
-      "path": "webapp/public/file.svg",
-      "bytes": 392,
-      "sha256": "1e0ae4d1a1ddfa36752988647b731e4abf150c414d069ec83c96fb0aaeff0307"
-    },
-    {
-      "path": "webapp/public/globe.svg",
-      "bytes": 1036,
-      "sha256": "d051a8c47936990a9085693d307bb7cea1bc1b6d7ed956bcbaacf674f4ec96b9"
+      "bytes": 610,
+      "sha256": "8042594ee7d7361ad22984c9e26d88f66cf4863d4da81651b9e68199e57ea86d"
     },
     {
       "path": "webapp/public/manifest.webmanifest",
       "bytes": 233,
-      "sha256": "84998a85319da6edcf8184aea35f74a27b1ff43591a1aa6278f9b6fd737e0806"
-    },
-    {
-      "path": "webapp/public/window.svg",
-      "bytes": 386,
-      "sha256": "decf1cf7bb22b5c99c4857cfcd5718ce5465c4454166317589c83fc73df74b66"
+      "sha256": "1293292f418061571123216715b33ed6e57ee5295c7cfdef4488a46dfe4d7b4a"
     },
     {
       "path": "webapp/scripts/build-offline.mjs",
@@ -1475,8 +1493,8 @@
     },
     {
       "path": "webapp/web/app.tsx",
-      "bytes": 2922,
-      "sha256": "31d320616bf22e1bfb4d8268d000d497fb3d05f8dc26a7a331d0b7b8947c1c8b"
+      "bytes": 2970,
+      "sha256": "0ffaea01687579244178dfeae5606a140a55e4a8051671bb85f476de47838cce"
     },
     {
       "path": "webapp/web/main.tsx",
@@ -1495,9 +1513,9 @@
     "this manifest from its own inventory"
   ],
   "baseline_manifest_note": "webapp/SOURCE-MANIFEST.json, webapp/tests/standalone-evidence.json, artifacts/BUNDLED-ASSETS.json and verification/SUMMARY.json retain historical1.0.1/0.1.0 records. This current exact source inventory excludes ignored generated build assets. Current hosted APK evidence is its .verification.json; see VERIFICATION.md.",
-  "source_revision": "2026-10-09-release-pipeline",
-  "source_scope": "Android0.1.1 release source and signing/verification pipeline; generated current web assets and signed APK require the actual Actions run",
+  "source_revision": "2026-10-17-shared-clipboard-branding",
+  "source_scope": "Android0.1.1 source with shared Qingdan clipboard branding; generated current web assets and signed APK require the actual Actions run",
   "inventory_sha256_method": "SHA256 of UTF-8 lines: <sha256><two spaces><relative path><LF>, ordered lexicographically by path; includes every non-ignored delivered source file except this manifest.",
-  "inventory_sha256": "ff668867585beb24576f22cd74aec379842c67e342a463f0dc1d5a696e8e609c",
+  "inventory_sha256": "72afafec80cf2e4aaffda08352009141a88a7f2bac502014b375d135cd2cd996",
   "version_code": 2
 }

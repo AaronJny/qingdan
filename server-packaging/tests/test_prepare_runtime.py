@@ -20,6 +20,8 @@ class PrepareRuntimeTests(unittest.TestCase):
             'package.json': json.dumps({'name': 'qingdan-fixture', 'version': '1.1.0'}),
             'package-lock.json': '{}', 'README.md': 'Fixture', 'AUTH.md': 'Fixture',
             'VERIFICATION.md': 'Fixture', 'dist/server/main.mjs': '// fixture',
+            'docs/THIRD-PARTY-NOTICES.md': 'Fixture source acquisition: https://registry.npmjs.org/ical.js/-/ical.js-2.2.1.tgz\n[License](licenses/ical.js-MPL-2.0.txt)\n',
+            'docs/licenses/ical.js-MPL-2.0.txt': 'Mozilla Public License Version 2.0\nSynthetic retained license fixture.\n',
             'dist/server/users.mjs': '// fixture', 'dist/client/index.html': '<main>Fixture</main>',
             'drizzle/0000_fixture.sql': '-- fixture',
         }
@@ -54,6 +56,35 @@ class PrepareRuntimeTests(unittest.TestCase):
 
     def test_changed_source_fails_before_output_exists(self):
         (self.source / 'README.md').write_text('Changed after checks')
+        self.assertNotEqual(self.run_prepare().returncode, 0)
+        self.assertFalse(self.output.exists())
+
+    def test_dependency_source_notice_and_license_are_copied_and_manifested(self):
+        result = self.run_prepare()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        manifest = json.loads((self.output / 'RUNTIME-MANIFEST.json').read_text())
+        for name in ['docs/THIRD-PARTY-NOTICES.md', 'docs/licenses/ical.js-MPL-2.0.txt']:
+            self.assertEqual((self.output / name).read_bytes(), (self.source / name).read_bytes())
+            self.assertEqual(manifest['files_sha256'][name], hashlib.sha256((self.source / name).read_bytes()).hexdigest())
+        self.assertIn('https://registry.npmjs.org/ical.js/-/ical.js-2.2.1.tgz',
+                      (self.output / 'docs/THIRD-PARTY-NOTICES.md').read_text())
+
+    def test_missing_dependency_notice_or_license_cannot_be_omitted_from_a_checked_runtime(self):
+        for name in ['docs/THIRD-PARTY-NOTICES.md', 'docs/licenses/ical.js-MPL-2.0.txt']:
+            with self.subTest(name=name):
+                path = self.source / name
+                original = path.read_bytes()
+                path.unlink()
+                self.write_evidence()
+                result = self.run_prepare()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('Missing or non-regular input: ' + name, result.stderr)
+                self.assertFalse(self.output.exists())
+                path.write_bytes(original)
+                self.write_evidence()
+
+    def test_notice_changed_after_checks_is_rejected(self):
+        (self.source / 'docs/THIRD-PARTY-NOTICES.md').write_text('Changed source information after checks')
         self.assertNotEqual(self.run_prepare().returncode, 0)
         self.assertFalse(self.output.exists())
 

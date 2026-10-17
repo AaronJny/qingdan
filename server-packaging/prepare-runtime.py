@@ -72,8 +72,13 @@ def prepare(source, output):
         out.mkdir(parents=True)
         shutil.copytree(src / 'dist', out / 'dist')
         shutil.copytree(src / 'drizzle', out / 'drizzle')
-        for name in ['package.json', 'package-lock.json', 'README.md', 'AUTH.md', 'VERIFICATION.md']:
-            shutil.copy2(src / name, out / name)
+        # Shared by desktop backend and standalone-server packaging. Preserve
+        # the source-acquisition notice and its relative MPL license link.
+        for name in ['package.json', 'package-lock.json', 'README.md', 'AUTH.md', 'VERIFICATION.md',
+                     'docs/THIRD-PARTY-NOTICES.md', 'docs/licenses/ical.js-MPL-2.0.txt']:
+            target = out / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(checked_path(src, name), target)
         files = {file.relative_to(out).as_posix(): digest(file) for file in out.rglob('*') if file.is_file()}
         (out / 'RUNTIME-MANIFEST.json').write_text(json.dumps({'product': 'qingdan-standalone', 'version': package['version'], 'source_snapshot_sha256': snapshot, 'checks': evidence['checks'], 'files_sha256': files}, indent=2) + '\n')
     except BaseException:

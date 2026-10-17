@@ -1,4 +1,11 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="48dp" android:height="48dp" android:viewportWidth="48" android:viewportHeight="48">
-    <path android:fillColor="#3867E8" android:pathData="M10,0 L38,0 Q48,0 48,10 L48,38 Q48,48 38,48 L10,48 Q0,48 0,38 L0,10 Q0,0 10,0" />
-    <path android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFF" android:strokeWidth="4" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M12,25 L21,33 L37,15" />
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="48dp" android:height="48dp" android:viewportWidth="1024" android:viewportHeight="1024">
+    <path android:fillColor="#276455" android:pathData="M272,52 H753 A220,220 0,0 1,973,272 V753 A220,220 0,0 1,753,973 H272 A220,220 0,0 1,52,753 V272 A220,220 0,0 1,272,52 Z" />
+    <path android:fillColor="#f7f7f0" android:pathData="M345,230 H686 A70,70 0,0 1,756,300 V725 A70,70 0,0 1,686,795 H345 A70,70 0,0 1,275,725 V300 A70,70 0,0 1,345,230 Z" />
+    <path android:fillColor="#a9c7a5" android:pathData="M425,202 H606 A40,40 0,0 1,646,242 V268 A40,40 0,0 1,606,308 H425 A40,40 0,0 1,385,268 V242 A40,40 0,0 1,425,202 Z" />
+    <path android:fillColor="#276455" android:pathData="M340,420 A28,28 0,1 1,396,420 A28,28 0,1 1,340,420 Z" />
+    <path android:fillColor="#276455" android:pathData="M340,554 A28,28 0,1 1,396,554 A28,28 0,1 1,340,554 Z" />
+    <path android:fillColor="#276455" android:pathData="M340,688 A28,28 0,1 1,396,688 A28,28 0,1 1,340,688 Z" />
+    <path android:fillColor="#a9c7a5" android:pathData="M465,400 H655 A20,20 0,0 1,675,420 V421 A20,20 0,0 1,655,441 H465 A20,20 0,0 1,445,421 V420 A20,20 0,0 1,465,400 Z" />
+    <path android:fillColor="#a9c7a5" android:pathData="M465,534 H655 A20,20 0,0 1,675,554 V555 A20,20 0,0 1,655,575 H465 A20,20 0,0 1,445,555 V554 A20,20 0,0 1,465,534 Z" />
+    <path android:fillColor="#a9c7a5" android:pathData="M465,668 H655 A20,20 0,0 1,675,688 V689 A20,20 0,0 1,655,709 H465 A20,20 0,0 1,445,689 V688 A20,20 0,0 1,465,668 Z" />
 </vector>
