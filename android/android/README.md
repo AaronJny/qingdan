@@ -4,7 +4,7 @@ Android 客户端使用 Java Activity 和 APK 内置网页界面；默认本地�
 
 ## 构建
 
-需要 JDK 17+（发布流水线使用21）、Gradle 8.13、已预装并已接受许可的 Android SDK Platform 36 / Build Tools 36.0.0。插件固定为 AGP 8.12.0。构建禁用 SDK 自动下载，不接受 SDK 许可、不生成签名密钥。客户端默认版本0.1.1 / versionCode2，应用 ID 和数据身份保持不变。
+需要 JDK 17+（发布流水线使用21）、Gradle 8.13、已预装并已接受许可的 Android SDK Platform 36 / Build Tools 36.0.0。插件固定为 AGP 8.12.0。构建禁用 SDK 自动下载，不接受 SDK 许可、不生成签名密钥。客户端默认版本0.1.2 / versionCode 3，应用 ID 和数据身份保持不变。
 
 1. 在仓库根按项目 Android 打包脚本生成 SPA。输出仅放入 `app/src/main/assets/web/`，必须包含 `index.html`、`assets/`、favicon。
 2. 将上游 `webapp/drizzle/*.sql` 原字节复制到 `app/src/main/assets/migrations/`。请保留 SQL 原文，以免迁移校验失败。

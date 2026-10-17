@@ -1,7 +1,7 @@
 {
   "name": "qingdan-desktop-bundled",
   "productName": "Qingdan",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "private": true,
   "main": "src/main.cjs",
   "author": "Independent Qingdan project",

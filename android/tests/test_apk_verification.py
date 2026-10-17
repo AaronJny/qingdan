@@ -19,8 +19,8 @@ ROOT = Path(__file__).resolve().parent.parent
 spec = importlib.util.spec_from_file_location("verify_apk", ROOT / "scripts/verify-apk.py")
 verifier = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(verifier)
-IDENTITY = {"application_id": "cn.qingdan.android", "version_name": "0.1.1", "version_code": 2, "min_sdk": 26, "target_sdk": 36}
-BADGING = """package: name='cn.qingdan.android' versionCode='2' versionName='0.1.1' platformBuildVersionName='16'
+IDENTITY = {"application_id": "cn.qingdan.android", "version_name": "0.1.2", "version_code": 3, "min_sdk": 26, "target_sdk": 36}
+BADGING = """package: name='cn.qingdan.android' versionCode='3' versionName='0.1.2' platformBuildVersionName='16'
 sdkVersion:'26'
 targetSdkVersion:'36'
 launchable-activity: name='cn.qingdan.android.MainActivity' label='青单' icon='res/drawable/ic_qingdan.xml'
@@ -154,7 +154,7 @@ class ApkVerificationTests(unittest.TestCase):
         self.assertEqual(verifier.verify_manifest(BADGING, IDENTITY), IDENTITY)
 
     def test_manifest_wrong_version_or_sdk_rejected(self):
-        for old, new in (("versionCode='2'", "versionCode='1'"), ("versionName='0.1.1'", "versionName='0.1.0'"), ("sdkVersion:'26'", "sdkVersion:'25'"), ("targetSdkVersion:'36'", "targetSdkVersion:'35'")):
+        for old, new in (("versionCode='3'", "versionCode='2'"), ("versionName='0.1.2'", "versionName='0.1.1'"), ("sdkVersion:'26'", "sdkVersion:'25'"), ("targetSdkVersion:'36'", "targetSdkVersion:'35'")):
             with self.subTest(new=new), self.assertRaisesRegex(verifier.VerificationError, "identity differs"):
                 verifier.verify_manifest(BADGING.replace(old, new), IDENTITY)
 
@@ -197,9 +197,9 @@ class ApkVerificationTests(unittest.TestCase):
     def test_source_identity_and_environment_overrides(self):
         with patch.dict(os.environ, {"QINGDAN_ANDROID_VERSION_NAME": "", "QINGDAN_ANDROID_VERSION_CODE": ""}):
             self.assertEqual(verifier.source_identity(), IDENTITY)
-        with patch.dict(os.environ, {"QINGDAN_ANDROID_VERSION_NAME": "0.1.2", "QINGDAN_ANDROID_VERSION_CODE": "3"}):
+        with patch.dict(os.environ, {"QINGDAN_ANDROID_VERSION_NAME": "0.1.3", "QINGDAN_ANDROID_VERSION_CODE": "4"}):
             identity = verifier.source_identity()
-            self.assertEqual((identity["version_name"], identity["version_code"]), ("0.1.2", 3))
+            self.assertEqual((identity["version_name"], identity["version_code"]), ("0.1.3", 4))
 
     def test_groovy_version_properties_require_explicit_assignment(self):
         # Regression guard for the actual Actions evaluation failure. This is

@@ -216,7 +216,15 @@ class Reconcile(Assets):
         env = {'GITHUB_REPOSITORY': 'owner/repo', 'GITHUB_SHA': 'b' * 40, 'GITHUB_RUN_ID': '200',
                'GITHUB_STEP_SUMMARY': str(self.root.parent / (self.root.name + '-summary'))}
         self.addCleanup(lambda: Path(env['GITHUB_STEP_SUMMARY']).unlink(missing_ok=True))
-        with patch.dict(os.environ, env), patch.object(publish, 'gh', side_effect=github):
+        # This recovery fixture deliberately models v1.1.1. It must not depend
+        # on the repository's current intentional release request.
+        read_text = Path.read_text
+        def fixture_text(path, *args, **kwargs):
+            if path == Path('.github/release/request.json'):
+                return json.dumps({'version': '1.1.1', 'androidVersion': '0.1.1'})
+            return read_text(path, *args, **kwargs)
+        with patch.dict(os.environ, env), patch.object(publish, 'gh', side_effect=github), \
+                patch.object(Path, 'read_text', fixture_text):
             publish.main(['--assets', str(self.root), '--android-result', 'success',
                           '--source-commit', source, '--source-run-id', '100'])
         self.assertFalse(state['draft'])

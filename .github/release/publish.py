@@ -306,7 +306,8 @@ def main(argv=None):
                        '- Windows：x64 ZIP，解压后运行 Qingdan.exe，无需单独安装 Node。程序未签名。',
                        '- Linux：x64 AppImage，共用 Electron 前端/内置后端；需要系统正常支持 Chromium sandbox。',
                        '- 服务端：ZIP 包含 Linux x64/macOS arm64 官方 Node、锁定依赖、迁移和一键启动/停止/初始化管理员脚本；独立解压 Linux HTTP 验收已通过。',
-                       f'- Android：独立客户端 {android_version}，内置业务基准 1.0.1。' + ('可安装自签名 release APK；新签名不能覆盖安装旧签名应用，请先备份。' if complete else '等待可用发布签名；APK 尚缺。'),
+                       f'- Android：独立客户端 {android_version}，内置业务基准 1.0.1。' + ('使用仓库已配置发布身份签名的 release APK；覆盖升级需要签名一致，升级前请导出完整备份。' if complete else '等待可用发布签名；APK 尚缺。'),
+                       '', f'使用说明、功能介绍与部署步骤见 [项目文档](https://github.com/{repository}/blob/{commit}/README.md)。项目源码采用 AGPL-3.0-only，第三方组件保留各自许可与声明。',
                        '', '各平台检查报告与 SHA256 随成品附带。归档/后端验收不等于桌面 GUI 或 Android 真机验收。',
                        '', f'构建来源：{commit}', f'构建工作流：{build_url}',
                        f'发布来源：{publishing_commit}', f'发布工作流：{publish_url}', ''])
