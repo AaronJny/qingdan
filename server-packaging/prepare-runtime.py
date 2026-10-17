@@ -73,8 +73,9 @@ def prepare(source, output):
         shutil.copytree(src / 'dist', out / 'dist')
         shutil.copytree(src / 'drizzle', out / 'drizzle')
         # Shared by desktop backend and standalone-server packaging. Preserve
-        # the source-acquisition notice and its relative MPL license link.
-        for name in ['package.json', 'package-lock.json', 'README.md', 'AUTH.md', 'VERIFICATION.md',
+        # the project license, source guidance and scoped dependency notices.
+        for name in ['package.json', 'package-lock.json', 'LICENSE', 'README.md', 'AUTH.md', 'VERIFICATION.md',
+                     'docs/LICENSING.md',
                      'docs/THIRD-PARTY-NOTICES.md', 'docs/licenses/ical.js-MPL-2.0.txt']:
             target = out / name
             target.parent.mkdir(parents=True, exist_ok=True)

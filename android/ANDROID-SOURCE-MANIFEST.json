@@ -5,7 +5,7 @@
   "application_baseline_version": "1.0.1",
   "application_baseline_commit": "c3194463a8cf748242955c61da72969c652ea062",
   "application_baseline_source_zip_sha256": "3cf3e87df0fcbceda9a1053524ad0c1fdc2a595b36712a8d583a58fc5359372d",
-  "unchanged_baseline_webapp_files": 197,
+  "unchanged_baseline_webapp_files": 193,
   "android_adaptations": [
     {
       "path": "webapp/vite.android.config.ts",
@@ -128,6 +128,36 @@
       "path": "webapp/public/window.svg",
       "change": "removed unused starter-template asset",
       "baseline_sha256": "decf1cf7bb22b5c99c4857cfcd5718ce5465c4454166317589c83fc73df74b66"
+    },
+    {
+      "path": "webapp/LICENSE",
+      "change": "added",
+      "sha256": "d8a6cc31abc16b6748c7a21f21611f5a1ec33f67d22ca23d7da1c19b95496bee",
+      "scope": "Project AGPL-3.0-only; third-party license notices remain separate."
+    },
+    {
+      "path": "webapp/Dockerfile",
+      "change": "android-adapted",
+      "sha256": "056c895a0c4e040f0ed0101b8137e9d317f6c0e2bfdc6d3ce4499cd74d745f3e",
+      "baseline_sha256": "65180794d6070c2f41a358208deabf4eb2060d10a9b30bfb6440602007d8a2c3"
+    },
+    {
+      "path": "webapp/package.json",
+      "change": "android-adapted",
+      "sha256": "78280af5de9c1ad0b27bb72e3fc55495550d38090f7061743fac877dfc139ef1",
+      "baseline_sha256": "595996cc26b591df53e10b14252c2cfa7e51b3b97d1488c4d79e66b828f1b2de"
+    },
+    {
+      "path": "webapp/package-lock.json",
+      "change": "android-adapted",
+      "sha256": "9c7bc72e306f891da9d7229eea2fb494dc15b54bbcbf0cca4393ca26cfeebad7",
+      "baseline_sha256": "5164278c6805e8ce818e580c2200d28eb0b752190c5c703267556035347a9556"
+    },
+    {
+      "path": "webapp/scripts/build-offline.mjs",
+      "change": "android-adapted",
+      "sha256": "222efb358690710dcd33ec28242e52b469234942ac7343d9193942b195cbe9af",
+      "baseline_sha256": "9a4449ce7020f0cd757edf25a0bd00a8b4e785e8372684504f2ffad3cccd54fb"
     }
   ],
   "files": [
@@ -338,8 +368,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 391,
-      "sha256": "7c7255533e6831c649c276f40614818e160164122ec98fbeced8f4787f036d3e"
+      "bytes": 421,
+      "sha256": "6096432fc25bc8308fdb5c24deb8a61cdef1822ff300d54f4d43a4e521c0e504"
     },
     {
       "path": "scripts/build-native-api-tests.mjs",
@@ -348,8 +378,8 @@
     },
     {
       "path": "scripts/build-web.mjs",
-      "bytes": 1715,
-      "sha256": "784209a338e0483f036ac00cc7ebfe4e442e64baa3bd3a701a8146ae00e300e7"
+      "bytes": 1778,
+      "sha256": "fe4a8e95d9bc150ba5759da8823111283652d333be402a1e9ba299fa37fde008"
     },
     {
       "path": "scripts/create-release-key-macos.sh",
@@ -433,8 +463,13 @@
     },
     {
       "path": "webapp/Dockerfile",
-      "bytes": 553,
-      "sha256": "65180794d6070c2f41a358208deabf4eb2060d10a9b30bfb6440602007d8a2c3"
+      "bytes": 594,
+      "sha256": "056c895a0c4e040f0ed0101b8137e9d317f6c0e2bfdc6d3ce4499cd74d745f3e"
+    },
+    {
+      "path": "webapp/LICENSE",
+      "bytes": 34020,
+      "sha256": "d8a6cc31abc16b6748c7a21f21611f5a1ec33f67d22ca23d7da1c19b95496bee"
     },
     {
       "path": "webapp/README.md",
@@ -1363,13 +1398,13 @@
     },
     {
       "path": "webapp/package-lock.json",
-      "bytes": 109312,
-      "sha256": "5164278c6805e8ce818e580c2200d28eb0b752190c5c703267556035347a9556"
+      "bytes": 109346,
+      "sha256": "9c7bc72e306f891da9d7229eea2fb494dc15b54bbcbf0cca4393ca26cfeebad7"
     },
     {
       "path": "webapp/package.json",
-      "bytes": 1571,
-      "sha256": "595996cc26b591df53e10b14252c2cfa7e51b3b97d1488c4d79e66b828f1b2de"
+      "bytes": 1601,
+      "sha256": "78280af5de9c1ad0b27bb72e3fc55495550d38090f7061743fac877dfc139ef1"
     },
     {
       "path": "webapp/postcss.config.mjs",
@@ -1388,8 +1423,8 @@
     },
     {
       "path": "webapp/scripts/build-offline.mjs",
-      "bytes": 2005,
-      "sha256": "9a4449ce7020f0cd757edf25a0bd00a8b4e785e8372684504f2ffad3cccd54fb"
+      "bytes": 2087,
+      "sha256": "222efb358690710dcd33ec28242e52b469234942ac7343d9193942b195cbe9af"
     },
     {
       "path": "webapp/scripts/build-server.mjs",
@@ -1513,9 +1548,9 @@
     "this manifest from its own inventory"
   ],
   "baseline_manifest_note": "webapp/SOURCE-MANIFEST.json, webapp/tests/standalone-evidence.json, artifacts/BUNDLED-ASSETS.json and verification/SUMMARY.json retain historical1.0.1/0.1.0 records. This current exact source inventory excludes ignored generated build assets. Current hosted APK evidence is its .verification.json; see VERIFICATION.md.",
-  "source_revision": "2026-10-17-shared-clipboard-branding",
-  "source_scope": "Android0.1.1 source with shared Qingdan clipboard branding; generated current web assets and signed APK require the actual Actions run",
+  "source_revision": "2026-10-17-agpl-3.0-only",
+  "source_scope": "Android 0.1.1 source with shared Qingdan branding and AGPL-3.0-only project licensing; current web assets and signed APK require the actual build and verification.",
   "inventory_sha256_method": "SHA256 of UTF-8 lines: <sha256><two spaces><relative path><LF>, ordered lexicographically by path; includes every non-ignored delivered source file except this manifest.",
-  "inventory_sha256": "72afafec80cf2e4aaffda08352009141a88a7f2bac502014b375d135cd2cd996",
+  "inventory_sha256": "e9e9ada911a402020c7713cd397d7199a7329d24c085e7178906ca3693b643c7",
   "version_code": 2
 }

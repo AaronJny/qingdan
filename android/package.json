@@ -2,6 +2,7 @@
   "name": "qingdan-android",
   "version": "0.1.1",
   "private": true,
+  "license": "AGPL-3.0-only",
   "type": "module",
   "engines": {"node": ">=24 <25"},
   "scripts": {

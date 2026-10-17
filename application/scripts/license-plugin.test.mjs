@@ -105,9 +105,15 @@ test('offline build copies and hash-verifies notices with the MIME types served 
   await writeFile(join(root, 'offline/entry.js'), "import { value } from '@fixture/bundled'; console.log(value);");
   await writeFile(join(root, 'offline/worker.js'), '/* Synthetic offline worker fixture. */');
   await writeFile(join(root, 'public/favicon.svg'), '<svg xmlns="http://www.w3.org/2000/svg"/>');
+  const projectLicense = 'Synthetic project license fixture.\n';
+  await writeFile(join(root, 'LICENSE'), projectLicense);
   await promisify(execFile)(process.execPath, [fileURLToPath(new URL('./build-offline.mjs', import.meta.url))], { cwd: root });
   const output = join(root, 'dist/client');
   const manifest = JSON.parse(await readFile(join(output, 'offline-shell-manifest.json'), 'utf8'));
+  assert.equal(await readFile(join(output, 'LICENSE.txt'), 'utf8'), projectLicense);
+  const projectLicenseResource = manifest.resources.find(item => item.url === '/LICENSE.txt');
+  assert.ok(projectLicenseResource, 'Project license must remain available in the offline cache');
+  assert.equal(projectLicenseResource.sha256, createHash('sha256').update(projectLicense).digest('hex'));
   for (const [name, mime] of [['WEB-DEPENDENCY-LICENSES.txt', 'application/octet-stream'], ['WEB-DEPENDENCY-VERSIONS.json', 'application/json']]) {
     const url = `/offline-assets/${name}`;
     const bytes = await readFile(join(output, url));

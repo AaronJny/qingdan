@@ -41,8 +41,8 @@ function projectLock(sourcePackage, sourceLock, specifiers) {
     if (!sourcePackage.dependencies?.[name]) throw Error(`Server import is not an application production dependency: ${name}`);
     const key = resolveDependency('', name); direct[name] = sourceLock.packages[key].version; visit(key);
   }
-  const runtimePackage = { name: sourcePackage.name, version: sourcePackage.version, private: true, type: 'module', engines: sourcePackage.engines, scripts: { start: 'node dist/server/main.mjs', users: 'node dist/server/users.mjs' }, dependencies: Object.fromEntries(Object.entries(direct).sort()) };
-  const rootPackage = { name: runtimePackage.name, version: runtimePackage.version, dependencies: runtimePackage.dependencies, engines: runtimePackage.engines };
+  const runtimePackage = { name: sourcePackage.name, version: sourcePackage.version, private: true, license: sourcePackage.license, type: 'module', engines: sourcePackage.engines, scripts: { start: 'node dist/server/main.mjs', users: 'node dist/server/users.mjs' }, dependencies: Object.fromEntries(Object.entries(direct).sort()) };
+  const rootPackage = { name: runtimePackage.name, version: runtimePackage.version, license: runtimePackage.license, dependencies: runtimePackage.dependencies, engines: runtimePackage.engines };
   return { runtimePackage, runtimeLock: { name: runtimePackage.name, version: runtimePackage.version, lockfileVersion: 3, requires: true, packages: { '': rootPackage, ...Object.fromEntries(Object.entries(packages).sort()) } } };
 }
 async function analyzeImports(application) {

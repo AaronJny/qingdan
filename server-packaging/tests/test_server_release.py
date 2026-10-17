@@ -95,6 +95,8 @@ class ServerReleaseTests(unittest.TestCase):
         self.put('dist/client/index.html', '<html><body>Fixture</body></html>')
         self.put('drizzle/0000_fixture.sql', '-- synthetic migration')
         self.put('README.md', 'Fixture documentation')
+        self.put('LICENSE', 'Synthetic project license fixture.\n')
+        self.put('docs/LICENSING.md', 'Synthetic project source-delivery guidance.\n')
         self.put('docs/THIRD-PARTY-NOTICES.md', 'Fixture source: https://registry.npmjs.org/ical.js/-/ical.js-2.2.1.tgz\n[License](licenses/ical.js-MPL-2.0.txt)\n')
         self.put('docs/licenses/ical.js-MPL-2.0.txt', 'Mozilla Public License Version 2.0\nSynthetic retained license fixture.\n')
         self.refresh_manifest()
@@ -123,7 +125,7 @@ class ServerReleaseTests(unittest.TestCase):
                 self.assertTrue(archive.getinfo('qingdan-server/' + entry).external_attr >> 16 & 0o111)
         extracted = verifier.extract_archive(self.zip, self.root / 'independent 中文 path')
         self.assertEqual(verifier.verify_structure(extracted)['application_source_snapshot_sha256'], self.snapshot)
-        for name in ['docs/THIRD-PARTY-NOTICES.md', 'docs/licenses/ical.js-MPL-2.0.txt']:
+        for name in ['LICENSE', 'docs/LICENSING.md', 'docs/THIRD-PARTY-NOTICES.md', 'docs/licenses/ical.js-MPL-2.0.txt']:
             self.assertEqual((extracted / 'app' / name).read_bytes(), (self.app / name).read_bytes())
 
     def test_zip_cli_succeeds_with_snapshot_and_optimized_python(self):

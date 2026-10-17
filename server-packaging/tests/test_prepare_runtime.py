@@ -19,6 +19,8 @@ class PrepareRuntimeTests(unittest.TestCase):
         files = {
             'package.json': json.dumps({'name': 'qingdan-fixture', 'version': '1.1.0'}),
             'package-lock.json': '{}', 'README.md': 'Fixture', 'AUTH.md': 'Fixture',
+            'LICENSE': 'Synthetic project license fixture.\n',
+            'docs/LICENSING.md': 'Synthetic project source-delivery guidance.\n',
             'VERIFICATION.md': 'Fixture', 'dist/server/main.mjs': '// fixture',
             'docs/THIRD-PARTY-NOTICES.md': 'Fixture source acquisition: https://registry.npmjs.org/ical.js/-/ical.js-2.2.1.tgz\n[License](licenses/ical.js-MPL-2.0.txt)\n',
             'docs/licenses/ical.js-MPL-2.0.txt': 'Mozilla Public License Version 2.0\nSynthetic retained license fixture.\n',
@@ -63,14 +65,14 @@ class PrepareRuntimeTests(unittest.TestCase):
         result = self.run_prepare()
         self.assertEqual(result.returncode, 0, result.stderr)
         manifest = json.loads((self.output / 'RUNTIME-MANIFEST.json').read_text())
-        for name in ['docs/THIRD-PARTY-NOTICES.md', 'docs/licenses/ical.js-MPL-2.0.txt']:
+        for name in ['LICENSE', 'docs/LICENSING.md', 'docs/THIRD-PARTY-NOTICES.md', 'docs/licenses/ical.js-MPL-2.0.txt']:
             self.assertEqual((self.output / name).read_bytes(), (self.source / name).read_bytes())
             self.assertEqual(manifest['files_sha256'][name], hashlib.sha256((self.source / name).read_bytes()).hexdigest())
         self.assertIn('https://registry.npmjs.org/ical.js/-/ical.js-2.2.1.tgz',
                       (self.output / 'docs/THIRD-PARTY-NOTICES.md').read_text())
 
     def test_missing_dependency_notice_or_license_cannot_be_omitted_from_a_checked_runtime(self):
-        for name in ['docs/THIRD-PARTY-NOTICES.md', 'docs/licenses/ical.js-MPL-2.0.txt']:
+        for name in ['LICENSE', 'docs/LICENSING.md', 'docs/THIRD-PARTY-NOTICES.md', 'docs/licenses/ical.js-MPL-2.0.txt']:
             with self.subTest(name=name):
                 path = self.source / name
                 original = path.read_bytes()
