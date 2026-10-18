@@ -1,6 +1,8 @@
 # 青单桌面构建与发布
 
-使用 Node.js 24.19.0、Python 3 与锁定的 Electron 44.6.0 / electron-builder 26.15.3。当前 backend 由同仓库 application 的完整检查快照生成，不再要求旧冻结 payload 或手工拷贝依赖。
+本文面向桌面端开发和发行维护。安装与使用见 [桌面端说明](../README.md)。
+
+需要 Node.js 24.19.0、Python 3、Electron 44.6.0 和 electron-builder 26.15.3。内置后端由同仓库 `application/` 源码生成。
 
 ```sh
 cd application
@@ -42,7 +44,7 @@ Apple Silicon 使用 GitHub 标准托管 `macos-15` runner，Intel 使用 `macos
 - `smoke-local-session.cjs` 在 `npm ci` 后复制官方 Electron 44.6.0 到临时测试目录，仅在副本中启用 CookieEncryption，并重置副本的 ad-hoc 签名；核验其他 fuse 及源运行时的 fuse 未变。两个真实 Electron 进程使用合成数据，验证生产 preload、IPC、内存会话、同步保存与重启恢复，以及弹窗隔离和后端失效后的受信 Blob 导出。
 - `smoke-packaged-recovery.cjs` 在成品及归档校验后，用同架构官方 Electron 的 Node 模式加载成品 ASAR 中的 `classic-level` 和最终解包的原生绑定，完成合成数据库写入、读取与重新打开。它不启动产品应用，也不改动产品的 RunAsNode 等 fuse。运行过的绑定哈希必须与最终包、ZIP 解出内容及只读挂载 DMG 中的实际绑定字节一致；原生签名后可能变化的字节以最终磁盘文件为准，不使用 ASAR 的签名前哈希替代。
 
-通过的证据以 `localSessionSmoke` 和 `packagedRecoverySmoke` 嵌入已有 `verified-mac-架构.json`；最终绑定字节证据也记录在包和归档报告中。不会新增独立发布附件，完整 Release 仍为 32 个资源（含 `RELEASE-MANIFEST.json`）。这些检查只使用合成数据，不访问真实用户配置；它们没有直接监测钥匙串调用，也不代表最终 macOS 产品的 GUI 或实机钥匙串行为已验收。
+结果写入 `verified-mac-架构.json` 的 `localSessionSmoke` 和 `packagedRecoverySmoke`，绑定哈希同时写入包和归档报告。自动测试使用临时数据；产品 GUI 与钥匙串权限提示仍需单独进行设备测试。
 
 GitHub runner 标签来源：[GitHub-hosted runners reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)。
 
@@ -63,15 +65,3 @@ package.cjs 生成 Qingdan-版本-linux-x64.AppImage 后自动调用 verify-linu
 - 解出已核验的实际 ASAR 后端，用构建机普通 Node 24 在合成数据目录测试版本握手、在线及离线资源、迁移、日历 worker、建任务与正常重启持久性
 
 结果写入 dist/verified-linux-appimage-x64.json，明确记录 electronUtilityProcessTested=false、nativeGuiTested=false。此流程验证 AppImage 结构及归档后端，不代表 Linux 窗口、Electron utilityProcess、图形菜单、桌面通知、X11/Wayland 或发行版兼容性已实机验收。
-
-## 历史变更说明
-
-## 1.0.2 Mac 启动修复
-
-1.0.1 的 CFBundleName=青单与实际 Qingdan Helper 路径不匹配。Electron 44.6.0 在 JavaScript 启动前先寻找 Electron Helper，找不到再寻找 CFBundleName 对应的辅助程序，原包两者都缺。1.0.2 在 afterPack（签名和 fuse 最终处理之前）把四类辅助程序恢复为官方 Electron Helper 名称、匹配 CFBundleExecutable，显示名称为中文；mac.executableName 固定为青单，使主可执行文件和外层目录都是青单。app.qingdan.desktop 和 QingdanDesktop 数据目录保持稳定，冻结的 c319 后端与 Android 源码不变。
-
-新增 test/mac-bundle.test.cjs 覆盖原错误、四种 helper、中文显示名、缺失/权限/冲突拒绝及稳定配置。scripts/mac/inspect-launch.py 对真实解包 app 按固定版本规则检查辅助程序。该检查不是 macOS 原生运行测试。
-
-## 1.0.3 文案清理
-
-本次仅删去设置页与运行说明中多余的产品比较和声明，没有新增宣传文案。正常重建了在线/离线前端；Mac继续保持1.0.2修复后的helper、中文app和数据目录。用户数据库、后端API及依赖许可证未改。详见RELEASE-1.0.3.md。

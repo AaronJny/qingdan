@@ -803,15 +803,15 @@
   "android.export.legacyLimit": "当前原生宿主缺少分块导出支持，超过1MB请使用网页端导出。",
   "android.export.unconfirmed": "导出内容没有确认，请同步后重试。",
   "settings.general": "通用",
-  "settings.languageDeviceOnly": "语言偏好仅保存在当前设备或浏览器，不随账号同步。你创建的任务、笔记、清单和标签不会被翻译。",
-  "core.localRecoveryInputPending": "以前的本地输入已保留，等待核对。已保存的任务仍可使用。",
-  "core.localRecoveryDataPending": "以前的本地数据已保留，等待核对。",
-  "core.localRecoveryReview": "核对以前的输入",
-  "core.localRecoveryUnavailable": "暂时无法检查或打开以前的本地输入，请重试核对。",
+  "settings.languageDeviceOnly": "语言仅在此设备或浏览器生效，任务、笔记、清单和标签保留原文。",
+  "core.localRecoveryInputPending": "旧版输入已保留，等待核对。已保存任务仍可使用。",
+  "core.localRecoveryDataPending": "旧版数据已保留，等待核对。",
+  "core.localRecoveryReview": "核对旧版输入",
+  "core.localRecoveryUnavailable": "无法打开旧版输入，请重试。",
   "core.localStorageMutationBlocked": "本地输入未能持久保存。请先导出未保存的输入，再重新加载并核对，之后再继续修改。",
   "core.localStorageFailureWarning": "本地保存失败，修改已暂停。导出未保存的输入之前，请勿关闭或重新加载此窗口。确认导出文件已保存后，再重新加载并与已保存的任务核对。此前正在提交的修改可能已经保存。",
   "core.localStorageExportUnsaved": "导出未保存的输入",
   "core.localStorageExportRequested": "已请求下载。重新加载前，请确认 JSON 文件已保存，并保留该文件直到所有输入核对完毕。",
   "core.localStorageExportFailed": "未能开始导出。请保持此窗口打开并重试。",
-  "quickInput.supportedLanguages": "快速录入的日期指令支持简体中文和英文。其他语言会保留为任务文字，请使用日期选择器。"
+  "quickInput.supportedLanguages": "可用简体中文或英文输入日期，其他语言请使用日期选择器。"
 }

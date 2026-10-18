@@ -5,7 +5,7 @@
     <string name="settings_mode">Mode / Serveur</string>
     <string name="mode_local">Mode local · Sans compte, sur cet appareil uniquement</string>
     <string name="mode_server">Serveur privé · Connexion à votre propre serveur</string>
-    <string name="mode_description">Les serveurs privés nécessitent un certificat HTTPS valide et une interface /api compatible. Changer de mode ou de serveur ne déplace, ne fusionne et ne supprime aucune donnée. Les connexions aux comptes et les données locales restent séparées.</string>
+    <string name="mode_description">Utilisez un serveur Qingdan compatible avec un certificat HTTPS valide. Changer de mode ou de serveur ne déplace, ne fusionne ni ne supprime les données. Chaque serveur a sa propre session.</string>
     <string name="mode_title">Mode Qingdan</string>
     <string name="common_open">Ouvrir</string>
     <string name="common_cancel">Annuler</string>
@@ -13,13 +13,13 @@
     <string name="data_clear_title">Effacer les données web locales de tous les modes ?</string>
     <string name="data_clear_description">Cette action vous déconnecte de tous les serveurs privés et supprime les caches web, copies hors ligne et brouillons web non synchronisés de tous les modes. Les enregistrements SQLite locaux, pièces jointes et données du serveur ne sont pas affectés. Cette action est irréversible.</string>
     <string name="common_clear">Effacer</string>
-    <string name="storage_initialize_failed">Le stockage local n’a pas pu démarrer. Pour protéger vos données existantes, Qingdan n’a pas reconstruit la base de données.</string>
+    <string name="storage_initialize_failed">Les données locales n’ont pas pu être ouvertes. Les données existantes sont conservées. Rouvrez l’application pour réessayer.</string>
     <string name="mode_local_title">Qingdan · Local</string>
     <string name="mode_server_title">Qingdan · Serveur privé</string>
     <string name="export_use_button">Utilisez le bouton d’export de Qingdan pour enregistrer ce fichier.</string>
     <string name="page_reopen">Rouvrir la page</string>
     <string name="navigation_blocked">Seule la page Qingdan du serveur actuel est autorisée dans l’application.</string>
-    <string name="page_process_stopped">La page web s’est arrêtée. Vous pouvez la rouvrir. Qingdan n’a supprimé ni reconstruit aucune donnée.</string>
+    <string name="page_process_stopped">La page s’est arrêtée. Rouvrez-la pour continuer. Les données enregistrées sont conservées.</string>
     <string name="server_certificate_invalid">Le certificat HTTPS du serveur n’est pas valide. La connexion a été interrompue.</string>
     <string name="page_open_failed">Impossible d’ouvrir Qingdan. Vérifiez les paramètres de votre serveur ou rouvrez l’application.</string>
     <string name="file_selection_pending">Terminez ou annulez d’abord la sélection de fichier actuelle.</string>
@@ -40,7 +40,7 @@
     <string name="server_tls_invalid">Le certificat HTTPS ou la connexion sécurisée du serveur n’est pas valide.</string>
     <string name="server_network_unavailable">Connexion indisponible. Les saisies non confirmées seront conservées.</string>
     <string name="notifications_enable_title">Activer les notifications Qingdan ?</string>
-    <string name="notifications_enable_description">Autoriser les rappels du minuteur de concentration lorsque l’application est au premier plan. Aucune alarme exacte en arrière-plan ne sera programmée.</string>
+    <string name="notifications_enable_description">Autoriser les rappels de concentration lorsque Qingdan est ouvert et visible. Les rappels ne peuvent pas arriver à l’heure si l’application est en arrière-plan ou fermée.</string>
     <string name="notifications_not_now">Pas maintenant</string>
     <string name="common_continue">Continuer</string>
     <string name="endpoint_invalid">Saisissez une origine HTTPS complète, par exemple https://qingdan.example.com, sans nom d’utilisateur, mot de passe, chemin ni paramètres. Le certificat doit être valide.</string>

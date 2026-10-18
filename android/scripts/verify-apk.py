@@ -184,7 +184,7 @@ def verify(apk, assets, build_tools, structural_only=False, expected_certificate
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("apk", type=Path, nargs="?", default=ROOT / "artifacts/Qingdan-0.3.0-android.apk")
+    parser.add_argument("apk", type=Path, nargs="?", default=ROOT / "artifacts/Qingdan-0.3.1-android.apk")
     parser.add_argument("--assets", type=Path, default=ROOT / "android/app/src/main/assets")
     parser.add_argument("--report", type=Path, default=ROOT / "artifacts/APK-INDEPENDENT-VERIFICATION.json")
     sdk = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT")

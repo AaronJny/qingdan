@@ -2,22 +2,22 @@
 
 These dependency-free TypeScript utilities support snapshot import/export and server-side provider adapters.
 
-## Status
+## Scope
 
-- Implemented and mock-tested: CSV parser/serializer, generic task CSV snapshot import/export, Todoist-style CSV snapshot import, ICS VEVENT snapshot import/export, OpenAI summary/extraction/transcription HTTP adapters, Google Calendar event list/create/patch/delete HTTP adapters.
-- Not configured or live tested: provider credentials, OAuth grants/refresh, webhook delivery, background sync, app integration authorization, provider account access, billing, or real audio transcription.
-- File imports/exports are one-time snapshots. No two-way sync is claimed. AI results are suggestions, never automatically saved or executed.
+- CSV and ICS utilities import and export one-time file snapshots.
+- Server-only adapters provide OpenAI summary, task extraction and transcription requests, plus Google Calendar event operations. They require authentication and permission handling in the calling application; they do not provide a connected integration in the product interface.
+- OAuth setup, token refresh, webhooks and background synchronization are outside this module. AI output must be reviewed before saving or acting on it.
 
 ## Tests
 
-Run from the project root:
+Run from `android/webapp/`:
 
 ```sh
 node --experimental-strip-types --test assets/importers.test.ts assets/integrations.test.ts
 ./node_modules/.bin/tsc --noEmit --strict --target ES2022 --module nodenext --moduleResolution nodenext --allowImportingTsExtensions --skipLibCheck --lib es2022,dom assets/importers.ts assets/importers.test.ts assets/integrations.ts assets/integrations.test.ts
 ```
 
-30 tests pass. Tests use `node:test`, injected mock fetch, nonworking mock credential strings, generated synthetic task/event data and synthetic bytes. They do not access the network or invoke AI models.
+Tests use `node:test` and mocked HTTP responses; they run without network access or provider credentials.
 
 ## Snapshot API
 

@@ -90,11 +90,11 @@ test('25-item pages show next only until the final page and viewing again restar
   assert.equal(h.elements.more.hidden, false);
   await h.click('more');
   assert.equal(h.elements.candidates.children.length, 3);
-  assert.equal(h.elements.candidates.children[0].children[0].textContent, '候选 26 · 快速录入草稿');
+  assert.equal(h.elements.candidates.children[0].children[0].textContent, '输入 26 · 快速录入草稿');
   assert.equal(h.elements.more.hidden, true);
   await h.click('view');
   assert.equal(h.elements.candidates.children.length, 25);
-  assert.equal(h.elements.candidates.children[0].children[0].textContent, '候选 1 · 快速录入草稿');
+  assert.equal(h.elements.candidates.children[0].children[0].textContent, '输入 1 · 快速录入草稿');
   assert.equal(h.elements.more.hidden, false);
   assert.deepEqual(h.calls.candidates, [0, 25, 0]);
 });
@@ -102,8 +102,8 @@ test('25-item pages show next only until the final page and viewing again restar
 test('candidate headings use exact bilingual labels while raw input stays unchanged and read-only', async () => {
   const value = '<script>not executable</script> 原始输入';
   for (const [locale, expected] of [
-    ['zh-CN', ['候选 1 · 语言偏好', '候选 2 · 未确认的新建操作', '候选 3 · 快速录入草稿']],
-    ['en', ['Candidate 1 · Language preference', 'Candidate 2 · Unconfirmed creation', 'Candidate 3 · Quick-entry draft']],
+    ['zh-CN', ['输入 1 · 语言偏好', '输入 2 · 未确认的新建操作', '输入 3 · 快速录入草稿']],
+    ['en', ['Item 1 · Language preference', 'Item 2 · Unconfirmed creation', 'Item 3 · Quick-entry draft']],
   ]) {
     const h = await harness({ locale, items: ['language', 'queue-create', 'quick-draft'].map(kind => ({ kind, value, candidateId: 'private-hash', key: 'private-principal' })) });
     await h.click('view');

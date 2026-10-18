@@ -803,15 +803,15 @@
   "android.export.legacyLimit": "이 앱 버전은 분할 내보내기를 지원하지 않습니다. 1 MB보다 큰 파일은 웹 앱에서 내보내세요.",
   "android.export.unconfirmed": "내보낼 내용을 확인할 수 없습니다. 동기화한 후 다시 시도하세요.",
   "settings.general": "일반",
-  "settings.languageDeviceOnly": "언어 설정은 이 기기나 브라우저에만 적용되며 계정과 동기화되지 않습니다. 할 일, 노트, 목록, 태그는 작성한 그대로 유지됩니다.",
-  "core.localRecoveryInputPending": "이전 로컬 입력 내용이 검토용으로 보관되어 있습니다. 저장된 할 일은 계속 사용할 수 있습니다.",
-  "core.localRecoveryDataPending": "이전 로컬 데이터가 검토용으로 보관되어 있습니다.",
-  "core.localRecoveryReview": "이전 입력 내용 검토",
-  "core.localRecoveryUnavailable": "이전 로컬 입력 내용을 확인하거나 열 수 없습니다. 다시 검토를 시도하세요.",
+  "settings.languageDeviceOnly": "언어 설정은 이 기기나 브라우저에만 적용됩니다. 할 일, 노트, 목록, 태그의 원문은 유지됩니다.",
+  "core.localRecoveryInputPending": "이전 입력은 확인할 수 있도록 보관되어 있습니다. 저장된 할 일은 계속 사용할 수 있습니다.",
+  "core.localRecoveryDataPending": "이전 데이터는 확인할 수 있도록 보관되어 있습니다.",
+  "core.localRecoveryReview": "이전 입력 확인",
+  "core.localRecoveryUnavailable": "이전 입력을 열지 못했습니다. 다시 시도하세요.",
   "core.localStorageMutationBlocked": "로컬 입력 내용을 안정적으로 저장하지 못했습니다. 저장되지 않은 입력을 내보낸 후 새로고침하여 내용을 대조한 다음 추가 변경을 진행하세요.",
   "core.localStorageFailureWarning": "로컬 저장에 실패하여 변경이 일시 정지되었습니다. 저장되지 않은 입력을 내보내기 전에는 이 창을 닫거나 새로고침하지 마세요. 파일이 저장되었는지 확인한 후 새로고침하여 저장된 할 일과 비교하세요. 진행 중이던 변경은 이미 저장되었을 수 있습니다.",
   "core.localStorageExportUnsaved": "저장되지 않은 입력 내보내기",
   "core.localStorageExportRequested": "다운로드를 요청했습니다. 새로고침하기 전에 JSON 파일이 저장되었는지 확인하고 모든 입력 내용의 대조가 끝날 때까지 보관하세요.",
   "core.localStorageExportFailed": "내보내기를 시작할 수 없습니다. 이 창을 열어 둔 채 다시 시도하세요.",
-  "quickInput.supportedLanguages": "빠른 입력의 날짜 명령은 간체 중국어와 영어를 지원합니다. 다른 언어는 할 일 내용으로 유지되므로 날짜 선택기를 사용하세요."
+  "quickInput.supportedLanguages": "날짜는 중국어 간체나 영어로 입력할 수 있습니다. 다른 언어는 날짜 선택기를 사용하세요."
 }

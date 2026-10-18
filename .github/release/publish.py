@@ -517,21 +517,20 @@ def main(argv=None):
     require(len(files) == len(candidate_names(version, android_version, complete)) + 1
             and {path.name for path in files} == candidate_names(version, android_version, complete) | {'RELEASE-MANIFEST.json'},
             'Unexpected release candidate inventory')
-    status = '六项安装与部署包已就绪。 / All six release targets are ready.' if complete else '草稿：Android 签名安装包尚未就绪。 / Draft: the signed Android package is not ready.'
+    status = '支持 macOS、Windows、Linux、Android 和自托管网页端。 / Available for macOS, Windows, Linux, Android and self-hosted web.' if complete else '草稿：Android 签名安装包尚未就绪。 / Draft: the signed Android package is not ready.'
     download = f'https://github.com/{repository}/releases/download/{tag}'
     notes = '\n'.join([f'# 青单 / Qingdan {tag}', '', status, '',
                        '## 更新 / What’s new',
                        '- 新增繁體中文、日本語、한국어、Español、Français、Deutsch 和 Português (Brasil)，连同简体中文与 English 共支持九种界面语言。 / Seven new interface languages join Simplified Chinese and English: Traditional Chinese, Japanese, Korean, Spanish, French, German and Brazilian Portuguese.',
-                       '- 网页、桌面端与 Android 可跟随系统语言，也可在“设置 → 通用 → 语言”中切换。 / Web, desktop and Android can follow the system language or your choice in Settings → General → Language.',
-                       '- 日期、数字、数量提示和原生菜单随所选语言显示；语言偏好仅保存在当前设备。 / Dates, numbers, count labels and native menus follow the selected language; the preference stays on this device.',
+                       '- 在“设置 → 通用 → 语言”中选择语言或跟随系统，日期、数字和原生菜单随之切换；设置仅对当前设备生效。 / Choose a language or System default in Settings → General → Language. Dates, numbers and native menus follow your choice, saved on this device.',
                        '- 任务、笔记、清单和标签保留原文；快速录入的日期命令支持简体中文与英文。 / Tasks, notes, lists and tags keep their original text. Quick-entry date commands support Simplified Chinese and English.',
                        '', '## 下载 / Downloads',
                        f'- macOS Apple Silicon：[DMG]({download}/Qingdan-{version}-mac-arm64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-arm64.zip)',
                        f'- macOS Intel：[DMG]({download}/Qingdan-{version}-mac-x64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-x64.zip)',
-                       '- Mac 安装包尚无 Developer ID 签名或 Apple 公证，系统可能拦截。请勿关闭 Gatekeeper 或移除隔离属性。 / Mac packages lack Developer ID signing and Apple notarization; macOS may block them. Do not disable Gatekeeper or remove quarantine attributes.',
-                       f'- Windows x64：[ZIP]({download}/Qingdan-{version}-win-x64.zip)，解压后运行 Qingdan.exe。程序未签名。 / Extract and run Qingdan.exe. The executable is unsigned.',
+                       '- Mac 安装包尚无 Developer ID 签名或 Apple 公证，系统可能阻止运行。遇到安全警告时，请核实下载来源并保留系统安全设置。 / Mac packages lack Developer ID signing and Apple notarization and may be blocked. If you see a security warning, verify the download source and keep system security protections enabled.',
+                       f'- Windows x64：[ZIP]({download}/Qingdan-{version}-win-x64.zip)，完整解压后运行 Qingdan.exe。此版本尚无发布者签名。 / Extract the entire archive and run Qingdan.exe. This build has no publisher signature.',
                        f'- Linux x64：[AppImage]({download}/Qingdan-{version}-linux-x64.AppImage)',
-                       f'- 服务端 / Server：[ZIP]({download}/qingdan-server-v{version}.zip)，含运行环境与启动脚本。 / Bundled runtimes and start scripts.',
+                       f'- 服务端 / Server：[ZIP]({download}/qingdan-server-v{version}.zip)，支持 Linux x64 / macOS arm64，内置运行环境与启动脚本。 / Supports Linux x64 and macOS arm64, with bundled runtimes and start scripts.',
                        (f'- Android {android_version}：[APK]({download}/Qingdan-{android_version}-android.apk)。更新前请导出完整备份，覆盖升级须签名一致。 / Export a full backup before updating; upgrades require the same signing identity.'
                         if complete else f'- Android {android_version}：等待发布签名。 / Awaiting release signing.'),
                        '', f'[中文说明](https://github.com/{repository}/blob/{commit}/README.md) · [English guide](https://github.com/{repository}/blob/{commit}/README.en.md)', ''])

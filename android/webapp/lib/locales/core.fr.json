@@ -803,15 +803,15 @@
   "android.export.legacyLimit": "Cette version de l’application ne prend pas en charge les exports par morceaux. Utilisez l’application web pour exporter des fichiers de plus de 1 Mo.",
   "android.export.unconfirmed": "Le contenu de l’export n’a pas pu être confirmé. Synchronisez et réessayez.",
   "settings.general": "Général",
-  "settings.languageDeviceOnly": "Votre choix de langue s’applique uniquement à cet appareil ou navigateur et n’est pas synchronisé avec votre compte. Vos tâches, notes, listes et étiquettes restent telles que vous les avez écrites.",
-  "core.localRecoveryInputPending": "La saisie locale précédente est conservée pour vérification. Les tâches enregistrées restent disponibles.",
-  "core.localRecoveryDataPending": "Les données locales précédentes sont conservées pour vérification.",
-  "core.localRecoveryReview": "Vérifier la saisie précédente",
-  "core.localRecoveryUnavailable": "La saisie locale précédente n’a pas pu être vérifiée ou ouverte. Réessayez la vérification.",
+  "settings.languageDeviceOnly": "La langue s’applique uniquement à cet appareil ou navigateur. Les tâches, notes, listes et étiquettes conservent leur texte d’origine.",
+  "core.localRecoveryInputPending": "Les saisies précédentes sont conservées pour vérification. Les tâches enregistrées restent disponibles.",
+  "core.localRecoveryDataPending": "Les données précédentes sont conservées pour vérification.",
+  "core.localRecoveryReview": "Vérifier les saisies précédentes",
+  "core.localRecoveryUnavailable": "Les saisies précédentes n’ont pas pu être ouvertes. Réessayez.",
   "core.localStorageMutationBlocked": "La saisie locale n’a pas pu être enregistrée durablement. Exportez la saisie non enregistrée, puis rechargez pour rapprocher les données avant toute autre modification.",
   "core.localStorageFailureWarning": "L’enregistrement local a échoué et les modifications sont suspendues. Ne fermez pas et ne rechargez pas cette fenêtre avant d’exporter la saisie non enregistrée. Après avoir vérifié que le fichier est bien enregistré, rechargez et comparez-le aux tâches enregistrées. Une modification en cours a peut-être déjà été enregistrée.",
   "core.localStorageExportUnsaved": "Exporter la saisie non enregistrée",
   "core.localStorageExportRequested": "Téléchargement demandé. Vérifiez que le fichier JSON est enregistré avant de recharger et conservez-le jusqu’à ce que toutes les saisies aient été rapprochées.",
   "core.localStorageExportFailed": "L’export n’a pas pu démarrer. Gardez cette fenêtre ouverte et réessayez.",
-  "quickInput.supportedLanguages": "Les commandes de date de la saisie rapide prennent en charge le chinois simplifié et l’anglais. Les autres langues restent du texte de tâche ; utilisez le sélecteur de date."
+  "quickInput.supportedLanguages": "Saisissez les dates en chinois simplifié ou en anglais. Pour les autres langues, utilisez le sélecteur de date."
 }

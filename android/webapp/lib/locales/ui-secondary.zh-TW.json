@@ -645,7 +645,7 @@
   "ui.secondary.workspaceSync.localModeRefreshesOnlyTheCurrentLocal": "本機模式只重新整理目前本機服務。",
   "ui.secondary.workspaceSync.syncThisAccountSDataFromThe": "同步目前伺服器中此帳號的資料。",
   "ui.secondary.offlineShellSettings.savedIndependentlyOnThisDevice": "本機獨立儲存",
-  "ui.secondary.offlineShellSettings.localModeUsesThisAppSPrivate": "本機模式使用此應用程式的私有SQLite資料庫與檔案目錄，不需要伺服器或登入。解除安裝應用程式會清除此目錄，請先匯出完整備份。",
+  "ui.secondary.offlineShellSettings.localModeUsesThisAppSPrivate": "本機模式無需伺服器或登入，資料儲存在此應用程式中。解除安裝會刪除資料，請先匯出完整備份。",
   "ui.secondary.taskCard.markIncomplete": "標為未完成",
   "ui.secondary.taskCard.markComplete": "標為完成",
   "ui.secondary.habitEditor.dayCountUnit": "天",

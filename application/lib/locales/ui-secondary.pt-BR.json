@@ -645,7 +645,7 @@
   "ui.secondary.workspaceSync.localModeRefreshesOnlyTheCurrentLocal": "O modo local atualiza apenas o serviço local atual.",
   "ui.secondary.workspaceSync.syncThisAccountSDataFromThe": "Sincronizar os dados desta conta a partir do servidor atual.",
   "ui.secondary.offlineShellSettings.savedIndependentlyOnThisDevice": "Salvo de forma independente neste dispositivo",
-  "ui.secondary.offlineShellSettings.localModeUsesThisAppSPrivate": "O modo local usa o banco de dados SQLite e o diretório de arquivos privados deste aplicativo, sem precisar de servidor ou conta. A desinstalação apaga esse diretório. Exporte um backup completo primeiro.",
+  "ui.secondary.offlineShellSettings.localModeUsesThisAppSPrivate": "O modo local salva dados neste app, sem precisar de servidor ou login. Desinstalar o app exclui esses dados. Exporte um backup completo primeiro.",
   "ui.secondary.taskCard.markIncomplete": "Marcar como incompleta",
   "ui.secondary.taskCard.markComplete": "Marcar como concluída",
   "ui.secondary.habitEditor.dayCountUnit": "dias",

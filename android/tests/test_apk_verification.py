@@ -4,6 +4,7 @@ These tests prove validation logic only. They do not count as an Android build,
 cryptographic verification, install or device launch.
 """
 import importlib.util
+import json
 import os
 from pathlib import Path
 import re
@@ -19,8 +20,8 @@ ROOT = Path(__file__).resolve().parent.parent
 spec = importlib.util.spec_from_file_location("verify_apk", ROOT / "scripts/verify-apk.py")
 verifier = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(verifier)
-IDENTITY = {"application_id": "cn.qingdan.android", "version_name": "0.2.1", "version_code": 5, "min_sdk": 26, "target_sdk": 36}
-BADGING = """package: name='cn.qingdan.android' versionCode='5' versionName='0.2.1' platformBuildVersionName='16'
+IDENTITY = {"application_id": "cn.qingdan.android", "version_name": "0.3.1", "version_code": 7, "min_sdk": 26, "target_sdk": 36}
+BADGING = f"""package: name='cn.qingdan.android' versionCode='{IDENTITY["version_code"]}' versionName='{IDENTITY["version_name"]}' platformBuildVersionName='16'
 sdkVersion:'26'
 targetSdkVersion:'36'
 launchable-activity: name='cn.qingdan.android.MainActivity' label='青单' icon='res/drawable/ic_qingdan.xml'
@@ -154,7 +155,7 @@ class ApkVerificationTests(unittest.TestCase):
         self.assertEqual(verifier.verify_manifest(BADGING, IDENTITY), IDENTITY)
 
     def test_manifest_wrong_version_or_sdk_rejected(self):
-        for old, new in (("versionCode='5'", "versionCode='2'"), ("versionName='0.2.1'", "versionName='0.1.1'"), ("sdkVersion:'26'", "sdkVersion:'25'"), ("targetSdkVersion:'36'", "targetSdkVersion:'35'")):
+        for old, new in ((f"versionCode='{IDENTITY['version_code']}'", "versionCode='6'"), (f"versionName='{IDENTITY['version_name']}'", "versionName='0.3.0'"), (f"versionCode='{IDENTITY['version_code']}'", "versionCode='5'"), (f"versionName='{IDENTITY['version_name']}'", "versionName='0.2.1'"), ("sdkVersion:'26'", "sdkVersion:'25'"), ("targetSdkVersion:'36'", "targetSdkVersion:'35'")):
             with self.subTest(new=new), self.assertRaisesRegex(verifier.VerificationError, "identity differs"):
                 verifier.verify_manifest(BADGING.replace(old, new), IDENTITY)
 
@@ -200,6 +201,16 @@ class ApkVerificationTests(unittest.TestCase):
         with patch.dict(os.environ, {"QINGDAN_ANDROID_VERSION_NAME": "0.1.3", "QINGDAN_ANDROID_VERSION_CODE": "4"}):
             identity = verifier.source_identity()
             self.assertEqual((identity["version_name"], identity["version_code"]), ("0.1.3", 4))
+
+    def test_android_client_version_matches_package_and_native_app_info(self):
+        # The Android client and bundled business baseline are independently
+        # versioned. A client bump must update the native /api/app-info response.
+        package = json.loads((ROOT / "package.json").read_text())
+        dispatch = (ROOT / "webapp/native/dispatch.ts").read_text()
+        match = re.search(r"androidClient\s*:\s*['\"]([^'\"]+)['\"]", dispatch)
+        self.assertIsNotNone(match, "Native app-info must expose the Android client version")
+        self.assertEqual(package["version"], IDENTITY["version_name"])
+        self.assertEqual(match.group(1), IDENTITY["version_name"])
 
     def test_groovy_version_properties_require_explicit_assignment(self):
         # Regression guard for the actual Actions evaluation failure. This is

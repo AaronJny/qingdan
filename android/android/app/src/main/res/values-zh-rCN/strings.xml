@@ -4,7 +4,7 @@
     <string name="settings_mode">模式 / 服务器</string>
     <string name="mode_local">本地模式 · 免账号，仅此设备</string>
     <string name="mode_server">私服账号模式 · 连接自己的服务器</string>
-    <string name="mode_description">私服需使用有效 HTTPS 证书和兼容的 /api 接口。切换模式或服务器不会迁移、合并或删除数据。账号登录和本地数据互相独立。</string>
+    <string name="mode_description">自建服务器需运行兼容的青单服务，并使用有效的 HTTPS 证书。切换使用方式或服务器不会搬移、合并或删除数据，各服务器的登录状态相互独立。</string>
     <string name="mode_title">青单运行模式</string>
     <string name="common_open">打开</string>
     <string name="common_cancel">取消</string>
@@ -12,13 +12,13 @@
     <string name="data_clear_title">清除所有模式的本机网页数据？</string>
     <string name="data_clear_description">这会退出所有私服登录，删除所有模式的网页缓存、离线副本和未同步网页草稿。本地 SQLite 记录与附件不受影响，服务器数据也不会删除。此操作无法恢复。</string>
     <string name="common_clear">清除</string>
-    <string name="storage_initialize_failed">本地数据初始化失败。为保护已有数据，青单没有重建数据库。</string>
+    <string name="storage_initialize_failed">无法打开本机数据，现有数据仍保留。请重新打开应用。</string>
     <string name="mode_local_title">青单 · 本地</string>
     <string name="mode_server_title">青单 · 私服</string>
     <string name="export_use_button">请使用青单内的导出按钮保存此文件</string>
     <string name="page_reopen">重新打开页面</string>
     <string name="navigation_blocked">应用内只允许当前服务器的青单页面</string>
-    <string name="page_process_stopped">网页进程已停止。可以重新打开页面；青单没有删除或重建数据。</string>
+    <string name="page_process_stopped">页面已停止运行，请重新打开。已保存的数据仍保留。</string>
     <string name="server_certificate_invalid">服务器 HTTPS 证书无效，连接已停止</string>
     <string name="page_open_failed">青单页面无法打开，请检查服务器设置或重新打开应用</string>
     <string name="file_selection_pending">请先完成或取消当前文件选择</string>
@@ -39,7 +39,7 @@
     <string name="server_tls_invalid">服务器 HTTPS 证书或安全连接无效</string>
     <string name="server_network_unavailable">连接不可用，未确认输入会保留</string>
     <string name="notifications_enable_title">开启青单通知？</string>
-    <string name="notifications_enable_description">允许后，应用在前台运行时可发送专注计时提醒。不会安排后台精确闹钟。</string>
+    <string name="notifications_enable_description">允许青单在应用打开且处于前台时发送专注提醒。应用在后台或关闭时无法按时提醒。</string>
     <string name="notifications_not_now">暂不开启</string>
     <string name="common_continue">继续</string>
     <string name="endpoint_invalid">请输入完整 HTTPS 源地址，例如 https://qingdan.example.com；不要带用户名、密码、路径或参数。证书必须有效。</string>

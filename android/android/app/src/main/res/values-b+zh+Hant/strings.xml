@@ -5,7 +5,7 @@
     <string name="settings_mode">模式 / 伺服器</string>
     <string name="mode_local">本機模式 · 無需帳號，僅限此裝置</string>
     <string name="mode_server">私人伺服器 · 連線至自己的伺服器</string>
-    <string name="mode_description">私人伺服器須有有效的 HTTPS 憑證及相容的 /api 介面。切換模式或伺服器不會移動、合併或刪除資料。各伺服器的登入狀態與本機資料會分別保留。</string>
+    <string name="mode_description">自架伺服器需執行相容的青單服務，並使用有效的 HTTPS 憑證。切換使用方式或伺服器不會搬移、合併或刪除資料，各伺服器的登入狀態彼此獨立。</string>
     <string name="mode_title">青單使用模式</string>
     <string name="common_open">開啟</string>
     <string name="common_cancel">取消</string>
@@ -13,13 +13,13 @@
     <string name="data_clear_title">要清除所有模式的本機網頁資料嗎？</string>
     <string name="data_clear_description">這會登出所有私人伺服器，並刪除每種模式的網頁快取、離線副本及未同步的網頁草稿。本機 SQLite 記錄、附件及伺服器資料不受影響。此操作無法復原。</string>
     <string name="common_clear">清除</string>
-    <string name="storage_initialize_failed">無法啟動本機儲存空間。為保護現有資料，青單未重建資料庫。</string>
+    <string name="storage_initialize_failed">無法開啟本機資料，現有資料仍保留。請重新開啟應用程式。</string>
     <string name="mode_local_title">青單 · 本機</string>
     <string name="mode_server_title">青單 · 私人伺服器</string>
     <string name="export_use_button">請使用青單的匯出按鈕儲存此檔案。</string>
     <string name="page_reopen">重新開啟頁面</string>
     <string name="navigation_blocked">應用程式內只允許開啟目前伺服器的青單頁面。</string>
-    <string name="page_process_stopped">網頁已停止運作，你可以重新開啟。青單並未刪除或重建任何資料。</string>
+    <string name="page_process_stopped">頁面已停止運作，請重新開啟。已儲存的資料仍保留。</string>
     <string name="server_certificate_invalid">伺服器的 HTTPS 憑證無效，已中止連線。</string>
     <string name="page_open_failed">無法開啟青單。請檢查伺服器設定，或重新開啟應用程式。</string>
     <string name="file_selection_pending">請先完成或取消目前的檔案選擇。</string>
@@ -40,7 +40,7 @@
     <string name="server_tls_invalid">伺服器的 HTTPS 憑證或安全連線無效。</string>
     <string name="server_network_unavailable">目前無法連線，未確認的輸入仍會保留。</string>
     <string name="notifications_enable_title">要啟用青單通知嗎？</string>
-    <string name="notifications_enable_description">允許應用程式在前景執行時顯示專注計時提醒。不會設定精確的背景鬧鐘。</string>
+    <string name="notifications_enable_description">允許青單在應用程式開啟且位於前景時傳送專注提醒。在背景或關閉時無法準時提醒。</string>
     <string name="notifications_not_now">暫時不要</string>
     <string name="common_continue">繼續</string>
     <string name="endpoint_invalid">請輸入完整的 HTTPS 來源網址，例如 https://qingdan.example.com，不可包含使用者名稱、密碼、路徑或參數。憑證必須有效。</string>

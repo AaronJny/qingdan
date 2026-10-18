@@ -48,19 +48,19 @@
       "sha256": "d8a6cc31abc16b6748c7a21f21611f5a1ec33f67d22ca23d7da1c19b95496bee"
     },
     {
-      "path": "web/assets/dispatch-BOXIFSKD.js",
+      "path": "web/assets/dispatch-DGvwoEZq.js",
       "bytes": 88945,
-      "sha256": "a94505ace54a10cbbbed4d0964231630493cc93d0e065f80ae57accb9ad29781"
+      "sha256": "200752575b1c2acf24c70b863da6d79994e486ffdb786d1c51e54289d1a629f3"
+    },
+    {
+      "path": "web/assets/index-BDFSAExI.js",
+      "bytes": 3228461,
+      "sha256": "a76445ec66803b3f0ee49bc242cd63a3e30f2fcf88b309896452e9c18c8c199f"
     },
     {
       "path": "web/assets/index-D7-xLmDL.css",
       "bytes": 77042,
       "sha256": "9afa689de472b919e8fd5d47eba54a28aee5e2223d08021bf3e00ca5fabdb67c"
-    },
-    {
-      "path": "web/assets/index-DpwzIIBv.js",
-      "bytes": 3230405,
-      "sha256": "23dabf7008dc627e534ac275d5d1f712d6defaeb559ee5d7cd265eb8c9eb0914"
     },
     {
       "path": "web/assets/licenses/WEB-DEPENDENCY-LICENSES.txt",
@@ -80,7 +80,7 @@
     {
       "path": "web/index.html",
       "bytes": 405,
-      "sha256": "f537922d03ea6b1523e52ad827b1009b5005e2b25dd3f3f2c9a3b3d680746499"
+      "sha256": "ddc37c74c51e13b763d604ea1425951554bc8166ae83eacbed3b753fe7e32f7a"
     },
     {
       "path": "web/manifest.de.webmanifest",

@@ -803,15 +803,15 @@
   "android.export.legacyLimit": "このアプリのバージョンは分割エクスポートに対応していません。1 MBを超えるファイルのエクスポートにはWebアプリをご利用ください。",
   "android.export.unconfirmed": "エクスポート内容を確認できませんでした。同期して、もう一度お試しください。",
   "settings.general": "一般",
-  "settings.languageDeviceOnly": "言語設定はこの端末またはブラウザーにのみ適用され、アカウントとは同期されません。タスク、ノート、リスト、タグは入力した内容のままです。",
-  "core.localRecoveryInputPending": "以前の端末内の入力内容は確認用に保持されています。保存済みのタスクは引き続き利用できます。",
-  "core.localRecoveryDataPending": "以前の端末内のデータは確認用に保持されています。",
-  "core.localRecoveryReview": "以前の入力内容を確認",
-  "core.localRecoveryUnavailable": "以前の端末内の入力内容を確認または開くことができませんでした。もう一度お試しください。",
+  "settings.languageDeviceOnly": "言語設定はこの端末またはブラウザーにのみ適用されます。タスク、ノート、リスト、タグは元の言語のままです。",
+  "core.localRecoveryInputPending": "以前の入力は確認用に保持されています。保存済みのタスクは引き続き使えます。",
+  "core.localRecoveryDataPending": "以前のデータは確認用に保持されています。",
+  "core.localRecoveryReview": "以前の入力を確認",
+  "core.localRecoveryUnavailable": "以前の入力を開けませんでした。再試行してください。",
   "core.localStorageMutationBlocked": "端末内の入力内容を確実に保存できませんでした。未保存の入力内容をエクスポートし、再読み込みして照合してから、さらに変更してください。",
   "core.localStorageFailureWarning": "端末への保存に失敗し、変更を一時停止しています。未保存の入力内容をエクスポートするまで、このウィンドウを閉じたり再読み込みしたりしないでください。ファイルの保存を確認したら再読み込みし、保存済みのタスクと比較してください。処理中だった変更は、すでに保存されている場合があります。",
   "core.localStorageExportUnsaved": "未保存の入力内容をエクスポート",
   "core.localStorageExportRequested": "ダウンロードをリクエストしました。再読み込みする前にJSONファイルが保存されたことを確認し、すべての入力内容の照合が終わるまで保管してください。",
   "core.localStorageExportFailed": "エクスポートを開始できませんでした。このウィンドウを開いたまま、もう一度お試しください。",
-  "quickInput.supportedLanguages": "クイック入力の日付コマンドは簡体字中国語と英語に対応しています。他の言語はタスク本文として扱われます。日付選択をご利用ください。"
+  "quickInput.supportedLanguages": "日付は簡体字中国語または英語で入力できます。他の言語では日付選択を使ってください。"
 }

@@ -803,15 +803,15 @@
   "android.export.legacyLimit": "目前的原生應用程式不支援分塊匯出。超過 1 MB 的檔案請使用網頁版匯出。",
   "android.export.unconfirmed": "匯出內容沒有確認，請同步後重試。",
   "settings.general": "一般",
-  "settings.languageDeviceOnly": "語言偏好僅儲存在目前裝置或瀏覽器，不隨帳號同步。你建立的任務、筆記、清單和標籤不會被翻譯。",
-  "core.localRecoveryInputPending": "以前的本機輸入已保留，等待核對。已儲存的任務仍可使用。",
-  "core.localRecoveryDataPending": "以前的本機資料已保留，等待核對。",
-  "core.localRecoveryReview": "核對以前的輸入",
-  "core.localRecoveryUnavailable": "暫時無法檢查或開啟以前的本機輸入，請重試核對。",
+  "settings.languageDeviceOnly": "語言僅在此裝置或瀏覽器生效，任務、筆記、清單和標籤保留原文。",
+  "core.localRecoveryInputPending": "舊版輸入已保留，等待核對。已儲存的任務仍可使用。",
+  "core.localRecoveryDataPending": "舊版資料已保留，等待核對。",
+  "core.localRecoveryReview": "核對舊版輸入",
+  "core.localRecoveryUnavailable": "無法開啟舊版輸入，請重試。",
   "core.localStorageMutationBlocked": "本機輸入未能持久儲存。請先匯出未儲存的輸入，再重新載入並核對，之後再繼續修改。",
   "core.localStorageFailureWarning": "本機儲存失敗，修改已暫停。匯出未儲存的輸入之前，請勿關閉或重新載入此視窗。確認匯出檔案已儲存後，再重新載入並與已儲存的任務核對。此前正在送出的修改可能已經儲存。",
   "core.localStorageExportUnsaved": "匯出未儲存的輸入",
   "core.localStorageExportRequested": "已請求下載。重新載入前，請確認 JSON 檔案已儲存，並保留該檔案直到所有輸入核對完畢。",
   "core.localStorageExportFailed": "未能開始匯出。請保持此視窗開啟並重試。",
-  "quickInput.supportedLanguages": "快速輸入的日期指令支援簡體中文和英文。其他語言會保留為任務文字，請使用日期選擇器設定日期。"
+  "quickInput.supportedLanguages": "可用簡體中文或英文輸入日期，其他語言請使用日期選擇器。"
 }

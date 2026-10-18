@@ -645,7 +645,7 @@
   "ui.secondary.workspaceSync.localModeRefreshesOnlyTheCurrentLocal": "ローカルモードでは、現在のローカルサービスのみを更新します。",
   "ui.secondary.workspaceSync.syncThisAccountSDataFromThe": "現在のサーバーからこのアカウントのデータを同期します。",
   "ui.secondary.offlineShellSettings.savedIndependentlyOnThisDevice": "この端末に独立して保存",
-  "ui.secondary.offlineShellSettings.localModeUsesThisAppSPrivate": "ローカルモードでは、このアプリ専用のSQLiteデータベースとファイルディレクトリを使います。サーバーやサインインは不要です。アンインストールするとこのディレクトリは消去されます。先に完全バックアップをエクスポートしてください。",
+  "ui.secondary.offlineShellSettings.localModeUsesThisAppSPrivate": "ローカルモードでは、サーバーやログインなしでアプリ内にデータを保存します。アンインストールするとデータが削除されます。先に完全バックアップをエクスポートしてください。",
   "ui.secondary.taskCard.markIncomplete": "未完了にする",
   "ui.secondary.taskCard.markComplete": "完了にする",
   "ui.secondary.habitEditor.dayCountUnit": "日",

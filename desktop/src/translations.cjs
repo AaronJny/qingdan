@@ -1,7 +1,7 @@
 'use strict';
 module.exports = Object.freeze({
-  "desktop.recovery.more":{"zh-CN":"下一页候选","en":"Next candidates"},
-  "desktop.recovery.unreadable":{"zh-CN":"此候选无法安全解码，原始资料保留在导出文件和本机备份中。","en":"This candidate cannot be decoded safely. Original evidence remains in the export and local backup."},
+  "desktop.recovery.more":{"zh-CN":"下一页","en":"Next page"},
+  "desktop.recovery.unreadable":{"zh-CN":"无法显示此项输入。原始内容保留在本机，可导出核对报告。","en":"This input cannot be displayed. Its original contents are kept on this computer. You can export a review report."},
   "desktop.recovery.kind.language":{"zh-CN":"语言偏好","en":"Language preference"},
   "desktop.recovery.kind.quick.draft":{"zh-CN":"快速录入草稿","en":"Quick-entry draft"},
   "desktop.recovery.kind.tags.draft":{"zh-CN":"批量标签草稿","en":"Batch tag draft"},
@@ -146,8 +146,8 @@ module.exports = Object.freeze({
     "en": "The local service stopped. Please reconnect. Your local data is safe."
   },
   "desktop.an.independently.built.workspace.for.your.lists": {
-    "zh-CN": "独立开发的清单工作台。",
-    "en": "An independently built workspace for your lists."
+    "zh-CN": "管理任务、习惯与专注时间。",
+    "en": "Organize your tasks, habits and focus time."
   },
   "desktop.modes.and.your.data": {
     "zh-CN": "使用方式与数据",
@@ -158,8 +158,8 @@ module.exports = Object.freeze({
     "en": "Use Qingdan locally or connect to your own server."
   },
   "desktop.local.mode.starts.the.built.in.service": {
-    "zh-CN": "本机模式会自动启动内置服务，任务和附件保存在本机用户资料目录，升级应用会保留数据。连接自建服务器时，数据保存在该服务器；是否需要登录由服务器设置决定。切换使用方式不会搬移或合并数据，各服务器的登录状态相互独立。退出应用会停止内置服务；macOS 关闭窗口后可从 Dock 重新打开。",
-    "en": "Local mode starts the built-in service automatically. Tasks and attachments stay in your local user profile and survive app upgrades. With a private server, data is stored on that server and its settings determine whether sign-in is required. Switching modes does not move or merge data. Each server has its own sign-in session. Quitting stops the built-in service. On macOS, reopen a closed window from the Dock."
+    "zh-CN": "本机模式无需登录，任务和附件保存在这台电脑上，升级应用会保留数据。连接自建服务器时，数据保存在该服务器，按其要求登录。切换使用方式不会搬移或合并数据，各服务器的登录状态相互独立。退出应用会停止本机服务；macOS 关闭窗口后可从 Dock 重新打开。",
+    "en": "Local mode needs no sign-in. Tasks and attachments stay on this computer and are kept when you upgrade. When connected to your own server, data stays there; sign in if required. Switching modes does not move or merge data, and each server has a separate sign-in. Quitting stops the local service. On macOS, reopen a closed window from the Dock."
   },
   "desktop.qingdan.could.not.start": {
     "zh-CN": "青单无法启动",
@@ -446,7 +446,7 @@ module.exports = Object.freeze({
     "en": "Q"
   },
   "desktop.qingdan.desktop": {
-    "zh-CN": "青单 · 独立桌面版",
+    "zh-CN": "青单 · 桌面版",
     "en": "Qingdan · Desktop"
   },
   "desktop.local.mode.automatically.starts.the.built.in": {
@@ -482,8 +482,8 @@ module.exports = Object.freeze({
     "en": "Mode"
   },
   "desktop.local.mode.automatic.startup.no.account.needed": {
-    "zh-CN": "本机模式 · 自动启动 · 免账号密码",
-    "en": "Local mode · Automatic startup · No account needed"
+    "zh-CN": "本机模式 · 无需登录",
+    "en": "Local mode · No sign-in needed"
   },
   "desktop.private.server.server.managed.accounts": {
     "zh-CN": "连接私服 · 由服务器管理账号",
@@ -530,83 +530,83 @@ module.exports = Object.freeze({
     "en": "Current: {{name}} ({{state}})"
   },
   "desktop.recovery.title": {
-    "zh-CN": "查看旧版本机输入",
-    "en": "Review previous local input"
+    "zh-CN": "核对旧版输入",
+    "en": "Review previous input"
   },
   "desktop.recovery.intro": {
-    "zh-CN": "原有任务和附件仍保存在本机。旧版草稿、未确认操作和偏好保留在原位置；已读取的内容仅作为待核对候选，没有自动提交。",
-    "en": "Saved tasks and attachments remain on this computer. Previous drafts, unconfirmed operations and preferences are preserved in their original location. Readable entries are review candidates only; nothing is submitted automatically."
+    "zh-CN": "旧版草稿、待确认操作和偏好已保留，供你核对，不会自动应用。已保存的任务和附件仍可使用。",
+    "en": "Earlier drafts, pending changes and preferences are kept for review. Nothing is applied automatically. Your saved tasks and attachments remain available."
   },
   "desktop.recovery.limits": {
-    "zh-CN": "读取候选不代表完整恢复。损坏或截断的记录可能未被读取；已关闭进程的临时输入和未保存的文件内容可能无法恢复。",
-    "en": "Reading candidates does not establish complete recovery. Damaged or truncated records may be missing. Temporary input from a closed process and unsaved file contents may not be recoverable."
+    "zh-CN": "部分输入可能无法找回，包括损坏记录、临时输入和未保存的文件。",
+    "en": "Some input may be missing, including damaged records, temporary input and unsaved files."
   },
   "desktop.recovery.loading": {
-    "zh-CN": "正在读取恢复状态…",
-    "en": "Reading recovery status…"
+    "zh-CN": "正在查找旧版输入…",
+    "en": "Looking for previous input…"
   },
   "desktop.recovery.view": {
-    "zh-CN": "查看候选内容",
-    "en": "View candidates"
+    "zh-CN": "查看旧版输入",
+    "en": "View previous input"
   },
   "desktop.recovery.export": {
-    "zh-CN": "导出待核对资料",
-    "en": "Export review file"
+    "zh-CN": "导出核对报告",
+    "en": "Export review report"
   },
   "desktop.recovery.candidates": {
-    "zh-CN": "保留的候选输入",
-    "en": "Preserved input candidates"
+    "zh-CN": "待核对输入",
+    "en": "Input to review"
   },
   "desktop.recovery.review": {
-    "zh-CN": "请将候选与现有任务核对后再手动采用；未确认操作需要核对原操作标识和提交结果，避免重复或覆盖新修改。",
-    "en": "Compare candidates with saved tasks before using them. Unconfirmed operations need their original operation IDs and results checked to avoid duplication or overwriting newer changes."
+    "zh-CN": "使用前请与已保存任务核对。先确认待处理操作是否已经成功，避免重复操作或覆盖较新的修改。",
+    "en": "Compare this input with your saved tasks before using it. Check whether pending changes already succeeded to avoid duplicates or overwriting newer changes."
   },
   "desktop.recovery.continue": {
-    "zh-CN": "使用已保存任务，保留旧输入待核对",
-    "en": "Use saved tasks and keep previous input pending"
+    "zh-CN": "继续使用已保存任务",
+    "en": "Continue with saved tasks"
   },
   "desktop.recovery.later": {
-    "zh-CN": "以后可从“帮助 → 查看旧版本机输入”或任务页面的提示返回。继续使用不会删除原始资料，也不会标记恢复完成。",
-    "en": "Return later from Help → Review previous local input or the notice in your workspace. Continuing does not delete the original data or mark recovery complete."
+    "zh-CN": "旧版输入会保留，稍后可从“帮助 → 核对旧版输入”或工作台提示返回。",
+    "en": "Previous input stays here for later review. Open Help → Review previous input, or use the notice in your workspace."
   },
   "desktop.recovery.error": {
-    "zh-CN": "此操作未完成。原始资料仍保留，请重新尝试或检查磁盘空间及访问权限。",
-    "en": "This action did not complete. Original data is preserved. Retry or check available disk space and access permissions."
+    "zh-CN": "操作未完成，原始资料仍保留。请重试，或检查磁盘空间与访问权限。",
+    "en": "The action did not finish. Original data is preserved. Try again, or check disk space and access permissions."
   },
   "desktop.recovery.none": {
-    "zh-CN": "没有发现需要核对的旧版本机存储。",
-    "en": "No previous local storage was found for review."
+    "zh-CN": "未发现需要核对的旧版本机数据。",
+    "en": "No previous local data was found for review."
   },
   "desktop.recovery.pending": {
-    "zh-CN": "有旧版输入或尚未确认的存储需要核对。您可以先查看或导出，再继续使用已保存任务。",
-    "en": "Previous input or unverified storage needs review. You can inspect or export it before continuing with saved tasks."
+    "zh-CN": "有旧版数据需要核对。你可以先查看或导出报告，也可以稍后处理。",
+    "en": "Previous data needs review. View it or export a report now, or review it later."
   },
   "desktop.recovery.preferences": {
-    "zh-CN": "已读取的候选包含旧版偏好；未确认是否存在其他未读输入。原始资料保留待核对。",
-    "en": "The readable candidates include previous preferences. Other unread input may exist. Original data remains preserved for review."
+    "zh-CN": "已找到旧版偏好。其他输入可能未能读取，原始资料仍保留。",
+    "en": "Previous preferences were found. Other input may not have been read; original data is preserved."
   },
   "desktop.recovery.conflicts": {
-    "zh-CN": "不同旧版窗口的候选可能不一致，包含某处存在而另一处没有的内容。请逐项核对。",
-    "en": "Candidates from previous windows may differ, including entries present in one and absent in another. Review each version."
+    "zh-CN": "找到了不同版本的输入，其中部分内容可能已被删除。请逐项核对。",
+    "en": "Different versions of the input were found. Some entries may have been deleted. Review each version."
   },
   "desktop.recovery.candidate": {
-    "zh-CN": "候选",
-    "en": "Candidate"
+    "zh-CN": "输入",
+    "en": "Item"
   },
   "desktop.recovery.no.candidates": {
-    "zh-CN": "没有可安全显示的候选。原始资料和恢复诊断仍保留在本机，可导出核对。",
-    "en": "No candidates can be safely displayed. Original data and recovery diagnostics remain on this computer and can be exported for review."
+    "zh-CN": "没有可显示的输入。可导出核对报告，原始文件仍保留在本机。",
+    "en": "No readable input was found. You can export the review report; original files remain on this computer."
   },
   "desktop.recovery.exported": {
-    "zh-CN": "待核对资料已导出；恢复状态仍为待核对。",
-    "en": "Review file exported. Recovery remains pending."
+    "zh-CN": "核对报告已导出，旧版输入仍待核对。",
+    "en": "Review report exported. Previous input still needs review."
   },
   "desktop.recovery.waiting": {
-    "zh-CN": "旧版本机输入需要核对。请在恢复窗口查看，或选择保留旧输入并继续使用已保存任务。",
-    "en": "Previous local input needs review. Use the recovery window to inspect it or keep it pending and continue with saved tasks."
+    "zh-CN": "请在打开的窗口核对旧版输入，或选择“继续使用已保存任务”，稍后再处理。",
+    "en": "Review previous input in the open window, or choose “Continue with saved tasks” to review it later."
   },
   "desktop.recovery.storage.failed": {
-    "zh-CN": "本机输入存储无法安全读取。原始文件未更改；请先检查磁盘或访问权限，再重新连接。",
-    "en": "Local input storage could not be read safely. Original files were not changed. Check disk space or access permissions, then reconnect."
+    "zh-CN": "无法读取本机输入，原始文件未更改。请检查磁盘空间与访问权限后重新连接。",
+    "en": "Local input could not be read. Original files were not changed. Check disk space and access permissions, then reconnect."
   }
 });

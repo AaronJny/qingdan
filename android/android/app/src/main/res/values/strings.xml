@@ -4,7 +4,7 @@
     <string name="settings_mode">Mode / Server</string>
     <string name="mode_local">Local mode · No account, this device only</string>
     <string name="mode_server">Private server · Connect to your own server</string>
-    <string name="mode_description">Private servers need a valid HTTPS certificate and a compatible /api interface. Switching modes or servers does not move, merge, or delete data. Account sign-ins and local data stay separate.</string>
+    <string name="mode_description">Use a compatible Qingdan server with a valid HTTPS certificate. Switching modes or servers does not move, merge or delete data. Each server has a separate sign-in.</string>
     <string name="mode_title">Qingdan mode</string>
     <string name="common_open">Open</string>
     <string name="common_cancel">Cancel</string>
@@ -12,13 +12,13 @@
     <string name="data_clear_title">Clear local web data for all modes?</string>
     <string name="data_clear_description">This signs you out of all private servers and deletes web caches, offline copies, and unsynced web drafts in every mode. Local SQLite records, attachments, and server data are unaffected. This cannot be undone.</string>
     <string name="common_clear">Clear</string>
-    <string name="storage_initialize_failed">Local storage could not start. To protect your existing data, Qingdan did not rebuild the database.</string>
+    <string name="storage_initialize_failed">Local data could not be opened. Existing data is preserved. Reopen the app to try again.</string>
     <string name="mode_local_title">Qingdan · Local</string>
     <string name="mode_server_title">Qingdan · Private server</string>
     <string name="export_use_button">Use Qingdan\'s export button to save this file.</string>
     <string name="page_reopen">Reopen page</string>
     <string name="navigation_blocked">Only the current server\'s Qingdan page is allowed in the app.</string>
-    <string name="page_process_stopped">The web page stopped. You can reopen it. Qingdan has not deleted or rebuilt any data.</string>
+    <string name="page_process_stopped">The page stopped. Reopen it to continue. Saved data is preserved.</string>
     <string name="server_certificate_invalid">The server\'s HTTPS certificate is invalid. The connection was stopped.</string>
     <string name="page_open_failed">Could not open Qingdan. Check your server settings or reopen the app.</string>
     <string name="file_selection_pending">Finish or cancel the current file selection first.</string>
@@ -39,7 +39,7 @@
     <string name="server_tls_invalid">The server\'s HTTPS certificate or secure connection is invalid.</string>
     <string name="server_network_unavailable">Connection unavailable. Unconfirmed input will be kept.</string>
     <string name="notifications_enable_title">Enable Qingdan notifications?</string>
-    <string name="notifications_enable_description">Allow focus timer reminders while the app is in the foreground. No exact background alarms will be scheduled.</string>
+    <string name="notifications_enable_description">Allow focus reminders while Qingdan is open and visible. Reminders cannot arrive on time while the app is in the background or closed.</string>
     <string name="notifications_not_now">Not now</string>
     <string name="common_continue">Continue</string>
     <string name="endpoint_invalid">Enter a complete HTTPS origin, such as https://qingdan.example.com, without a username, password, path, or parameters. The certificate must be valid.</string>

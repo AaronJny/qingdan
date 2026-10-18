@@ -19,9 +19,9 @@
 
 ### 界面语言
 
-支持简体中文、繁體中文、English、日本語、한국어、Español、Français、Deutsch 和 Português (Brasil)。可在“设置 → 通用 → 语言”中选择语言或跟随系统，切换后立即生效，日期、数字和原生菜单也会随之更新。未支持的系统语言使用英文。
+支持简体中文、繁體中文、English、日本語、한국어、Español、Français、Deutsch 和 Português (Brasil)。在“设置 → 通用 → 语言”中切换，也可跟随系统；未支持的系统语言使用英文。
 
-语言偏好仅保存在当前设备或浏览器，不随账号同步；你创建的任务、笔记、清单和标签保留原文。快速录入的日期命令支持简体中文和英文，也可使用日期选择器。
+语言设置仅对当前设备或浏览器生效，任务和笔记内容保留原文。快速录入支持简体中文和英文日期命令，也可使用日期选择器。
 
 ## 界面截图
 
@@ -61,20 +61,16 @@
 | 平台 | 下载 | 使用方式与要求 |
 | --- | --- | --- |
 | macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-mac-arm64.dmg) | macOS 13 及以上；正常退出旧版后，将应用拖入 Applications |
-| macOS · Intel | [x64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-mac-x64.dmg) | macOS 13 及以上；适用于 Intel 处理器的 Mac，安装方式同上 |
+| macOS · Intel | [x64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-mac-x64.dmg) | macOS 13 及以上；将应用拖入 Applications |
 | Windows · x64 | [便携 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-win-x64.zip) | 完整解压后运行 `Qingdan.exe`，不要只复制 EXE |
-| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-linux-x64.AppImage) | 需要图形桌面与正常可用的 Electron 沙箱；添加可执行权限后运行，FUSE 替代启动方式见[桌面说明](desktop/README.md) |
+| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-linux-x64.AppImage) | 添加可执行权限后运行；系统要求与 FUSE 启动说明见[桌面说明](desktop/README.md) |
 | 自托管服务端 / 网页端 | [含运行时 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/qingdan-server-v1.2.1.zip) | 内置 Linux x64 / macOS arm64 运行时和启动脚本，无需另外安装 Node.js 或 npm |
 | Android | [0.2.1 APK](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-0.2.1-android.apk) | Android 8.0 及以上，并需保持系统 WebView 更新；安装与签名注意事项见[Android 说明](android/README.md) |
-
-本机桌面模式使用独立原生草稿存储，不需要钥匙串；私服登录仍保留独立加密会话。升级发现旧草稿时会提供核对与导出，未确认操作不会自动重放。详见[本机存储与旧输入核对](desktop/README.md#121-本机存储与旧输入核对)。
-
-在 Mac 的“关于本机”中，显示“芯片 Apple M…”请选择 arm64；显示“处理器 Intel…”请选择 x64。两种架构也各提供 ZIP 版，可在发行版资源中下载。
 
 ### 已知平台限制
 
 - macOS 版本尚无 Developer ID 签名或 Apple 公证，Windows 版本尚无发布者签名，系统可能阻止运行。遇到安全警告时，请先核实下载来源，保留系统安全设置。
-- Android 新签名不能覆盖旧签名安装。升级前先在旧应用中导出完整备份；不要直接卸载旧应用，卸载会删除其私有数据。
+- Android 更新需要签名一致。升级前先导出完整备份；不要直接卸载旧应用，卸载会删除其私有数据。
 - 提醒和计时铃声需要保持应用页面打开且可见。Android 暂不支持后台推送或准点闹钟。
 
 ## 本机模式与私服模式
@@ -91,7 +87,7 @@
 
 使用账号模式部署服务后，桌面端可从“设置 → 账号与同步 → 服务器连接”或菜单“文件 → 服务器连接”（`Cmd/Ctrl+,`）填写服务器地址，再使用该服务器创建的账号登录。远程私服需要有效证书的 HTTPS 根地址；桌面端允许字面回环地址使用 HTTP。Android 私服连接仅支持 HTTPS。
 
-账号模式没有默认密码或公开注册，需要在部署机器的交互终端初始化管理员。不同服务器、不同账号与本机模式的数据身份和缓存相互隔离，不会自动相互迁移。部署步骤与 HTTPS 配置见[服务端配置](application/README.md)和[账号说明](application/AUTH.md)。
+账号模式没有默认密码或公开注册，需要在部署机器的交互终端初始化管理员。各服务器、各账号和本机模式的数据分别保存，切换不会自动迁移。部署步骤与 HTTPS 配置见[服务端配置](application/README.md)和[账号说明](application/AUTH.md)。
 
 ## 从源码运行
 
@@ -106,18 +102,12 @@ npm start
 
 打开 `http://127.0.0.1:4310`，默认进入仅本机可访问的单人模式。默认数据目录为 `application/data/local`，可通过 `QINGDAN_DATA_DIR` 指定独立目录。
 
-返回仓库根目录后，另行运行完整源码检查：
-
-```sh
-npm run check --prefix application
-```
-
 私服配置、环境变量、Docker Compose 和开发说明见 [application/README.md](application/README.md)。
 
 ## 数据与备份
 
 - **桌面端**：稳定用户目录为系统应用数据目录下的 `QingdanDesktop`，本机数据库与附件位于其中的 `local-data`。备份前正常退出应用，再完整复制用户目录；升级时保留该目录。
-- **独立服务端**：先停止服务，再完整备份实例数据目录，包括 SQLite、对象文件和模式标记。不要在运行时只复制 SQLite 主文件，也不要复用本机与账号模式的数据目录。
+- **独立服务端**：先停止服务，再完整复制数据目录。不要只备份数据库文件，也不要让本机与账号模式共用数据目录。
 - **Android**：卸载或系统清除数据会删除应用私有数据，请提前通过应用导出完整备份。
 - 应用内任务导出不包含登录密码或会话；实例目录备份可能包含账号与会话等私密信息，应自行妥善保管。
 
@@ -131,12 +121,6 @@ npm run check --prefix application
 | [server-packaging/](server-packaging/BUILD.md) | 含运行时的服务端 ZIP 与启动脚本 |
 | [品牌资源](docs/BRANDING.md) | 网页、桌面与 Android 绿色剪贴板图标 |
 | [前端第三方声明](application/docs/THIRD-PARTY-NOTICES.md) · [DMG 工具链声明](desktop/scripts/dmg/toolchain/THIRD-PARTY-NOTICES.md) | 分发时需要保留的第三方许可与声明 |
-
-### 检查与发行
-
-推送到 `main` 会运行[完整检查工作流](.github/workflows/check.yml)。发布请求通过 [.github/release/request.json](.github/release/request.json) 指定版本；修改发布请求、推送对应版本 tag 或手动触发“青单发布”工作流才会构建发行，普通提交只做检查。
-
-发行流水线要求 macOS Apple Silicon / Intel、Windows、Linux、服务器和 Android 成品全部齐备，并核验每个架构的独立检查报告。Android 签名未配置时，发行版会保留为草稿。签名密钥与密码应通过安全配置提供，不要写入源码、聊天或构建产物。
 
 ## 许可证
 

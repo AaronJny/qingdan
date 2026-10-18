@@ -1,6 +1,6 @@
 # 独立服务端发行包构建
 
-发行资源由当前完整检查通过的源码快照生成。以下仅供源码开发/重新打包，发行包用户直接使用根启动入口。
+本文面向维护服务端发行包的开发者。安装和运行请使用发行包根目录的启动脚本，参见 [运行说明](README-运行.txt)。
 
 1. 使用 Node.js 24，在应用源码目录执行 `npm ci`、`npm run check`。该命令包含编译，并写入同快照哈希证据。
 2. 从仓库根目录执行 `node desktop/scripts/prepare-backend.cjs /path/to/application-source /path/to/fresh-runtime`。共享准备器调用 `prepare-runtime.py` 验证当前源码/资源/检查结果，分析编译服务的外部导入，从应用锁文件提取完整纯JavaScript依赖闭包，执行 `npm ci --omit=dev --ignore-scripts`，并写入逐文件依赖证据。不要直接复制旧desktop/backend、完整开发node_modules或实例数据。
@@ -13,11 +13,3 @@
 7. 无需下载二进制的包装回归：`python3 -m unittest discover -s server-packaging/tests -v`。合成二进制夹具仅测试验证/拒绝行为，不代表官方Node运行验收。
 
 此源码不包含Node二进制或npm依赖缓存；下载源、固定校验与许可证随运行发行包记录。Node官方支持范围：https://github.com/nodejs/node/blob/v24.19.0/BUILDING.md 。Mac至少13.5/arm64；Linux x64 glibc至少2.28，内核至少4.18。Mac进程宽输出参数参考Apple官方源：https://github.com/apple-oss-distributions/adv_cmds/blob/main/ps/ps.1 。不使用或配置发布身份、真实证书或域名。
-
-## 保留的无参数启动修复（2026-10-09）
-
-start.sh在没有用户参数时显式设置默认start操作，再追加原有随机实例标记。这样start.command和直接运行start.sh都能进入启动操作；显式start/stop等参数保持原样。原Node平台选择、instance UUID、owned-PID核对和退出逻辑不变。修复只改start.sh，不改服务器程序、数据库或用户数据。
-
-历史1.0.3服务器ZIP在包含中文和空格的目录独立解压后，26项检查通过：无参start.sh、显式start.sh start、start.command和stop.command（均在Linux执行）正常；HTTP任务创建/修改、附件上传/下载与跨重启持久性通过；重复启动拒绝、模式隔离和实例锁保护保持。测试只使用临时合成数据，不代表macOS原生、真实账号或私服HTTPS验收。
-
-每次发布都需对最终压缩包重新解压检查，结果保存在该发行版的验证报告中。

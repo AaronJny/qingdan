@@ -645,7 +645,7 @@
   "ui.secondary.workspaceSync.localModeRefreshesOnlyTheCurrentLocal": "로컬 모드에서는 현재 로컬 서비스만 새로고침합니다.",
   "ui.secondary.workspaceSync.syncThisAccountSDataFromThe": "현재 서버에서 이 계정의 데이터를 동기화합니다.",
   "ui.secondary.offlineShellSettings.savedIndependentlyOnThisDevice": "이 기기에 독립적으로 저장됨",
-  "ui.secondary.offlineShellSettings.localModeUsesThisAppSPrivate": "로컬 모드는 서버나 로그인 없이 이 앱의 비공개 SQLite 데이터베이스와 파일 디렉터리를 사용합니다. 앱을 삭제하면 이 디렉터리도 삭제됩니다. 먼저 전체 백업을 내보내세요.",
+  "ui.secondary.offlineShellSettings.localModeUsesThisAppSPrivate": "로컬 모드는 서버나 로그인 없이 이 앱에 데이터를 저장합니다. 앱을 삭제하면 데이터도 삭제됩니다. 먼저 전체 백업을 내보내세요.",
   "ui.secondary.taskCard.markIncomplete": "미완료로 표시",
   "ui.secondary.taskCard.markComplete": "완료로 표시",
   "ui.secondary.habitEditor.dayCountUnit": "일",

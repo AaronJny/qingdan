@@ -4,7 +4,7 @@
     <string name="settings_mode">Modus / Server</string>
     <string name="mode_local">Lokaler Modus · Ohne Konto, nur dieses Gerät</string>
     <string name="mode_server">Privater Server · Mit eigenem Server verbinden</string>
-    <string name="mode_description">Private Server benötigen ein gültiges HTTPS-Zertifikat und eine kompatible /api-Schnittstelle. Beim Wechsel von Modus oder Server werden Daten weder verschoben noch zusammengeführt oder gelöscht. Kontoanmeldungen und lokale Daten bleiben getrennt.</string>
+    <string name="mode_description">Verwende einen kompatiblen Qingdan-Server mit einem gültigen HTTPS-Zertifikat. Beim Wechsel von Modus oder Server werden Daten weder verschoben noch zusammengeführt oder gelöscht. Jeder Server hat eine eigene Anmeldung.</string>
     <string name="mode_title">Qingdan-Modus</string>
     <string name="common_open">Öffnen</string>
     <string name="common_cancel">Abbrechen</string>
@@ -12,13 +12,13 @@
     <string name="data_clear_title">Lokale Webdaten aller Modi löschen?</string>
     <string name="data_clear_description">Dies meldet dich von allen privaten Servern ab und löscht Web-Caches, Offlinekopien und nicht synchronisierte Webentwürfe in jedem Modus. Lokale SQLite-Datensätze, Anhänge und Serverdaten bleiben unberührt. Dies kann nicht rückgängig gemacht werden.</string>
     <string name="common_clear">Löschen</string>
-    <string name="storage_initialize_failed">Der lokale Speicher konnte nicht gestartet werden. Zum Schutz deiner vorhandenen Daten hat Qingdan die Datenbank nicht neu erstellt.</string>
+    <string name="storage_initialize_failed">Lokale Daten konnten nicht geöffnet werden. Vorhandene Daten bleiben erhalten. Öffne die App erneut, um es noch einmal zu versuchen.</string>
     <string name="mode_local_title">Qingdan · Lokal</string>
     <string name="mode_server_title">Qingdan · Privater Server</string>
     <string name="export_use_button">Verwende die Export-Schaltfläche von Qingdan, um diese Datei zu speichern.</string>
     <string name="page_reopen">Seite erneut öffnen</string>
     <string name="navigation_blocked">In der App ist nur die Qingdan-Seite des aktuellen Servers erlaubt.</string>
-    <string name="page_process_stopped">Die Webseite wurde beendet. Du kannst sie erneut öffnen. Qingdan hat keine Daten gelöscht oder neu erstellt.</string>
+    <string name="page_process_stopped">Die Seite wurde angehalten. Öffne sie erneut, um fortzufahren. Gespeicherte Daten bleiben erhalten.</string>
     <string name="server_certificate_invalid">Das HTTPS-Zertifikat des Servers ist ungültig. Die Verbindung wurde gestoppt.</string>
     <string name="page_open_failed">Qingdan konnte nicht geöffnet werden. Prüfe deine Servereinstellungen oder öffne die App erneut.</string>
     <string name="file_selection_pending">Schließe die aktuelle Dateiauswahl zuerst ab oder brich sie ab.</string>
@@ -39,7 +39,7 @@
     <string name="server_tls_invalid">Das HTTPS-Zertifikat oder die sichere Verbindung des Servers ist ungültig.</string>
     <string name="server_network_unavailable">Keine Verbindung verfügbar. Unbestätigte Eingaben bleiben erhalten.</string>
     <string name="notifications_enable_title">Qingdan-Benachrichtigungen aktivieren?</string>
-    <string name="notifications_enable_description">Erinnerungen des Fokustimers erlauben, während die App im Vordergrund ist. Es werden keine zeitgenauen Hintergrundalarme geplant.</string>
+    <string name="notifications_enable_description">Erlaube Fokus-Erinnerungen, solange Qingdan geöffnet und sichtbar ist. Im Hintergrund oder bei geschlossener App können Erinnerungen nicht pünktlich eintreffen.</string>
     <string name="notifications_not_now">Nicht jetzt</string>
     <string name="common_continue">Weiter</string>
     <string name="endpoint_invalid">Gib eine vollständige HTTPS-Herkunftsadresse wie https://qingdan.example.com ohne Benutzername, Passwort, Pfad oder Parameter ein. Das Zertifikat muss gültig sein.</string>

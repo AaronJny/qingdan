@@ -4,7 +4,7 @@
     <string name="settings_mode">モード／サーバー</string>
     <string name="mode_local">ローカルモード · アカウント不要、この端末のみ</string>
     <string name="mode_server">プライベートサーバー · 自分のサーバーに接続</string>
-    <string name="mode_description">プライベートサーバーには、有効なHTTPS証明書と互換性のある/apiインターフェースが必要です。モードやサーバーを切り替えても、データの移動、統合、削除は行いません。アカウントのサインインとローカルデータは独立しています。</string>
+    <string name="mode_description">有効な HTTPS 証明書を持つ、互換性のある Qingdan サーバーを使用してください。モードやサーバーを切り替えても、データの移動・統合・削除は行われません。ログイン状態はサーバーごとに独立しています。</string>
     <string name="mode_title">Qingdanのモード</string>
     <string name="common_open">開く</string>
     <string name="common_cancel">キャンセル</string>
@@ -12,13 +12,13 @@
     <string name="data_clear_title">すべてのモードの端末内Webデータを消去しますか？</string>
     <string name="data_clear_description">すべてのプライベートサーバーからサインアウトし、全モードのWebキャッシュ、オフラインコピー、未同期のWeb下書きを削除します。端末内のSQLite記録、添付ファイル、サーバーのデータには影響しません。この操作は取り消せません。</string>
     <string name="common_clear">消去</string>
-    <string name="storage_initialize_failed">ローカルストレージを開始できませんでした。既存のデータを保護するため、Qingdanはデータベースを再構築していません。</string>
+    <string name="storage_initialize_failed">端末内のデータを開けませんでした。既存のデータは保持されています。アプリを開き直して再試行してください。</string>
     <string name="mode_local_title">Qingdan · ローカル</string>
     <string name="mode_server_title">Qingdan · プライベートサーバー</string>
     <string name="export_use_button">このファイルを保存するには、Qingdanのエクスポートボタンを使ってください。</string>
     <string name="page_reopen">ページを開き直す</string>
     <string name="navigation_blocked">アプリ内で開けるのは、現在のサーバーのQingdanページのみです。</string>
-    <string name="page_process_stopped">Webページが停止しました。開き直すことができます。Qingdanはデータの削除や再構築を行っていません。</string>
+    <string name="page_process_stopped">ページが停止しました。開き直してください。保存済みのデータは保持されています。</string>
     <string name="server_certificate_invalid">サーバーのHTTPS証明書が無効です。接続を停止しました。</string>
     <string name="page_open_failed">Qingdanを開けませんでした。サーバー設定を確認するか、アプリを開き直してください。</string>
     <string name="file_selection_pending">先に現在のファイル選択を完了またはキャンセルしてください。</string>
@@ -39,7 +39,7 @@
     <string name="server_tls_invalid">サーバーのHTTPS証明書または安全な接続が無効です。</string>
     <string name="server_network_unavailable">接続できません。未確認の入力内容は保持されます。</string>
     <string name="notifications_enable_title">Qingdanの通知を有効にしますか？</string>
-    <string name="notifications_enable_description">アプリが前面にある間、集中タイマーのリマインダーを許可します。バックグラウンドでの正確なアラームは設定されません。</string>
+    <string name="notifications_enable_description">Qingdan を開いて表示している間の集中リマインダーを許可します。アプリがバックグラウンドにあるか閉じている場合は、時間どおりに通知できません。</string>
     <string name="notifications_not_now">今はしない</string>
     <string name="common_continue">続行</string>
     <string name="endpoint_invalid">https://qingdan.example.comのような完全なHTTPSオリジンを入力してください。ユーザー名、パスワード、パス、パラメーターは含めないでください。有効な証明書が必要です。</string>

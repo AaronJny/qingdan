@@ -803,15 +803,15 @@
   "android.export.legacyLimit": "This app version does not support chunked exports. Use the web app to export files larger than 1 MB.",
   "android.export.unconfirmed": "The export content could not be confirmed. Sync and try again.",
   "settings.general": "General",
-  "settings.languageDeviceOnly": "Your language choice applies only to this device or browser and does not sync with your account. Your tasks, notes, lists, and tags stay as you wrote them.",
-  "core.localRecoveryInputPending": "Previous local input is preserved for review. Saved tasks remain available.",
-  "core.localRecoveryDataPending": "Previous local data is preserved for review.",
+  "settings.languageDeviceOnly": "Language applies to this device or browser only. Tasks, notes, lists and tags keep their original text.",
+  "core.localRecoveryInputPending": "Previous input is kept for review. Saved tasks remain available.",
+  "core.localRecoveryDataPending": "Previous data is kept for review.",
   "core.localRecoveryReview": "Review previous input",
-  "core.localRecoveryUnavailable": "Previous local input could not be checked or opened. Please try the review again.",
+  "core.localRecoveryUnavailable": "Previous input could not be opened. Try again.",
   "core.localStorageMutationBlocked": "Local input could not be durably saved. Export unsaved input, then reload to reconcile before making more changes.",
   "core.localStorageFailureWarning": "Local saving failed and changes are paused. Do not close or reload this window before exporting unsaved input. After verifying the file is saved, reload and compare it with saved tasks. An in-flight change may already have been saved.",
   "core.localStorageExportUnsaved": "Export unsaved input",
   "core.localStorageExportRequested": "Download requested. Verify the JSON file was saved before reloading, and keep it until all input is reconciled.",
   "core.localStorageExportFailed": "Export could not be started. Keep this window open and try again.",
-  "quickInput.supportedLanguages": "Quick-entry date commands support Simplified Chinese and English. Other languages remain task text; use the date picker."
+  "quickInput.supportedLanguages": "Enter dates in Simplified Chinese or English. For other languages, use the date picker."
 }

@@ -1,6 +1,6 @@
-# Interface languages
+# Interface localization development
 
-Qingdan bundles Simplified Chinese (`zh-CN`) and English (`en`) with i18next and react-i18next. No translation service or remote resource loader is used.
+Qingdan bundles nine interface languages with i18next and react-i18next: Simplified Chinese (`zh-CN`), English (`en`), Traditional Chinese (`zh-TW`), Japanese (`ja`), Korean (`ko`), Spanish (`es`), French (`fr`), German (`de`) and Brazilian Portuguese (`pt-BR`). Translation resources are packaged with the application.
 
 ## Resources and call sites
 
@@ -14,11 +14,11 @@ Qingdan bundles Simplified Chinese (`zh-CN`) and English (`en`) with i18next and
 
 ## Preference and native hosts
 
-The preference is `system`, `zh-CN` or `en`; first launch uses `system`. The first system language selects Chinese when it is a Chinese locale and English otherwise. A manual choice is local to the browser or device and does not create a synchronized settings record.
+The preference is `system` or one of the nine locale identifiers; first launch uses `system`. The first nonempty system language determines the locale. For Chinese, an explicit Hans/Hant script takes precedence; otherwise TW, HK and MO select Traditional Chinese and other regions select Simplified Chinese. Portuguese maps to `pt-BR`; unsupported languages fall back to English. A manual choice is local to the browser or device and does not sync with the account.
 
-The browser persists `qingdan-language` in local storage. A storage failure keeps the current choice and displays a persistence notice. Electron persists an atomically written host preference and broadcasts revisioned snapshots to trusted windows. Stale reads and acknowledgements cannot overwrite a newer native choice. Android persists its host preference, uses localized Android resources, and seeds each trusted WebView before its application module starts.
+The web client stores `qingdan-language` through the business-storage adapter. A storage failure keeps the current choice and displays a persistence notice. Electron persists an atomically written host preference and broadcasts revisioned snapshots to trusted windows. Stale reads and acknowledgements cannot overwrite a newer native choice. Android persists its host preference, uses localized Android resources, and seeds each trusted WebView before its application module starts.
 
-Existing record bytes and schema migrations are unchanged. An untouched built-in Inbox can have a localized display label; a renamed Inbox and all user-created names remain exactly as saved. Sample content is created in the selected language only when the user explicitly adds it.
+Keep record content and schema migrations independent of interface translations. An untouched built-in Inbox can have a localized display label; a renamed Inbox and all user-created names remain exactly as saved. Sample content is created in the selected language only when the user explicitly adds it.
 
 ## Checks
 

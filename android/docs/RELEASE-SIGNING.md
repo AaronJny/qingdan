@@ -1,6 +1,6 @@
 # Android 发布签名设置
 
-签名密钥只在自己的电脑生成和备份，不应发到聊天、提交到仓库或上传为构建产物。当前旧 APK 的私钥不可用。新密钥签名的应用无法覆盖安装旧签名版本；已有应用先在应用内导出完整备份，再按需卸载、安装和导入。卸载会删除应用私有数据。
+签名密钥只在自己的电脑生成和备份，不应发到聊天、提交到仓库或上传为构建产物。升级必须使用与已安装应用相同的签名密钥。不同签名无法覆盖安装；如需更换签名，先在应用内导出完整备份，确认可用后再卸载、安装和导入。卸载会删除应用私有数据。
 
 ## 在自己的 Mac 生成一次
 
@@ -27,8 +27,8 @@ bash android/scripts/create-release-key-macos.sh "$HOME/你的私密备份目录
 
 ## 发布
 
-配置完成后，在 Actions 中选择“青单发布”→ Run workflow，分支选 main。也可重跑缺少签名而失败的 Android job。默认只会在专门更新 `.github/release/request.json`、推送版本 tag 或手动运行时构建发布，不会为每个普通代码提交发布。
+配置完成后，在 Actions 中选择“青单发布”→ Run workflow，分支选 main。默认只会在专门更新 `.github/release/request.json`、推送版本 tag 或手动运行时构建发布，不会为每个普通代码提交发布。
 
 工作流只在 runner 临时目录解码密钥，密码通过环境变量交给 `apksigner`，不打印秘密，不把密钥收进 APK 或 artifact，并在结束时清理临时密钥。只有通过 APK 签名、版本、资源和原生库检查的成品才进入 Release；不会发布不可安装的 unsigned APK。
 
-Android 独立客户端版本为 0.1.2，内置业务代码基准为 1.0.1。与桌面和服务器版本独立维护。发布前仍需完成真机验证。
+客户端版本见 [`android/package.json`](../package.json)，内置网页版本见 [`android/webapp/package.json`](../webapp/package.json)。两者独立维护。设备测试步骤见 [原生测试说明](../android/tests/README.md)。

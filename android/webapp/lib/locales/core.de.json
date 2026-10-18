@@ -803,15 +803,15 @@
   "android.export.legacyLimit": "Diese App-Version unterstützt keine segmentierten Exporte. Verwende die Web-App, um Dateien über 1 MB zu exportieren.",
   "android.export.unconfirmed": "Der Exportinhalt konnte nicht bestätigt werden. Synchronisiere und versuche es erneut.",
   "settings.general": "Allgemein",
-  "settings.languageDeviceOnly": "Deine Sprachwahl gilt nur für dieses Gerät oder diesen Browser und wird nicht mit deinem Konto synchronisiert. Aufgaben, Notizen, Listen und Tags bleiben so, wie du sie geschrieben hast.",
-  "core.localRecoveryInputPending": "Frühere lokale Eingaben bleiben zur Prüfung erhalten. Gespeicherte Aufgaben sind weiterhin verfügbar.",
-  "core.localRecoveryDataPending": "Frühere lokale Daten bleiben zur Prüfung erhalten.",
+  "settings.languageDeviceOnly": "Die Sprache gilt nur für dieses Gerät oder diesen Browser. Aufgaben, Notizen, Listen und Tags behalten ihren ursprünglichen Text.",
+  "core.localRecoveryInputPending": "Frühere Eingaben bleiben zur Prüfung erhalten. Gespeicherte Aufgaben sind weiterhin verfügbar.",
+  "core.localRecoveryDataPending": "Frühere Daten bleiben zur Prüfung erhalten.",
   "core.localRecoveryReview": "Frühere Eingaben prüfen",
-  "core.localRecoveryUnavailable": "Frühere lokale Eingaben konnten nicht geprüft oder geöffnet werden. Versuche die Prüfung erneut.",
+  "core.localRecoveryUnavailable": "Frühere Eingaben konnten nicht geöffnet werden. Versuche es erneut.",
   "core.localStorageMutationBlocked": "Lokale Eingaben konnten nicht dauerhaft gespeichert werden. Exportiere ungespeicherte Eingaben und lade dann zum Abgleichen neu, bevor du weitere Änderungen vornimmst.",
   "core.localStorageFailureWarning": "Das lokale Speichern ist fehlgeschlagen und Änderungen sind angehalten. Schließe dieses Fenster nicht und lade es nicht neu, bevor du ungespeicherte Eingaben exportiert hast. Prüfe, ob die Datei gespeichert wurde, lade dann neu und vergleiche sie mit gespeicherten Aufgaben. Eine laufende Änderung wurde möglicherweise bereits gespeichert.",
   "core.localStorageExportUnsaved": "Ungespeicherte Eingaben exportieren",
   "core.localStorageExportRequested": "Download angefordert. Prüfe vor dem Neuladen, ob die JSON-Datei gespeichert wurde, und bewahre sie auf, bis alle Eingaben abgeglichen sind.",
   "core.localStorageExportFailed": "Der Export konnte nicht gestartet werden. Lass dieses Fenster geöffnet und versuche es erneut.",
-  "quickInput.supportedLanguages": "Datumsbefehle in der Schnelleingabe unterstützen vereinfachtes Chinesisch und Englisch. Andere Sprachen bleiben Aufgabentext; verwende die Datumsauswahl."
+  "quickInput.supportedLanguages": "Gib Datumsangaben auf vereinfachtem Chinesisch oder Englisch ein. Für andere Sprachen verwende die Datumsauswahl."
 }
