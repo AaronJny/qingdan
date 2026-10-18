@@ -54,15 +54,15 @@
 
 ## 下载与安装
 
-前往 [Releases](https://github.com/AaronJny/qingdan/releases/latest) 下载适合自己系统的版本。当前发行版为 [v1.1.2](https://github.com/AaronJny/qingdan/releases/tag/v1.1.2)，包含桌面端、服务端和 Android 客户端。
+前往 [Releases](https://github.com/AaronJny/qingdan/releases/latest) 下载适合自己系统的版本。当前发行版为 [v1.2.0](https://github.com/AaronJny/qingdan/releases/tag/v1.2.0)，包含桌面端、服务端和 Android 客户端。
 
 | 平台 | 下载 | 使用方式与要求 |
 | --- | --- | --- |
-| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.1.2/Qingdan-1.1.2-mac-arm64.dmg) | macOS 13 及以上；正常退出旧版后，将应用拖入 Applications。暂不支持 Intel Mac |
-| Windows · x64 | [便携 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.1.2/Qingdan-1.1.2-win-x64.zip) | 完整解压后运行 `Qingdan.exe`，不要只复制 EXE |
-| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.1.2/Qingdan-1.1.2-linux-x64.AppImage) | 需要图形桌面与正常可用的 Electron 沙箱；添加可执行权限后运行，FUSE 替代启动方式见[桌面说明](desktop/README.md) |
-| 自托管服务端 / 网页端 | [含运行时 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.1.2/qingdan-server-v1.1.2.zip) | 内置 Linux x64 / macOS arm64 运行时和启动脚本，无需另外安装 Node.js 或 npm |
-| Android | [0.1.2 APK](https://github.com/AaronJny/qingdan/releases/download/v1.1.2/Qingdan-0.1.2-android.apk) | Android 8.0 及以上，并需保持系统 WebView 更新；安装与签名注意事项见[Android 说明](android/README.md) |
+| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/Qingdan-1.2.0-mac-arm64.dmg) | macOS 13 及以上；正常退出旧版后，将应用拖入 Applications。暂不支持 Intel Mac |
+| Windows · x64 | [便携 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/Qingdan-1.2.0-win-x64.zip) | 完整解压后运行 `Qingdan.exe`，不要只复制 EXE |
+| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/Qingdan-1.2.0-linux-x64.AppImage) | 需要图形桌面与正常可用的 Electron 沙箱；添加可执行权限后运行，FUSE 替代启动方式见[桌面说明](desktop/README.md) |
+| 自托管服务端 / 网页端 | [含运行时 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/qingdan-server-v1.2.0.zip) | 内置 Linux x64 / macOS arm64 运行时和启动脚本，无需另外安装 Node.js 或 npm |
+| Android | [0.2.0 APK](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/Qingdan-0.2.0-android.apk) | Android 8.0 及以上，并需保持系统 WebView 更新；安装与签名注意事项见[Android 说明](android/README.md) |
 
 下载后可使用发行版附带的 SHA256 校验文件检查文件完整性。
 
