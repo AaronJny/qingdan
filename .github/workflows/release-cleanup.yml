@@ -1,0 +1,48 @@
+name: 清理已验证发布的临时产物
+
+on:
+  workflow_run:
+    workflows: ['青单发布']
+    types: [completed]
+
+permissions:
+  contents: read
+
+# Never occupy the release/repair concurrency group or cancel a queued build.
+concurrency:
+  group: release-cleanup-${{ github.repository }}-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: 仅删除本次成功发布运行的临时 Actions 产物
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event != 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      # workflow_run checks out trusted default-branch code, never downloaded code.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: 核实原始运行已成功结束并定位专属发布凭据
+        id: inspect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/release/cleanup.py inspect
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: steps.inspect.outputs.receipt-present == 'true'
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+          name: verified-release-publication
+          path: verified-publication
+      - name: 逐项复核正式 Release 后清理本次临时产物
+        if: steps.inspect.outputs.receipt-present == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/release/cleanup.py delete --receipt verified-publication/verified-publication.json

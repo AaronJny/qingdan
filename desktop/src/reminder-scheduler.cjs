@@ -1,4 +1,5 @@
 'use strict';
+const { t } = require('./language.cjs');
 const { isServiceUrl } = require('./policy.cjs');
 function validAccount(value) { return typeof value === 'string' && value.length > 0 && value.length <= 256 && !/[\u0000-\u001f\u007f]/.test(value); }
 function cleanAlert(value) {
@@ -100,7 +101,7 @@ class ReminderScheduler {
       const finish = shown => { if (settled) return; settled = true; clearTimeout(timer); signal.removeEventListener('abort', abort); resolve(shown); };
       const abort = () => { try { notification?.close(); } catch {} finish(false); };
       try {
-        notification = new this.Notification({ title: '青单提醒', body: alert.title, silent: false });
+        notification = new this.Notification({ title: t("desktop.qingdan.reminder"), body: alert.title, silent: false });
         this.notifications.add(notification); notification.qingdanReminderId = alert.id;
         if (this.notifications.size > 100) { const oldest = this.notifications.values().next().value; this.notifications.delete(oldest); try { oldest.close(); } catch {} }
         notification.once('show', () => finish(active()));

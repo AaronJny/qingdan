@@ -1,3 +1,4 @@
+import{translateError}from'./i18n';
 import{invalidateOfflineSession}from'./offline-session';
 let csrfToken='';
 export function configureSession(token:string){csrfToken=token;}
@@ -17,7 +18,7 @@ export async function api(path:string,body?:unknown,method='POST',expectedAccoun
   }
   if(typeof window!=='undefined'&&([401,403].includes(response.status)||data.code==='ACCOUNT_CHANGED'))await invalidateOfflineSession('server-denied-or-account-changed',expectedAccountId);
   if((data.code==='ACCOUNT_CHANGED'||response.status===401)&&typeof window!=='undefined')window.dispatchEvent(new Event('qingdan-account-changed'));
-  if(!response.ok)throw Object.assign(new Error(data.error||'操作失败。'),{status:response.status,code:data.code});
+  if(!response.ok)throw Object.assign(new Error(translateError(data.error||'操作失败。')),{status:response.status,code:data.code});
   if(typeof window!=='undefined'&&response.status<400&&!(body===undefined&&method==='POST'))window.dispatchEvent(new Event('qingdan-mutated'));
   return data;
  }finally{if(timer)clearTimeout(timer)}

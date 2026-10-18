@@ -1,11 +1,11 @@
 {
   "schema": "qingdan-android-source-v1",
   "product": "qingdan",
-  "android_client_version": "0.1.2",
+  "android_client_version": "0.2.0",
   "application_baseline_version": "1.0.1",
   "application_baseline_commit": "c3194463a8cf748242955c61da72969c652ea062",
   "application_baseline_source_zip_sha256": "3cf3e87df0fcbceda9a1053524ad0c1fdc2a595b36712a8d583a58fc5359372d",
-  "unchanged_baseline_webapp_files": 177,
+  "unchanged_baseline_webapp_files": 151,
   "android_adaptations": [
     {
       "path": "webapp/AUTH.md",
@@ -35,19 +35,55 @@
       "path": "webapp/app/activity-view.tsx",
       "change": "android-adapted",
       "baseline_sha256": "43f954a4023942944c01c73b88001a36c98eea6c626f027261fd3ae496e0429b",
-      "sha256": "58041bd354ae6d1adbf5b781eb4353f2c33f091d5aa06451a871037acda8bb4c"
+      "sha256": "8bdf170a532a741b75390a6357e086c5814ba246f25f8736c4589d84e66642a9"
     },
     {
       "path": "webapp/app/calendar-batch.tsx",
       "change": "android-adapted",
       "baseline_sha256": "56a0c18e4f2384495aec18a563844cbe26b37c1afbe4819ed77df321e94ea62b",
-      "sha256": "8a2936a73e7de2650de40feef98ad7cfb6ac4ad8f4199b71dfe9aec439b6e105"
+      "sha256": "1ba549ed7e99a858041a9dc14af9d77b977a6d0057312285f302156f8f86edae"
+    },
+    {
+      "path": "webapp/app/calendar-editor.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "43783cd6d40e902b621df5d76409e4654771892a669d3a2ea5cdf9897047cc5d",
+      "sha256": "83d34429543a2db44c06088905973e795c15f396f2234bddf95847ae6b51e2c9"
+    },
+    {
+      "path": "webapp/app/check-reminder-editor.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "8f09328723822c8352cc0093ef22bdb081a97fb86399aff7ff952ef516dd71f4",
+      "sha256": "7dad0eb92cd8788b7e9fa83345d0bbd47579b1e197ae0318c762cc36786f0323"
+    },
+    {
+      "path": "webapp/app/comment-composer.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "1640d339256f9c0963884be2d5451a6a9a9dc695fd30d9f7700f66b763c9173f",
+      "sha256": "25b8fa0cbe64d8cf8560b09a72640f2230adfcd6a7efad718f03b83978e188b3"
+    },
+    {
+      "path": "webapp/app/countdown-background.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "a73e77944a95ba676f39c85d3c23fc44763945693c5ad5a3da3206d67ab8f6a5",
+      "sha256": "acb2ee504d185b5030bb7d0fd9b972ff6be23217dfc729d4fe55265438994e9b"
+    },
+    {
+      "path": "webapp/app/countdown-editor.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "b55d94dd1b6b8ccb0f14b517189b8b345f4806cd00ef078a65506edc18f67053",
+      "sha256": "4f97652694238d299ff804b473499e95310552b40851e8ee1c2a6f1d583302a6"
+    },
+    {
+      "path": "webapp/app/focus-history-editor.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "da130452c41abba84bbcbd657e27bd38e06a822b189d595792b29a91eafe234b",
+      "sha256": "e3f2ffe6260f15cd00c6e6859a24bf3634c62f77c78e1f95ddd3183b3d8e2e4a"
     },
     {
       "path": "webapp/app/full-backup-panel.tsx",
       "change": "android-adapted",
       "baseline_sha256": "ea868d4189628d6c173cd92c42e8fb87a47bae523586fae49605fc6eb31b9dec",
-      "sha256": "7a6264b5ee5115e1c89ececf1d6f0f68528f0e03efa97db0ab0d0224401bff5f"
+      "sha256": "b179e7b1bb3ac3e57fcc040830fd8c138707b11c3d12349035b2834b4a0a2c8a"
     },
     {
       "path": "webapp/app/globals.css",
@@ -56,64 +92,118 @@
       "sha256": "e7a0ce4c1c968a728898cbf63ca43b033eaf10621ee00eed72cb57198d3051b8"
     },
     {
+      "path": "webapp/app/habit-editor.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "1b08e3d4de48ccd85540f3eb98ae6cd9e73d432ac04bc2845274781c339a653a",
+      "sha256": "c85ceb60add30bc222493e1601aab527644f3e758a3ec850529e1351c5e6d4e6"
+    },
+    {
       "path": "webapp/app/habit-group-manager.tsx",
       "change": "android-adapted",
       "baseline_sha256": "b5fea5f826f1fd186687f9e00b90aa6b9387601b95f328c17c510ab76ba33fd0",
-      "sha256": "0e1f69567f3c4e475076be5deeb697733df0447f6f1450a732763709ff09f0ce"
+      "sha256": "6e597e495a7a2b473ab91b20bb673d0c52b76f8dfdeba0323eabb3c0977834fd"
+    },
+    {
+      "path": "webapp/app/habit-log-editor.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "608c7fba224055dfccd1c34ffe4e1436492a4e1c2f314e7339d28002bd9a4095",
+      "sha256": "5b2f06849c680a2a47bba675491f9f0cc32e31a603eba73794aa3727f7d6a9d3"
+    },
+    {
+      "path": "webapp/app/list-transfer-recovery.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "363d0b42eeb3b06681515b29da7a2411f6bd46ba5ec7d2b39a7ef0e837f7f1a9",
+      "sha256": "5c91c213dbaa95ee4cc0fd74b3474928968890942e3eed7a0700f3f71d413b06"
     },
     {
       "path": "webapp/app/list-transfer.tsx",
       "change": "android-adapted",
       "baseline_sha256": "d530ba0e3edb2af936e96acc3222cc40002abbd6bdadbd7f417f4c48273713d7",
-      "sha256": "8cae4beae2c11bd5429a1dc00ae2b9247f39724ea91717da7cadd5db8ebf8e05"
+      "sha256": "ffc17f7150551e6edcce197f18398170facb16169f7cadd9f05cf706133e9cfc"
     },
     {
       "path": "webapp/app/matrix-view.tsx",
       "change": "android-adapted",
       "baseline_sha256": "3ff5ea441bcb3ab61cc967dde3916e80f12db210b1f7d4379b9f827bb8d7e558",
-      "sha256": "168876d92eded6f58cb12f930826803152473882a9393b713b679663c330c189"
+      "sha256": "138e6b9ca15d54ef4d743af04923f9a3235760fe5419b0bc46be1b8ca284d8e0"
     },
     {
       "path": "webapp/app/merge-dialog.tsx",
       "change": "android-adapted",
       "baseline_sha256": "501e06b5e9f85ee1861747a743444ca1ad6d19443d2ec632f478e14d3b0b0f36",
-      "sha256": "907294760926a9787167840247219944cffb6d199d4c6ad9f99b03822e2e3ebb"
+      "sha256": "dafd8238b7b7fac0d4ab7ba67839d1f896c6edf4c701184cac9dde07e60a05ca"
     },
     {
       "path": "webapp/app/offline-shell-settings.tsx",
       "change": "android-adapted",
       "baseline_sha256": "6526db27659a29efa4f559a6c265299e5f56f8d22ea98b7eee2419780a5b0b31",
-      "sha256": "c51040981977b1266a2e5c5ba2f8077171a646a6aa5de80c04d51911a111092b"
+      "sha256": "e33a26b024611d63cc6bffc1b15686241929b5e3b8200e6b4c582ecf20818b80"
     },
     {
       "path": "webapp/app/pending-writes.tsx",
       "change": "android-adapted",
       "baseline_sha256": "4e0f5ba27e95ed13840559ddbe35e45be410d52096621ab22eea65496a350f96",
-      "sha256": "f3a35ee90753a591bb5b1cb359b32cef3851a9a7912b24566da042b9f3d7b0c3"
+      "sha256": "74ed71636dcb02d45096ccf2fda5f73f88b460f6ec1958392c162e45a6e3080f"
     },
     {
       "path": "webapp/app/record-form.tsx",
       "change": "android-adapted",
       "baseline_sha256": "78098129256fc6f7609f115cd7122cf75cc207d307340dcf62f26435629e61d6",
-      "sha256": "bd60f356451ad095e18545cd523b41bd800aa55688c0791cf808c19be2adbb79"
+      "sha256": "5825497589aa23f6c0ad89616f3bec1afd7d27440b1131e0fef47d6f713eb509"
+    },
+    {
+      "path": "webapp/app/reminder-actions.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "2ecec0e2b445a801876b432fc5667b421f116259e4e16ca555d92cc39f5c92ae",
+      "sha256": "9a9876d830d1960b768f99cbea5556f3582637557604846de4fddb1c1de5cf9f"
+    },
+    {
+      "path": "webapp/app/rich-editor.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "a86fd89ded1775eeeaeeecb67ed20f508b30f50816198606f1dab6f182f00c3c",
+      "sha256": "3fc58b6e1dbb3563e92555258c8176be1cdeeccde59eb7d76de1dc7fef677d79"
+    },
+    {
+      "path": "webapp/app/settings-preferences.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "cae64a362325079e42d1bd31e76bd1ef93d173741721313761a772e4e1c154da",
+      "sha256": "7380b85abe4fedefde1cd21c96f7ea238018534e167ef8e03a2311acf5706e24"
+    },
+    {
+      "path": "webapp/app/task-attachments.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "579956db2416328f1f5e2f5e3e3b0be5c8fa2422cfdc7d2f47d31ecd9c7a7fcc",
+      "sha256": "ccd5334977fcf08eca13c91c4ee55d7c7a30c6e939be383c8ad0448e827a6853"
+    },
+    {
+      "path": "webapp/app/task-card.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "d1beeb6aef1a59d6b67904cfb5ab27923cd34f29d0b01c6139a3bf36dbaae7c4",
+      "sha256": "0f342800a5be7eeb9b8e2fefc8aec2d7a4caed74062b276e4a0d2febfe1473c6"
+    },
+    {
+      "path": "webapp/app/user-management.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "1e4713489a2d94b8a1f2b3538c465068c9b1985ce7cb883ddf1120cbc68172bd",
+      "sha256": "3d13c3b1adeebd2b76c5b6655878c85b0d32c02b08b4474e848d34d0f13b0b24"
     },
     {
       "path": "webapp/app/workspace-dialogs.tsx",
       "change": "copy-only cleanup",
       "baseline_sha256": "fcde7e275447288faee720abd3c4d8f998a9303d4724ab5ae73ff0a014ccec81",
-      "sha256": "470b198df806e8f618c564a7fe227723686e850eb2b1389075ad10f9c2f133e1"
+      "sha256": "e4fa919076554ca20dc43a44321684f49d58d1150c4aa25b5530d8d74a9f51bb"
     },
     {
       "path": "webapp/app/workspace-views.tsx",
       "change": "android-adapted",
       "baseline_sha256": "8e1ce9a2bcc64677b89f732d3fd0dd26fa2388bc7919aeaf24330c059f61ccf2",
-      "sha256": "b0580caca7dff95edfb4a0d70c9071bddfb619c1c67e3238fea932236e6db787"
+      "sha256": "34ea3a935e57f347129849cc900575257ae90f110bd262c4a955c565e2327c33"
     },
     {
       "path": "webapp/app/workspace.tsx",
       "change": "android-adapted",
       "baseline_sha256": "a733f26f899acf3982098758e7157626bf4b68bdca27db69b78db3da0215f012",
-      "sha256": "8fa9c71f5a37f4d2bf4e51b3d67b6b8b176361052c295458e6647e2e1123fb49"
+      "sha256": "b1e9822f827b9b2647ccd7c3fb50f010f14ba56c8c0e552472a6f599773e0e8c"
     },
     {
       "path": "webapp/assets/IMPORT_INTEGRATIONS_README.md",
@@ -122,10 +212,22 @@
       "sha256": "ddfcc47ea8fb3f3bcc40513ae45bfc714d8f4eac08374f625f1920f0d96b2d5e"
     },
     {
+      "path": "webapp/assets/recurrence.ts",
+      "change": "android-adapted",
+      "baseline_sha256": "b66aea25af931e42b30ea970cf1b8f3c444c5593330555b3bba677313ba8355d",
+      "sha256": "bb45f9eb5ab20e3ee47d4441b78c81f88b2ecdf724a2cdb5b5f19533a971fc3a"
+    },
+    {
       "path": "webapp/index.html",
       "change": "android-adapted",
       "baseline_sha256": "5ff994c133f3696d8ae91460e1a758cf2de69c02a6b722399b8b62e6a73ec947",
       "sha256": "98ca07ca501b42e26901ecd2cbf3398478823b82eabf8f3c1fd8f03214391224"
+    },
+    {
+      "path": "webapp/lib/activity.ts",
+      "change": "android-adapted",
+      "baseline_sha256": "fa8d9df615cffaba73d1d181aa48aa58ed66168785fb74a5c354556018e2936c",
+      "sha256": "e221d35c567b73298a92de27c40e9aab3bdb046fbbff9e7c7be621a5a54eeecd"
     },
     {
       "path": "webapp/lib/bootstrap-loader.ts",
@@ -134,10 +236,34 @@
       "sha256": "2e6a613191873c856078881d5690abbabce978bbaa41df138b49c530467253e8"
     },
     {
+      "path": "webapp/lib/calendar-holidays.ts",
+      "change": "android-adapted",
+      "baseline_sha256": "c8c88f1e97a55c361daf91a95a0b7eaeadb84fdf822f9db29385b83b7f40b25c",
+      "sha256": "b35aef376a9e2752a02ccd32a0fbe4ce9f9d6bf105ef916e7dca51dc02c1ba87"
+    },
+    {
       "path": "webapp/lib/client.ts",
       "change": "android-adapted",
       "baseline_sha256": "649c5858d1a7efc46cf7f8aff91b9be56c4d47b0275316557296a446f06cac7a",
-      "sha256": "64d4bc2cc035594e4577e0cd519676211df4bff6101f2691c9492352e7aee041"
+      "sha256": "b5b1c0e34c9f83fdcfc336d673a086013dec0f4c804f79105c621aaca0c4a303"
+    },
+    {
+      "path": "webapp/lib/countdown-clock.ts",
+      "change": "android-adapted",
+      "baseline_sha256": "95ff46055d3dec7a3e9c8979ef2946cd9981de3c0a5a5ab5d72169e7e9353b24",
+      "sha256": "e72d839d1c4046ab94778f7bca001b2632fc597a510ce8a58b757ce9616d6c78"
+    },
+    {
+      "path": "webapp/lib/countdown-format.ts",
+      "change": "android-adapted",
+      "baseline_sha256": "587febd8057df7819d090a8bb29e868986e050d162db53e8073e093c3d759b91",
+      "sha256": "15aac67d1096be1e097cf0a23e7093596b3fba9bd796ad72ac79d6bc526d5053"
+    },
+    {
+      "path": "webapp/lib/habit-metrics.ts",
+      "change": "android-adapted",
+      "baseline_sha256": "7deeef39bdb8aa8f15082a07fd5226feda6f5d6c16fb05e5e364fbd5cc357b55",
+      "sha256": "5f95b812b74e8656d0ae9a16ec9115226208d8f989e860ba82ea3a1d51982eac"
     },
     {
       "path": "webapp/lib/offline-shell-client.ts",
@@ -146,14 +272,20 @@
       "sha256": "9a41c41972395ea815f794fb1f1b790057c3105e1dfc05aba476c6f2ac86ed35"
     },
     {
+      "path": "webapp/lib/types.ts",
+      "change": "android-adapted",
+      "baseline_sha256": "9297c9c509f41f26edd8a3c3e2f3282176e0f94433d862c9608da10f60dd236c",
+      "sha256": "9e4d2a7b1e852fd00473a2714fe2b0dbd45868be6052941ab21414a9282eca74"
+    },
+    {
       "path": "webapp/native/auth.ts",
       "change": "added",
       "sha256": "844165e46dc067cb91ca6464d5382b6b9d01f79382b304bf2d21024bb6aeaa85"
     },
     {
       "path": "webapp/native/dispatch.ts",
-      "change": "Android native API adapter; independent client identity 0.1.2 with business baseline 1.0.1 unchanged",
-      "sha256": "35c5a6afa5c12be4787b9e0360e741a9c4df6069e840764cd40d38923e6344be"
+      "change": "Android native API adapter; independent client identity 0.2.0 with business baseline 1.0.1 unchanged",
+      "sha256": "707e387ca6606b8de13b5b2a2ec471bca68b4e7906592118e0f5623382656c0f"
     },
     {
       "path": "webapp/native/license-plugin.mjs",
@@ -169,18 +301,18 @@
       "path": "webapp/offline/root.tsx",
       "change": "android-adapted",
       "baseline_sha256": "5bb606e7801535592ffa5d4324a16ce8c3831cd822b89685f715107ffec1f9b3",
-      "sha256": "c972c782cc253cdda59e0e9e477894e08e44218a36ec61b882d604a77424f7bd"
+      "sha256": "d6d5a555bde82752899388189f7f7fd41b3fbb85ed3d7646bc5ac2fe05d6b463"
     },
     {
       "path": "webapp/package-lock.json",
       "change": "android-adapted",
-      "sha256": "9c7bc72e306f891da9d7229eea2fb494dc15b54bbcbf0cca4393ca26cfeebad7",
+      "sha256": "54a169ad59c5914f3ca78891db6cf7a5bb3e5ad2a2654cdd506f97094989b307",
       "baseline_sha256": "5164278c6805e8ce818e580c2200d28eb0b752190c5c703267556035347a9556"
     },
     {
       "path": "webapp/package.json",
       "change": "android-adapted",
-      "sha256": "78280af5de9c1ad0b27bb72e3fc55495550d38090f7061743fac877dfc139ef1",
+      "sha256": "ca29a0c6e859a5ff925060a675a7f2b3ec25fb6f9f94ede980485669eacd026c",
       "baseline_sha256": "595996cc26b591df53e10b14252c2cfa7e51b3b97d1488c4d79e66b828f1b2de"
     },
     {
@@ -217,10 +349,34 @@
       "baseline_sha256": "9a4449ce7020f0cd757edf25a0bd00a8b4e785e8372684504f2ffad3cccd54fb"
     },
     {
+      "path": "webapp/scripts/check-release.mjs",
+      "change": "android-adapted",
+      "baseline_sha256": "70c553a9cf79c6166d5c9bde2739feba346d9ff862450c14d57db2b86fbeb8db",
+      "sha256": "ed63c167ef5f814f802565d4d854f4246f143ebd2e35a337fc1126c80e963f69"
+    },
+    {
+      "path": "webapp/tests/attachment-ui.test.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "f6514b20ce72f512b2cfbeac4f0b31476f09fb605f6faef6b3edb84a0dd94e12",
+      "sha256": "d19a09e57e9abba8960a6295c2aee65d0d539f50397cb2e335a634a4844e78cf"
+    },
+    {
+      "path": "webapp/tests/auth-ui.test.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "907cbd1c49d3e245d70446b5004f800416214a7f704a1ce473cfcf1ce16d0682",
+      "sha256": "96516520458744790f7c180cebc07d1f21cdcbc914a44c0f0a7df1ddbbdc91d2"
+    },
+    {
+      "path": "webapp/tests/session-ui.test.tsx",
+      "change": "android-adapted",
+      "baseline_sha256": "976daf26399cd38295599c5251f718bef4fdecc30ddb45ae3dcb3dbda019c480",
+      "sha256": "7f76f06af71a794229e8433725ebbba2f81bb58f0a08a2c22d5e94de712a9977"
+    },
+    {
       "path": "webapp/tests/ui.test.tsx",
       "change": "android-adapted",
       "baseline_sha256": "e2cdfe1f8dee907f8f92765d905edaf130511a45b250b29dfa8a3889f1f6585b",
-      "sha256": "fda120e8f771ce0e6bafe7f54df120b8f796755fe5e0cd99dd85ffae74911b6f"
+      "sha256": "a6935651588c89e1acd9e1fdb9fba57f824d69b9d62b135df3d10424052b06eb"
     },
     {
       "path": "webapp/tsconfig.json",
@@ -236,7 +392,7 @@
     {
       "path": "webapp/web/android-adapter.ts",
       "change": "added",
-      "sha256": "efc715b73269288297939e1667f66134bb1522c3309824c96e6e4f5d5afc75ed"
+      "sha256": "06b781551049d7db61b5783ea78a96568234bd95c3fb8da054b0864844f2d353"
     },
     {
       "path": "webapp/web/android.css",
@@ -247,7 +403,7 @@
       "path": "webapp/web/app.tsx",
       "change": "android-adapted",
       "baseline_sha256": "49f2729836159a4e8f4b696a767f09d3b4d449c31eb6022e7aa9fcd5031879bd",
-      "sha256": "beb2ed271fdecb985a2f89302f232c436dd80deb6c55ca242b4d219794a52bb3"
+      "sha256": "53e678bb3605875b8e0e2d53739ffe8a645765362004b14cd67933df6b882e3c"
     },
     {
       "path": "webapp/web/main.tsx",
@@ -284,8 +440,8 @@
     },
     {
       "path": "android/app/build.gradle",
-      "bytes": 2750,
-      "sha256": "674277a8c82492fb7f80ca825f5b2604b4481fdfdabb4bcd34b5f88ef7642861"
+      "bytes": 3568,
+      "sha256": "c4c6f22973d05166e790244342abec29fac5eca904fdfd27f7e3ea9deb600817"
     },
     {
       "path": "android/app/src/androidTest/AndroidManifest.xml",
@@ -349,13 +505,13 @@
     },
     {
       "path": "android/app/src/main/java/cn/qingdan/android/ExportPayload.java",
-      "bytes": 3877,
-      "sha256": "29e6661eea031669854115423cdbd6ffd3f3a46ef3e1f553b821bb7b82b4057c"
+      "bytes": 4035,
+      "sha256": "4a6a01d11618e9f6bff9596e5288e21007f586ea1c0e2efffb09cb9b05c11147"
     },
     {
       "path": "android/app/src/main/java/cn/qingdan/android/LocalStore.java",
-      "bytes": 37226,
-      "sha256": "209232b536a844ea9a72420e4af48faf8c641a0e9364a4266992ed2f1f7813e4"
+      "bytes": 37212,
+      "sha256": "d88290bda5204ed41cdf02c76bd0c82a30f77df274c5056d1980ed937a3034f5"
     },
     {
       "path": "android/app/src/main/java/cn/qingdan/android/LocalStorePolicy.java",
@@ -364,13 +520,23 @@
     },
     {
       "path": "android/app/src/main/java/cn/qingdan/android/MainActivity.java",
-      "bytes": 47012,
-      "sha256": "96d9118eefa8b085347011afb868d6e31f0688b488052107b5b32d7184ec1c7c"
+      "bytes": 51608,
+      "sha256": "2e385fb98648f286b2eea565d906ed5e2588d81d5044c3672d95016aa76896b7"
+    },
+    {
+      "path": "android/app/src/main/java/cn/qingdan/android/NativeErrors.java",
+      "bytes": 7247,
+      "sha256": "d616ca6543aac94bd2d638d8610ab0e4cda1540e364b16cf2d9568119b197474"
+    },
+    {
+      "path": "android/app/src/main/java/cn/qingdan/android/NativeLanguage.java",
+      "bytes": 2469,
+      "sha256": "8f223ef624908e65cc05f64e7d90262d47d05d16383029e4d7bf18063dedd316"
     },
     {
       "path": "android/app/src/main/java/cn/qingdan/android/OriginPolicy.java",
-      "bytes": 4629,
-      "sha256": "a5ef47e8ae23c70c9406ea4fa26661add7659476cf712deb33ac8a63126c24f1"
+      "bytes": 4526,
+      "sha256": "a06671dee07fa8a90007eea68d8902612da218d705ea4f2edb058e52816c4cbb"
     },
     {
       "path": "android/app/src/main/res/drawable/ic_qingdan.xml",
@@ -378,9 +544,19 @@
       "sha256": "bde746b37d5b1e524b169f8313b93972497e84cd068967ebc346b1e99854aa6b"
     },
     {
-      "path": "android/app/src/main/res/values/strings.xml",
+      "path": "android/app/src/main/res/values-zh-rCN/strings.xml",
+      "bytes": 11961,
+      "sha256": "5ec81597f89cc4c0e6f5eff073aa9945c4904c7a5aebde02a12f041d7a001066"
+    },
+    {
+      "path": "android/app/src/main/res/values-zh/strings.xml",
       "bytes": 136,
       "sha256": "e9f446604fa6b0d8808c0d98946d0409808e51c1ba549adfa48b8e1f3244d7ca"
+    },
+    {
+      "path": "android/app/src/main/res/values/strings.xml",
+      "bytes": 12027,
+      "sha256": "5b326e081365e84f14e5afd99daac2862ec9addda02e72a7c9d0b5d7d5af0c09"
     },
     {
       "path": "android/app/src/main/res/values/styles.xml",
@@ -398,9 +574,19 @@
       "sha256": "eb5f5c57a88fc656cb97ee142694b996b286064ba973e51e0158bcdff08b34f2"
     },
     {
+      "path": "android/app/src/test/java/cn/qingdan/android/LanguagePolicyTest.java",
+      "bytes": 2555,
+      "sha256": "845711960f0187791cb0ba55a3e6c8bdb16c13a3afd19f4a9163755b6344a8d2"
+    },
+    {
       "path": "android/app/src/test/java/cn/qingdan/android/LocalStorePolicyTest.java",
       "bytes": 4364,
       "sha256": "1230de84b314430ccedaea1916e129dc020513a98f124d2bc038917e6cc7b3c8"
+    },
+    {
+      "path": "android/app/src/test/java/cn/qingdan/android/NativeErrorsTest.java",
+      "bytes": 1046,
+      "sha256": "24ceda8c27c1171e70ff8caf2147a001ae207aa1af509f1aec92ee012898ad5b"
     },
     {
       "path": "android/app/src/test/java/cn/qingdan/android/SecurityPolicyTest.java",
@@ -434,8 +620,8 @@
     },
     {
       "path": "android/test-security.sh",
-      "bytes": 620,
-      "sha256": "b9f62b2b45be9ba2dc5f5a06231b547dfabd0377cee7d12d04b78994dde5305d"
+      "bytes": 982,
+      "sha256": "a68236de6c9b920d9352b01a1e62aa713771ccd154d4c0ef2549a6252e45823b"
     },
     {
       "path": "android/tests/BundledSqliteSmokeTest.java",
@@ -454,8 +640,8 @@
     },
     {
       "path": "artifacts/BUNDLED-ASSETS.json",
-      "bytes": 3230,
-      "sha256": "e53638f8950eac7558234150757d565c44568c1e034b91cc398e3cb163ad0f63"
+      "bytes": 3100,
+      "sha256": "d85d712534d1b7eededb430aed1fdb5e071dd013baa643dc714d9249bf1e721c"
     },
     {
       "path": "docs/RELEASE-SIGNING.md",
@@ -464,8 +650,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 421,
-      "sha256": "8a8b440533035c94eb737cd2425addb42354cb9bc7ff4cc122db38f056ec1b6f"
+      "bytes": 429,
+      "sha256": "28687815024d75905c5815d0895aa682a276a7b0754463ff6fa7a04f3ba5534e"
     },
     {
       "path": "scripts/build-native-api-tests.mjs",
@@ -474,8 +660,8 @@
     },
     {
       "path": "scripts/build-web.mjs",
-      "bytes": 1778,
-      "sha256": "fe4a8e95d9bc150ba5759da8823111283652d333be402a1e9ba299fa37fde008"
+      "bytes": 1805,
+      "sha256": "a5fe7348571fbc29c998816e9af4c71fd90efe2742b6d083ad9622620873e137"
     },
     {
       "path": "scripts/create-release-key-macos.sh",
@@ -490,22 +676,27 @@
     {
       "path": "scripts/verify-apk.py",
       "bytes": 12130,
-      "sha256": "49b022c61cbd9103b0bcf4933a60ccc1c83b3be22a287530bfeacb06be2c47e7"
+      "sha256": "1283dc9db93782f751758adcb72793df566c6d011545ee19198193bbad7596db"
     },
     {
       "path": "tests/android-adapter.test.mjs",
-      "bytes": 3052,
-      "sha256": "78887319dd43a1860fe74ea38932f998900ae84c9ae42c96b016c8438714c1e3"
+      "bytes": 4435,
+      "sha256": "73d13343624be782ee58bb1aebe1a44d7bfa66c058481b998e79a510d8edb878"
     },
     {
       "path": "tests/local-dispatch.test.mjs",
       "bytes": 7789,
-      "sha256": "d3e74de2b2da8b870d005a9cb7d97daec3f3ea1acb2296d4cf0d1ed0abd499a8"
+      "sha256": "54c7b4624518e29a1a32cf94d1497617e145ea01971be4c12509e6f1072035f4"
+    },
+    {
+      "path": "tests/native-language.test.mjs",
+      "bytes": 2019,
+      "sha256": "fb280c5f116209de2a4690a05b117867621f1d74784768f0acec8ba1aed9e1da"
     },
     {
       "path": "tests/test_apk_verification.py",
       "bytes": 13523,
-      "sha256": "a7b7acae39e320575135639204694eef88cfa87ca6642751b1cadce5ad822a83"
+      "sha256": "06598a9b695949259e8bb7a164dac9846895c8688ac4af3dc3b60b6f09e16d7e"
     },
     {
       "path": "verification/APK-INDEPENDENT-VERIFICATION.json",
@@ -584,8 +775,8 @@
     },
     {
       "path": "webapp/app/activity-view.tsx",
-      "bytes": 1614,
-      "sha256": "58041bd354ae6d1adbf5b781eb4353f2c33f091d5aa06451a871037acda8bb4c"
+      "bytes": 1953,
+      "sha256": "8bdf170a532a741b75390a6357e086c5814ba246f25f8736c4589d84e66642a9"
     },
     {
       "path": "webapp/app/api/attachments/route.ts",
@@ -649,43 +840,43 @@
     },
     {
       "path": "webapp/app/calendar-batch.tsx",
-      "bytes": 7185,
-      "sha256": "8a2936a73e7de2650de40feef98ad7cfb6ac4ad8f4199b71dfe9aec439b6e105"
+      "bytes": 7895,
+      "sha256": "1ba549ed7e99a858041a9dc14af9d77b977a6d0057312285f302156f8f86edae"
     },
     {
       "path": "webapp/app/calendar-editor.tsx",
-      "bytes": 4199,
-      "sha256": "43783cd6d40e902b621df5d76409e4654771892a669d3a2ea5cdf9897047cc5d"
+      "bytes": 5611,
+      "sha256": "83d34429543a2db44c06088905973e795c15f396f2234bddf95847ae6b51e2c9"
     },
     {
       "path": "webapp/app/check-reminder-editor.tsx",
-      "bytes": 4113,
-      "sha256": "8f09328723822c8352cc0093ef22bdb081a97fb86399aff7ff952ef516dd71f4"
+      "bytes": 4668,
+      "sha256": "7dad0eb92cd8788b7e9fa83345d0bbd47579b1e197ae0318c762cc36786f0323"
     },
     {
       "path": "webapp/app/comment-composer.tsx",
-      "bytes": 3739,
-      "sha256": "1640d339256f9c0963884be2d5451a6a9a9dc695fd30d9f7700f66b763c9173f"
+      "bytes": 4320,
+      "sha256": "25b8fa0cbe64d8cf8560b09a72640f2230adfcd6a7efad718f03b83978e188b3"
     },
     {
       "path": "webapp/app/countdown-background.tsx",
-      "bytes": 5780,
-      "sha256": "a73e77944a95ba676f39c85d3c23fc44763945693c5ad5a3da3206d67ab8f6a5"
+      "bytes": 6521,
+      "sha256": "acb2ee504d185b5030bb7d0fd9b972ff6be23217dfc729d4fe55265438994e9b"
     },
     {
       "path": "webapp/app/countdown-editor.tsx",
-      "bytes": 6759,
-      "sha256": "b55d94dd1b6b8ccb0f14b517189b8b345f4806cd00ef078a65506edc18f67053"
+      "bytes": 8850,
+      "sha256": "4f97652694238d299ff804b473499e95310552b40851e8ee1c2a6f1d583302a6"
     },
     {
       "path": "webapp/app/focus-history-editor.tsx",
-      "bytes": 2202,
-      "sha256": "da130452c41abba84bbcbd657e27bd38e06a822b189d595792b29a91eafe234b"
+      "bytes": 2584,
+      "sha256": "e3f2ffe6260f15cd00c6e6859a24bf3634c62f77c78e1f95ddd3183b3d8e2e4a"
     },
     {
       "path": "webapp/app/full-backup-panel.tsx",
-      "bytes": 4652,
-      "sha256": "7a6264b5ee5115e1c89ececf1d6f0f68528f0e03efa97db0ab0d0224401bff5f"
+      "bytes": 4943,
+      "sha256": "b179e7b1bb3ac3e57fcc040830fd8c138707b11c3d12349035b2834b4a0a2c8a"
     },
     {
       "path": "webapp/app/globals.css",
@@ -694,98 +885,98 @@
     },
     {
       "path": "webapp/app/habit-editor.tsx",
-      "bytes": 4633,
-      "sha256": "1b08e3d4de48ccd85540f3eb98ae6cd9e73d432ac04bc2845274781c339a653a"
+      "bytes": 5671,
+      "sha256": "c85ceb60add30bc222493e1601aab527644f3e758a3ec850529e1351c5e6d4e6"
     },
     {
       "path": "webapp/app/habit-group-manager.tsx",
-      "bytes": 10276,
-      "sha256": "0e1f69567f3c4e475076be5deeb697733df0447f6f1450a732763709ff09f0ce"
+      "bytes": 11458,
+      "sha256": "6e597e495a7a2b473ab91b20bb673d0c52b76f8dfdeba0323eabb3c0977834fd"
     },
     {
       "path": "webapp/app/habit-log-editor.tsx",
-      "bytes": 2680,
-      "sha256": "608c7fba224055dfccd1c34ffe4e1436492a4e1c2f314e7339d28002bd9a4095"
+      "bytes": 3340,
+      "sha256": "5b2f06849c680a2a47bba675491f9f0cc32e31a603eba73794aa3727f7d6a9d3"
     },
     {
       "path": "webapp/app/list-transfer-recovery.tsx",
-      "bytes": 1555,
-      "sha256": "363d0b42eeb3b06681515b29da7a2411f6bd46ba5ec7d2b39a7ef0e837f7f1a9"
+      "bytes": 1647,
+      "sha256": "5c91c213dbaa95ee4cc0fd74b3474928968890942e3eed7a0700f3f71d413b06"
     },
     {
       "path": "webapp/app/list-transfer.tsx",
-      "bytes": 4985,
-      "sha256": "8cae4beae2c11bd5429a1dc00ae2b9247f39724ea91717da7cadd5db8ebf8e05"
+      "bytes": 5319,
+      "sha256": "ffc17f7150551e6edcce197f18398170facb16169f7cadd9f05cf706133e9cfc"
     },
     {
       "path": "webapp/app/matrix-view.tsx",
-      "bytes": 11650,
-      "sha256": "168876d92eded6f58cb12f930826803152473882a9393b713b679663c330c189"
+      "bytes": 13496,
+      "sha256": "138e6b9ca15d54ef4d743af04923f9a3235760fe5419b0bc46be1b8ca284d8e0"
     },
     {
       "path": "webapp/app/merge-dialog.tsx",
-      "bytes": 3243,
-      "sha256": "907294760926a9787167840247219944cffb6d199d4c6ad9f99b03822e2e3ebb"
+      "bytes": 3509,
+      "sha256": "dafd8238b7b7fac0d4ab7ba67839d1f896c6edf4c701184cac9dde07e60a05ca"
     },
     {
       "path": "webapp/app/offline-shell-settings.tsx",
-      "bytes": 3131,
-      "sha256": "c51040981977b1266a2e5c5ba2f8077171a646a6aa5de80c04d51911a111092b"
+      "bytes": 3308,
+      "sha256": "e33a26b024611d63cc6bffc1b15686241929b5e3b8200e6b4c582ecf20818b80"
     },
     {
       "path": "webapp/app/pending-writes.tsx",
-      "bytes": 3546,
-      "sha256": "f3a35ee90753a591bb5b1cb359b32cef3851a9a7912b24566da042b9f3d7b0c3"
+      "bytes": 4274,
+      "sha256": "74ed71636dcb02d45096ccf2fda5f73f88b460f6ec1958392c162e45a6e3080f"
     },
     {
       "path": "webapp/app/record-form.tsx",
-      "bytes": 9276,
-      "sha256": "bd60f356451ad095e18545cd523b41bd800aa55688c0791cf808c19be2adbb79"
+      "bytes": 9582,
+      "sha256": "5825497589aa23f6c0ad89616f3bec1afd7d27440b1131e0fef47d6f713eb509"
     },
     {
       "path": "webapp/app/reminder-actions.tsx",
-      "bytes": 4189,
-      "sha256": "2ecec0e2b445a801876b432fc5667b421f116259e4e16ca555d92cc39f5c92ae"
+      "bytes": 4769,
+      "sha256": "9a9876d830d1960b768f99cbea5556f3582637557604846de4fddb1c1de5cf9f"
     },
     {
       "path": "webapp/app/rich-editor.tsx",
-      "bytes": 6012,
-      "sha256": "a86fd89ded1775eeeaeeecb67ed20f508b30f50816198606f1dab6f182f00c3c"
+      "bytes": 7026,
+      "sha256": "3fc58b6e1dbb3563e92555258c8176be1cdeeccde59eb7d76de1dc7fef677d79"
     },
     {
       "path": "webapp/app/settings-preferences.tsx",
-      "bytes": 1727,
-      "sha256": "cae64a362325079e42d1bd31e76bd1ef93d173741721313761a772e4e1c154da"
+      "bytes": 1806,
+      "sha256": "7380b85abe4fedefde1cd21c96f7ea238018534e167ef8e03a2311acf5706e24"
     },
     {
       "path": "webapp/app/task-attachments.tsx",
-      "bytes": 7537,
-      "sha256": "579956db2416328f1f5e2f5e3e3b0be5c8fa2422cfdc7d2f47d31ecd9c7a7fcc"
+      "bytes": 8348,
+      "sha256": "ccd5334977fcf08eca13c91c4ee55d7c7a30c6e939be383c8ad0448e827a6853"
     },
     {
       "path": "webapp/app/task-card.tsx",
-      "bytes": 1109,
-      "sha256": "d1beeb6aef1a59d6b67904cfb5ab27923cd34f29d0b01c6139a3bf36dbaae7c4"
+      "bytes": 1384,
+      "sha256": "0f342800a5be7eeb9b8e2fefc8aec2d7a4caed74062b276e4a0d2febfe1473c6"
     },
     {
       "path": "webapp/app/user-management.tsx",
-      "bytes": 4236,
-      "sha256": "1e4713489a2d94b8a1f2b3538c465068c9b1985ce7cb883ddf1120cbc68172bd"
+      "bytes": 5410,
+      "sha256": "3d13c3b1adeebd2b76c5b6655878c85b0d32c02b08b4474e848d34d0f13b0b24"
     },
     {
       "path": "webapp/app/workspace-dialogs.tsx",
-      "bytes": 61596,
-      "sha256": "470b198df806e8f618c564a7fe227723686e850eb2b1389075ad10f9c2f133e1"
+      "bytes": 65678,
+      "sha256": "e4fa919076554ca20dc43a44321684f49d58d1150c4aa25b5530d8d74a9f51bb"
     },
     {
       "path": "webapp/app/workspace-views.tsx",
-      "bytes": 55045,
-      "sha256": "b0580caca7dff95edfb4a0d70c9071bddfb619c1c67e3238fea932236e6db787"
+      "bytes": 59596,
+      "sha256": "34ea3a935e57f347129849cc900575257ae90f110bd262c4a955c565e2327c33"
     },
     {
       "path": "webapp/app/workspace.tsx",
-      "bytes": 67995,
-      "sha256": "8fa9c71f5a37f4d2bf4e51b3d67b6b8b176361052c295458e6647e2e1123fb49"
+      "bytes": 71886,
+      "sha256": "b1e9822f827b9b2647ccd7c3fb50f010f14ba56c8c0e552472a6f599773e0e8c"
     },
     {
       "path": "webapp/assets/IMPORT_INTEGRATIONS_README.md",
@@ -843,14 +1034,19 @@
       "sha256": "34f31f56ed9911c86c9747851e9d947da12a5ec4c7f2b89c01a2918bceb32704"
     },
     {
+      "path": "webapp/assets/recurrence-english.test.ts",
+      "bytes": 3957,
+      "sha256": "364654a8ddd2a1babf94bcfcb4e31dda822f7016c95990709c980f9706d861c9"
+    },
+    {
       "path": "webapp/assets/recurrence.test.ts",
       "bytes": 18536,
       "sha256": "1d24be74cbc48003e1d689b0521839685c00ffeb2f274318fd7dc3bc027b19ec"
     },
     {
       "path": "webapp/assets/recurrence.ts",
-      "bytes": 20654,
-      "sha256": "b66aea25af931e42b30ea970cf1b8f3c444c5593330555b3bba677313ba8355d"
+      "bytes": 22426,
+      "sha256": "bb45f9eb5ab20e3ee47d4441b78c81f88b2ecdf724a2cdb5b5f19533a971fc3a"
     },
     {
       "path": "webapp/compose.yaml",
@@ -934,8 +1130,8 @@
     },
     {
       "path": "webapp/lib/activity.ts",
-      "bytes": 1827,
-      "sha256": "fa8d9df615cffaba73d1d181aa48aa58ed66168785fb74a5c354556018e2936c"
+      "bytes": 2008,
+      "sha256": "e221d35c567b73298a92de27c40e9aab3bdb046fbbff9e7c7be621a5a54eeecd"
     },
     {
       "path": "webapp/lib/attachment-upload-service.ts",
@@ -989,8 +1185,8 @@
     },
     {
       "path": "webapp/lib/calendar-holidays.ts",
-      "bytes": 1355,
-      "sha256": "c8c88f1e97a55c361daf91a95a0b7eaeadb84fdf822f9db29385b83b7f40b25c"
+      "bytes": 1680,
+      "sha256": "b35aef376a9e2752a02ccd32a0fbe4ce9f9d6bf105ef916e7dca51dc02c1ba87"
     },
     {
       "path": "webapp/lib/check-reminders.test.ts",
@@ -1014,8 +1210,8 @@
     },
     {
       "path": "webapp/lib/client.ts",
-      "bytes": 2243,
-      "sha256": "64d4bc2cc035594e4577e0cd519676211df4bff6101f2691c9492352e7aee041"
+      "bytes": 2295,
+      "sha256": "b5b1c0e34c9f83fdcfc336d673a086013dec0f4c804f79105c621aaca0c4a303"
     },
     {
       "path": "webapp/lib/comment-append.test.ts",
@@ -1059,8 +1255,8 @@
     },
     {
       "path": "webapp/lib/countdown-clock.ts",
-      "bytes": 1248,
-      "sha256": "95ff46055d3dec7a3e9c8979ef2946cd9981de3c0a5a5ab5d72169e7e9353b24"
+      "bytes": 1493,
+      "sha256": "e72d839d1c4046ab94778f7bca001b2632fc597a510ce8a58b757ce9616d6c78"
     },
     {
       "path": "webapp/lib/countdown-draft.test.ts",
@@ -1079,13 +1275,18 @@
     },
     {
       "path": "webapp/lib/countdown-format.ts",
-      "bytes": 1339,
-      "sha256": "587febd8057df7819d090a8bb29e868986e050d162db53e8073e093c3d759b91"
+      "bytes": 2163,
+      "sha256": "15aac67d1096be1e097cf0a23e7093596b3fba9bd796ad72ac79d6bc526d5053"
     },
     {
       "path": "webapp/lib/dialog-focus.ts",
       "bytes": 1913,
       "sha256": "a53ff61c2a464a8aba79dd4b215a5b9b9f8520ddef43b26db4c70b10881b5fe6"
+    },
+    {
+      "path": "webapp/lib/domain-presentation.i18n.test.ts",
+      "bytes": 6088,
+      "sha256": "58af212636c3f5aeaf2ddb2e8ffcc16cf51647c35d9c7a199b496aed2b192969"
     },
     {
       "path": "webapp/lib/filter.test.ts",
@@ -1184,13 +1385,38 @@
     },
     {
       "path": "webapp/lib/habit-metrics.ts",
-      "bytes": 2826,
-      "sha256": "7deeef39bdb8aa8f15082a07fd5226feda6f5d6c16fb05e5e364fbd5cc357b55"
+      "bytes": 2942,
+      "sha256": "5f95b812b74e8656d0ae9a16ec9115226208d8f989e860ba82ea3a1d51982eac"
     },
     {
       "path": "webapp/lib/habits.ts",
       "bytes": 979,
       "sha256": "bb080b2928b3ada526390e0a75d4935e35f95839f816108f92b94d998460d082"
+    },
+    {
+      "path": "webapp/lib/i18n-react.tsx",
+      "bytes": 4599,
+      "sha256": "ded7392a2ea30d506fecbbbe5aff14f9aa4827189489fca499f23a1cf2fd0bd3"
+    },
+    {
+      "path": "webapp/lib/i18n-records.ts",
+      "bytes": 471,
+      "sha256": "47c37ef69886002c5efb095e280e755bfb9e68e8b0d1073043916edbb7f0f27e"
+    },
+    {
+      "path": "webapp/lib/i18n.test.ts",
+      "bytes": 6590,
+      "sha256": "622a1e91753c40bc6d2a9351f2564aa2113aa46a1140ae8c77c8260de9d00fe8"
+    },
+    {
+      "path": "webapp/lib/i18n.ts",
+      "bytes": 11424,
+      "sha256": "915f1a3809b9afb5063c3d312a96fab81d1c26e5ce768c654c3173a77243e193"
+    },
+    {
+      "path": "webapp/lib/i18next.d.ts",
+      "bytes": 591,
+      "sha256": "7ad16e0ec5c14d47976182e756e683edd6910218b7d6c892666fa7d6d54afafb"
     },
     {
       "path": "webapp/lib/instant-local-date.test.ts",
@@ -1231,6 +1457,46 @@
       "path": "webapp/lib/local-storage.ts",
       "bytes": 17896,
       "sha256": "173a96a6d04e5a4a38daf9107e146a4fea9d3e3f6e5f95b74b817c5fa154c56e"
+    },
+    {
+      "path": "webapp/lib/locales/core.en.json",
+      "bytes": 75360,
+      "sha256": "4ad7e5a400b13346bc5a8050959ef4f281af5f73b85760b26505237855a9ae9a"
+    },
+    {
+      "path": "webapp/lib/locales/core.zh.json",
+      "bytes": 68167,
+      "sha256": "ef668f5273b4a6936062e6345a093ccbe9c1c167fceb2d587eaab8f3c60446f1"
+    },
+    {
+      "path": "webapp/lib/locales/domain.en.json",
+      "bytes": 2156,
+      "sha256": "dfdf9ac7e53c4054a304f07316aa74c9806aab265e04a7d138b2970f16eeb432"
+    },
+    {
+      "path": "webapp/lib/locales/domain.zh.json",
+      "bytes": 1982,
+      "sha256": "a77152bad5e8cdadb081a668f5b27a0b01d3c7e3a298bd23c6ba1d7fa108fbae"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.en.json",
+      "bytes": 50900,
+      "sha256": "93b7d44656d2171e670697a4b5655c57f676f796996e7d0f0b7c2b922fb86639"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.zh.json",
+      "bytes": 47850,
+      "sha256": "ea72251085158c867fdaa94d0d1c58f2408112625dc380c63bcd5acae7e3985f"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.en.json",
+      "bytes": 71371,
+      "sha256": "b43e841a05db1f3a2ee22618d26998f4f2aa867a63b636ae839b6377364ce71d"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.zh.json",
+      "bytes": 66502,
+      "sha256": "2a9d7d10af5959c68418d788adf0cb528fc73223b71a3cb1b3f4396791fd41d4"
     },
     {
       "path": "webapp/lib/matrix-rules.test.ts",
@@ -1419,8 +1685,8 @@
     },
     {
       "path": "webapp/lib/types.ts",
-      "bytes": 4239,
-      "sha256": "9297c9c509f41f26edd8a3c3e2f3282176e0f94433d862c9608da10f60dd236c"
+      "bytes": 4277,
+      "sha256": "9e4d2a7b1e852fd00473a2714fe2b0dbd45868be6052941ab21414a9282eca74"
     },
     {
       "path": "webapp/lib/undo-task-data.test.ts",
@@ -1460,7 +1726,7 @@
     {
       "path": "webapp/native/dispatch.ts",
       "bytes": 1937,
-      "sha256": "35c5a6afa5c12be4787b9e0360e741a9c4df6069e840764cd40d38923e6344be"
+      "sha256": "707e387ca6606b8de13b5b2a2ec471bca68b4e7906592118e0f5623382656c0f"
     },
     {
       "path": "webapp/native/license-plugin.mjs",
@@ -1484,8 +1750,8 @@
     },
     {
       "path": "webapp/offline/root.tsx",
-      "bytes": 2840,
-      "sha256": "c972c782cc253cdda59e0e9e477894e08e44218a36ec61b882d604a77424f7bd"
+      "bytes": 2800,
+      "sha256": "d6d5a555bde82752899388189f7f7fd41b3fbb85ed3d7646bc5ac2fe05d6b463"
     },
     {
       "path": "webapp/offline/worker.js",
@@ -1494,13 +1760,13 @@
     },
     {
       "path": "webapp/package-lock.json",
-      "bytes": 109346,
-      "sha256": "9c7bc72e306f891da9d7229eea2fb494dc15b54bbcbf0cca4393ca26cfeebad7"
+      "bytes": 111816,
+      "sha256": "54a169ad59c5914f3ca78891db6cf7a5bb3e5ad2a2654cdd506f97094989b307"
     },
     {
       "path": "webapp/package.json",
-      "bytes": 1601,
-      "sha256": "78280af5de9c1ad0b27bb72e3fc55495550d38090f7061743fac877dfc139ef1"
+      "bytes": 1705,
+      "sha256": "ca29a0c6e859a5ff925060a675a7f2b3ec25fb6f9f94ede980485669eacd026c"
     },
     {
       "path": "webapp/postcss.config.mjs",
@@ -1511,6 +1777,11 @@
       "path": "webapp/public/favicon.svg",
       "bytes": 610,
       "sha256": "8042594ee7d7361ad22984c9e26d88f66cf4863d4da81651b9e68199e57ea86d"
+    },
+    {
+      "path": "webapp/public/manifest.en.webmanifest",
+      "bytes": 310,
+      "sha256": "76678c2777562d8fd60c9aaf3f7e1d16c99375d3bf7b1b0fcb9c670cdab5369f"
     },
     {
       "path": "webapp/public/manifest.webmanifest",
@@ -1528,9 +1799,14 @@
       "sha256": "e4fe9347b2745f194b6dde9172723193dd62d8bc04c5d60fc4d11a24546b3f64"
     },
     {
+      "path": "webapp/scripts/check-i18n.mjs",
+      "bytes": 3148,
+      "sha256": "a295d0335e5540988e214b4b96b095a62a20d7fd9703b3bd8addf24612adf028"
+    },
+    {
       "path": "webapp/scripts/check-release.mjs",
-      "bytes": 1888,
-      "sha256": "70c553a9cf79c6166d5c9bde2739feba346d9ff862450c14d57db2b86fbeb8db"
+      "bytes": 1900,
+      "sha256": "ed63c167ef5f814f802565d4d854f4246f143ebd2e35a337fc1126c80e963f69"
     },
     {
       "path": "webapp/scripts/users.ts",
@@ -1574,18 +1850,33 @@
     },
     {
       "path": "webapp/tests/attachment-ui.test.tsx",
-      "bytes": 5405,
-      "sha256": "f6514b20ce72f512b2cfbeac4f0b31476f09fb605f6faef6b3edb84a0dd94e12"
+      "bytes": 5484,
+      "sha256": "d19a09e57e9abba8960a6295c2aee65d0d539f50397cb2e335a634a4844e78cf"
     },
     {
       "path": "webapp/tests/auth-ui.test.tsx",
-      "bytes": 7990,
-      "sha256": "907cbd1c49d3e245d70446b5004f800416214a7f704a1ce473cfcf1ce16d0682"
+      "bytes": 8069,
+      "sha256": "96516520458744790f7c180cebc07d1f21cdcbc914a44c0f0a7df1ddbbdc91d2"
+    },
+    {
+      "path": "webapp/tests/localization-primary-ui.test.tsx",
+      "bytes": 12631,
+      "sha256": "c6a1ced23a60a75b2bf2ca6dc3e8fbfca8d0138605417f25ef3b784f1772128a"
+    },
+    {
+      "path": "webapp/tests/localization-runtime-ui.test.tsx",
+      "bytes": 4936,
+      "sha256": "c733f8c4a3cc20e917ab47284ce92202a81e1d1c73ec30f8092d11389517b68c"
+    },
+    {
+      "path": "webapp/tests/secondary-i18n-ui.test.tsx",
+      "bytes": 8624,
+      "sha256": "f235744bb09c68089b8418305f44e71844951b57a24d314a59291f06ab728e21"
     },
     {
       "path": "webapp/tests/session-ui.test.tsx",
-      "bytes": 2151,
-      "sha256": "976daf26399cd38295599c5251f718bef4fdecc30ddb45ae3dcb3dbda019c480"
+      "bytes": 2230,
+      "sha256": "7f76f06af71a794229e8433725ebbba2f81bb58f0a08a2c22d5e94de712a9977"
     },
     {
       "path": "webapp/tests/standalone-evidence.json",
@@ -1594,8 +1885,8 @@
     },
     {
       "path": "webapp/tests/ui.test.tsx",
-      "bytes": 187147,
-      "sha256": "fda120e8f771ce0e6bafe7f54df120b8f796755fe5e0cd99dd85ffae74911b6f"
+      "bytes": 187306,
+      "sha256": "a6935651588c89e1acd9e1fdb9fba57f824d69b9d62b135df3d10424052b06eb"
     },
     {
       "path": "webapp/tsconfig.json",
@@ -1614,8 +1905,8 @@
     },
     {
       "path": "webapp/web/android-adapter.ts",
-      "bytes": 5366,
-      "sha256": "efc715b73269288297939e1667f66134bb1522c3309824c96e6e4f5d5afc75ed"
+      "bytes": 5724,
+      "sha256": "06b781551049d7db61b5783ea78a96568234bd95c3fb8da054b0864844f2d353"
     },
     {
       "path": "webapp/web/android.css",
@@ -1624,8 +1915,8 @@
     },
     {
       "path": "webapp/web/app.tsx",
-      "bytes": 2973,
-      "sha256": "beb2ed271fdecb985a2f89302f232c436dd80deb6c55ca242b4d219794a52bb3"
+      "bytes": 3237,
+      "sha256": "53e678bb3605875b8e0e2d53739ffe8a645765362004b14cd67933df6b882e3c"
     },
     {
       "path": "webapp/web/main.tsx",
@@ -1643,10 +1934,10 @@
     "temporary native-api-test bundle",
     "this manifest from its own inventory"
   ],
-  "baseline_manifest_note": "webapp/SOURCE-MANIFEST.json, webapp/tests/standalone-evidence.json, artifacts/BUNDLED-ASSETS.json and verification/SUMMARY.json retain historical baseline records. This current source inventory excludes ignored generated assets. Current release APK evidence is the matching .apk.verification.json; see VERIFICATION.md.",
-  "source_revision": "2026-10-17-v1.1.2",
-  "source_scope": "Android 0.1.2 source with shared Qingdan branding, updated product documentation and AGPL-3.0-only project licensing. Business-code baseline remains 1.0.1; current web assets and signed APK require the actual build and verification.",
+  "baseline_manifest_note": "webapp/SOURCE-MANIFEST.json, webapp/tests/standalone-evidence.json and verification/SUMMARY.json retain historical baseline records. artifacts/BUNDLED-ASSETS.json describes the current locally rebuilt web assets. This current source inventory excludes ignored generated assets. Current release APK evidence is the matching .apk.verification.json; see VERIFICATION.md.",
+  "source_revision": "2026-10-18-v1.2.0",
+  "source_scope": "Android 0.2.0 source with Simplified Chinese and English interface localization, persistent device-local language preferences and shared semantic-key resources. Business-code baseline remains 1.0.1; current web assets and signed APK require the actual build and verification.",
   "inventory_sha256_method": "SHA256 of UTF-8 lines: <sha256><two spaces><relative path><LF>, ordered lexicographically by path; includes every non-ignored delivered source file except this manifest.",
-  "inventory_sha256": "3826ab10ac90b7c7cdc2c045a9e180e6802f493519a10eabe786c323d030a160",
-  "version_code": 3
+  "inventory_sha256": "05e93cd0675d6dedc3fa390c8860f48486a6e28d859adf2c0db8f777115794fb",
+  "version_code": 4
 }

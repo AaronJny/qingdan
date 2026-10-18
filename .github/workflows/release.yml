@@ -83,6 +83,7 @@ jobs:
           sha256sum "qingdan-server-v${ASSET_VERSION}.zip" > "qingdan-server-v${ASSET_VERSION}.sha256"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
+          retention-days: 1
           name: server-${{ github.sha }}
           if-no-files-found: error
           path: |
@@ -128,6 +129,7 @@ jobs:
           (cd release && shasum -a 256 *.dmg *.zip > SHA256SUMS-macos.txt)
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
+          retention-days: 1
           name: macos-${{ github.sha }}
           if-no-files-found: error
           path: desktop/release/*
@@ -170,6 +172,7 @@ jobs:
           (cd release && sha256sum *.zip > SHA256SUMS-windows.txt)
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
+          retention-days: 1
           name: windows-${{ github.sha }}
           if-no-files-found: error
           path: desktop/release/*
@@ -210,6 +213,7 @@ jobs:
           (cd release && sha256sum *.AppImage > SHA256SUMS-linux.txt)
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
+          retention-days: 1
           name: linux-${{ github.sha }}
           if-no-files-found: error
           path: desktop/release/*
@@ -261,6 +265,9 @@ jobs:
           npm ci --prefix android/webapp
           npm run build:web --prefix android
           npm run test:android --prefix android
+          npm run test --prefix android/webapp
+          npm run test:ui --prefix android/webapp
+          npm run test:server --prefix android/webapp
           python3 -m unittest discover -s android/tests -p 'test_*.py' -v
           (cd android/android && gradle --no-daemon -Pandroid.builder.sdkDownload=false securityTests localStorePolicyTests testReleaseUnitTest assembleRelease)
       - name: 用已有发布身份签名并验收安装候选
@@ -277,6 +284,7 @@ jobs:
           (cd android/release && sha256sum *.apk > SHA256SUMS-android.txt)
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
+          retention-days: 1
           name: android-${{ github.sha }}
           if-no-files-found: error
           path: |
@@ -308,4 +316,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ANDROID_RESULT: ${{ needs.package-android.result }}
-        run: python3 .github/release/publish.py --assets release-assets --android-result "$ANDROID_RESULT"
+        run: |
+          python3 .github/release/publish.py --assets release-assets --android-result "$ANDROID_RESULT" > publish-result.json
+          cat publish-result.json
+      - name: 保存已通过完整远端验收的发布凭据
+        if: success() && needs.package-android.result == 'success'
+        run: python3 .github/release/cleanup.py seal --assets release-assets --result publish-result.json --output verified-publication.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: success() && needs.package-android.result == 'success'
+        with:
+          name: verified-release-publication
+          retention-days: 1
+          if-no-files-found: error
+          path: verified-publication.json

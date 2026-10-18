@@ -1,3 +1,4 @@
+import{setLanguagePreference}from'../lib/i18n';setLanguagePreference('zh-CN');
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {Window} from 'happy-dom';

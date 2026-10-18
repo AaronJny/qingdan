@@ -1,3 +1,4 @@
+import{setLanguagePreference}from'../lib/i18n';setLanguagePreference('zh-CN');
 import{test}from'node:test';import assert from'node:assert/strict';import{Window}from'happy-dom';
 const window:any=new Window({url:'http://127.0.0.1:4310/'}),g=globalThis as any;
 for(const key of ['window','document','navigator','location','history','HTMLElement','HTMLInputElement','HTMLTextAreaElement','HTMLSelectElement','Event','CustomEvent','MouseEvent','KeyboardEvent','FocusEvent','MutationObserver','sessionStorage','localStorage'])Object.defineProperty(g,key,{value:window[key],configurable:true,writable:true});

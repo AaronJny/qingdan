@@ -1,10 +1,12 @@
 {
   "name": "qingdan-android",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
-  "engines": {"node": ">=24 <25"},
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "build:web": "node scripts/build-web.mjs",
     "test:android": "node --import ./webapp/node_modules/tsx/dist/loader.mjs scripts/build-native-api-tests.mjs && node --import ./webapp/node_modules/tsx/dist/loader.mjs --test tests/*.test.mjs"

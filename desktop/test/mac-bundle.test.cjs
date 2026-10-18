@@ -30,7 +30,7 @@ async function fixture(t) {
   for (const suffix of hook.SUFFIXES) await bundle(path.join(app, 'Contents/Frameworks', `Qingdan Helper${suffix}.app`), `Qingdan Helper${suffix}`, `app.qingdan.desktop.helper${suffix}`);
   return { app, root, frameworks: path.join(app, 'Contents/Frameworks') };
 }
-test('macOS internal helper names match the Electron 44.6.0 default lookup and display in Chinese', async t => {
+test('macOS helper lookup names stay unchanged while display names follow system language', async t => {
   const { app, frameworks } = await fixture(t);
   // The previous release's Chinese CFBundleName could resolve neither candidate.
   for (const name of ['Electron', '青单']) await assert.rejects(fs.access(path.join(frameworks, `${name} Helper.app/Contents/MacOS/${name} Helper`)));
@@ -40,12 +40,19 @@ test('macOS internal helper names match the Electron 44.6.0 default lookup and d
     const info = plist.parse(await fs.readFile(path.join(helper, 'Contents/Info.plist'), 'utf8'));
     assert.equal(info.CFBundleExecutable, `Electron Helper${suffix}`);
     assert.equal(info.CFBundleName, `Electron Helper${suffix}`);
-    assert.ok(info.CFBundleDisplayName.startsWith('青单辅助程序'));
+    assert.equal(info.CFBundleDisplayName, `Electron Helper${suffix}`);
+    assert.equal(info.CFBundleDevelopmentRegion, 'en');
+    assert.match(await fs.readFile(path.join(helper, 'Contents/Resources/en.lproj/InfoPlist.strings'), 'utf8'), /Qingdan Helper/);
+    assert.match(await fs.readFile(path.join(helper, 'Contents/Resources/zh_CN.lproj/InfoPlist.strings'), 'utf8'), /青单辅助程序/);
     assert.equal(info.CFBundleIdentifier, `app.qingdan.desktop.helper${suffix}`);
     if (!windows) assert.ok((await fs.stat(path.join(helper, 'Contents/MacOS', info.CFBundleExecutable))).mode & 0o111);
     await assert.rejects(fs.access(path.join(frameworks, `Qingdan Helper${suffix}.app`)));
   }
-  assert.equal(plist.parse(await fs.readFile(path.join(app, 'Contents/Info.plist'), 'utf8')).CFBundleIdentifier, 'app.qingdan.desktop');
+  const mainInfo = plist.parse(await fs.readFile(path.join(app, 'Contents/Info.plist'), 'utf8'));
+  assert.equal(mainInfo.CFBundleIdentifier, 'app.qingdan.desktop'); assert.equal(mainInfo.CFBundleDevelopmentRegion, 'en');
+  assert.equal(mainInfo.CFBundleDisplayName, '青单', 'Finder lookup still matches the on-disk app name');
+  assert.match(await fs.readFile(path.join(app, 'Contents/Resources/en.lproj/InfoPlist.strings'), 'utf8'), /"CFBundleDisplayName" = "Qingdan"/);
+  for (const locale of ['zh_CN','zh']) assert.match(await fs.readFile(path.join(app, `Contents/Resources/${locale}.lproj/InfoPlist.strings`), 'utf8'), /"CFBundleDisplayName" = "青单"/);
 });
 test('missing helper fails packaging before changing other helpers', async t => {
   const { app, frameworks } = await fixture(t);
@@ -71,8 +78,16 @@ test('config retains application identity, Chinese Mac filename and safety fuses
   assert.equal(config.appId, 'app.qingdan.desktop');
   assert.equal(config.mac.executableName, '青单');
   assert.equal(config.mac.extendInfo.CFBundleName, '青单');
+  assert.equal(config.mac.extendInfo.CFBundleDevelopmentRegion, 'en');
+  assert.deepEqual(config.mac.extendInfo.CFBundleLocalizations, ['en','zh_CN','zh']);
   assert.equal(config.electronFuses.enableEmbeddedAsarIntegrityValidation, true);
   assert.equal(config.electronFuses.onlyLoadAppFromAsar, true);
   assert.equal(config.electronFuses.runAsNode, false);
   assert.match(require('node:fs').readFileSync(path.join(__dirname, '../src/main.cjs'), 'utf8'), /app\.getPath\('appData'\), 'QingdanDesktop'/);
+});
+test('localized metadata refuses symbolic-link resource directories', {skip:windows}, async t => {
+  const {app,root}=await fixture(t);const outside=path.join(root,'outside');await fs.mkdir(outside);
+  await fs.symlink(outside,path.join(app,'Contents/Resources'));
+  await assert.rejects(hook.finalizeBundle(app,'Qingdan'),/Invalid bundle directory/);
+  assert.deepEqual(await fs.readdir(outside),[]);
 });

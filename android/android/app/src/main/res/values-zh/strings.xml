@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">青单</string>
+    <string name="notification_channel_name">专注计时</string>
+</resources>

@@ -1,7 +1,7 @@
 'use strict';
 // Electron 44.6.0 first resolves the literal Electron Helper executable, then
 // falls back to CFBundleName + " Helper". Keep its official internal names while
-// presenting a Chinese application name. Run BEFORE fuse finalization/signing.
+// localizing the application display name. Run BEFORE fuse finalization/signing.
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const plist = require('plist');
@@ -14,6 +14,18 @@ async function realFile(file, executable = false) {
 async function realDirectory(directory) {
   const value = await fs.lstat(directory);
   if (!value.isDirectory() || value.isSymbolicLink()) throw new Error(`Invalid bundle directory: ${directory}`);
+}
+async function writeLocalizedNames(contents, englishDisplay, chineseDisplay, stableName) {
+  const resources = path.join(contents, 'Resources');
+  await fs.mkdir(resources, { recursive: true }); await realDirectory(resources);
+  for (const [locale, display] of [['en', englishDisplay], ['zh_CN', chineseDisplay], ['zh', chineseDisplay]]) {
+    const directory = path.join(resources, locale + '.lproj');
+    await fs.mkdir(directory, { recursive: true }); await realDirectory(directory);
+    const file = path.join(directory, 'InfoPlist.strings');
+    try { await realFile(file); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+    const content = `"CFBundleDisplayName" = ${JSON.stringify(display)};\n"CFBundleName" = ${JSON.stringify(stableName || display)};\n`;
+    await fs.writeFile(file, content, { mode: 0o644 });
+  }
 }
 async function finalizeBundle(bundle, helperPrefix) {
   if (!helperPrefix || path.basename(helperPrefix) !== helperPrefix) throw new Error('Invalid helper prefix');
@@ -42,11 +54,19 @@ async function finalizeBundle(bundle, helperPrefix) {
     }
     helpers.push({ source, target, sourceName, targetName, metadataPath, metadata, index });
   }
+  // Apple CFBundleDisplayName rules require the raw display name to match 青单.app.
+  // https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html English
+  // fallback comes from the development locale, not a bundle/executable rename.
+  await writeLocalizedNames(contents, 'Qingdan', '青单');
+  info.CFBundleDevelopmentRegion = 'en'; info.CFBundleLocalizations = ['en', 'zh_CN', 'zh'];
+  await fs.writeFile(infoPath, plist.build(info) + '\n');
   for (const helper of helpers) {
     const { source, target, sourceName, targetName, metadataPath, metadata, index } = helper;
     metadata.CFBundleName = targetName;
     metadata.CFBundleExecutable = targetName;
-    metadata.CFBundleDisplayName = `青单辅助程序${DISPLAY_NAMES[index]}`;
+    metadata.CFBundleDisplayName = targetName;
+    metadata.CFBundleDevelopmentRegion = 'en'; metadata.CFBundleLocalizations = ['en', 'zh_CN', 'zh'];
+    await writeLocalizedNames(path.join(source, 'Contents'), `Qingdan Helper${SUFFIXES[index]}`, `青单辅助程序${DISPLAY_NAMES[index]}`, targetName);
     await fs.writeFile(metadataPath, plist.build(metadata) + '\n');
     if (source !== target) {
       await fs.rename(path.join(source, 'Contents', 'MacOS', sourceName), path.join(source, 'Contents', 'MacOS', targetName));

@@ -1,6 +1,6 @@
 {
   "name": "qingdan-standalone",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "private": true,
   "license": "AGPL-3.0-only",
   "engines": {
@@ -16,7 +16,8 @@
     "test:ui": "node --import tsx --test tests/*ui.test.tsx",
     "test:server": "node --import tsx --test server/*.test.ts",
     "test:licenses": "node --test scripts/license-plugin.test.mjs",
-    "check": "node scripts/check-release.mjs"
+    "check": "node scripts/check-release.mjs",
+    "test:i18n": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1",
@@ -30,10 +31,12 @@
     "@tiptap/starter-kit": "^3.31.4",
     "clsx": "2.1.1",
     "drizzle-orm": "0.45.2",
+    "i18next": "26.5.2",
     "ical.js": "2.2.1",
     "lucide-react": "^1.31.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
+    "react-i18next": "17.1.0",
     "tailwind-merge": "3.6.0"
   },
   "devDependencies": {
@@ -42,12 +45,12 @@
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
+    "esbuild": "0.28.0",
     "happy-dom": "^20.14.5",
     "tailwindcss": "4.2.1",
     "tsx": "^4.23.15",
     "typescript": "5.9.3",
-    "vite": "8.0.13",
-    "esbuild": "0.28.0"
+    "vite": "8.0.13"
   },
   "type": "module"
 }

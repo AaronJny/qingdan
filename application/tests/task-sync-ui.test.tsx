@@ -1,3 +1,4 @@
+import{setLanguagePreference}from'../lib/i18n';setLanguagePreference('zh-CN');
 import{test}from'node:test';import assert from'node:assert/strict';import{Window}from'happy-dom';
 import type{AppRecord,Bootstrap}from'../lib/types';
 const window:any=new Window({url:'https://task-sync.example.test/'}),g=globalThis as any;
@@ -32,10 +33,10 @@ test('account task add, edit and completion are optimistic, durable after remoun
  const f=await fixture();try{
   f.offline();const input=f.host.querySelector<HTMLTextAreaElement>('.quick-add textarea')!;
   await act(async()=>type(input,'离线保留的新任务'));await act(async()=>click(f.host.querySelector('.quick-submit')));await settle();
-  assert.equal(input.value,'');assert.match(f.host.querySelector('.task-row')?.textContent||'',/离线保留的新任务/);assert.equal(f.writes(),0);assert.match(f.host.querySelector('.account-task-sync')?.textContent||'',/已在此设备保存 1 条/);
+  assert.equal(input.value,'');assert.match(f.host.querySelector('.task-row')?.textContent||'',/离线保留的新任务/);assert.equal(f.writes(),0);assert.match(f.host.querySelector('.account-task-sync')?.textContent||'',/已在此设备保存\s*1\s*条/);
   await act(async()=>click(f.host.querySelector('.task-body')));const title=f.host.querySelector<HTMLTextAreaElement>('.detail-title')!;await act(async()=>type(title,'离线编辑后的新任务'));await act(async()=>title.dispatchEvent(new window.FocusEvent('focusout',{bubbles:true})));await settle();assert.match(f.host.querySelector('.task-row')?.textContent||'',/离线编辑后的新任务/);
-  await act(async()=>click(f.host.querySelector('.complete-check')));await settle();assert.match(f.host.querySelector('.account-task-sync')?.textContent||'',/已在此设备保存 3 条/);
-  await f.remount();assert.match(f.host.querySelector('.account-task-sync')?.textContent||'',/已在此设备保存 3 条/);assert.equal(f.writes(),0);
+  await act(async()=>click(f.host.querySelector('.complete-check')));await settle();assert.match(f.host.querySelector('.account-task-sync')?.textContent||'',/已在此设备保存\s*3\s*条/);
+  await f.remount();assert.match(f.host.querySelector('.account-task-sync')?.textContent||'',/已在此设备保存\s*3\s*条/);assert.equal(f.writes(),0);
   f.online();await act(async()=>window.dispatchEvent(new window.Event('online')));await settle();await settle();
   assert.equal(f.writes(),3);assert.equal(f.state.records.find(record=>record.kind==='task')?.data.title,'离线编辑后的新任务');assert.equal(f.host.querySelector('.account-task-sync'),null);assert.equal(f.state.records.find(record=>record.kind==='task')?.data.status,'done');assert.ok(f.verifications()>=1);
  }finally{await f.close()}

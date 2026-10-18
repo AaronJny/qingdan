@@ -80,6 +80,7 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: inputs.release-mode && steps.scope.outputs.run-check == 'true'
         with:
+          retention-days: 1
           name: verified-application
           if-no-files-found: error
           path: |
@@ -88,6 +89,7 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: inputs.release-mode && steps.scope.outputs.run-check == 'true'
         with:
+          retention-days: 1
           name: backend-verification
           if-no-files-found: error
           path: backend-verification.json
@@ -124,6 +126,7 @@ jobs:
           node desktop/scripts/verify-backend.cjs desktop/backend backend-verification-${{ matrix.platform }}.json --smoke
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
+          retention-days: 1
           name: backend-verification-native-${{ matrix.platform }}
           if-no-files-found: error
           path: backend-verification-${{ matrix.platform }}.json

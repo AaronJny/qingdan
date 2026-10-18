@@ -68,7 +68,7 @@ function inspectExtracted(extracted, unpacked, libraries, version) {
     metadata.set(key, line.slice(equals + 1));
   }
   assert.equal(metadata.get('Exec'), 'AppRun %U', 'Desktop launcher must not disable the sandbox.');
-  assert.equal(metadata.get('Name'), '青单'); assert.equal(metadata.get('Icon'), 'qingdan');
+  assert.equal(metadata.get('Name'), 'Qingdan'); assert.equal(metadata.get('Name[zh_CN]'), '青单'); assert.equal(metadata.get('Name[zh]'), '青单'); assert.equal(metadata.get('Icon'), 'qingdan');
   assert.equal(metadata.get('Type'), 'Application'); assert.equal(metadata.get('Terminal'), 'false');
   assert.equal(metadata.get('X-AppImage-Version'), version);
   const icons = [];

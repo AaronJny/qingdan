@@ -29,13 +29,14 @@ async function flush() {
   for (let i = 0; i < 12; i++) await Promise.resolve();
 }
 
-async function harness({ platform = 'darwin', runtimePath = path, initialSelection, initialEnsure, hangPrivateLoad = false } = {}) {
+async function harness({ platform = 'darwin', runtimePath = path, initialSelection, initialEnsure, hangPrivateLoad = false, systemLocale = 'zh-CN', languagePreference } = {}) {
   const windows = [], handlers = new Map(), sessions = new Map();
   const externalOpens = [], fetches = [], dialogs = [], exits = [], loadTimers = new Set();
   const files = new Map(), moduleCache = new Map();
   const appData = runtimePath.join(runtimePath.sep, 'mock-app-data');
   const profile = runtimePath.join(appData, 'QingdanDesktop');
   const connectionFile = runtimePath.join(profile, 'connection.json');
+  if (languagePreference !== undefined) files.set(runtimePath.join(profile, 'language.json'), JSON.stringify({ preference: languagePreference }));
   if (initialSelection) files.set(connectionFile, JSON.stringify({ schemaVersion: 3, ...initialSelection }));
   let menu, deferDialogs = false, synchronousChoice = 0, writeFailure = false, probeFailure = false;
 
@@ -97,7 +98,7 @@ async function harness({ platform = 'darwin', runtimePath = path, initialSelecti
     enableSandbox() { this.sandboxEnabled = true; }, setName() {}, setAppUserModelId() {},
     getPath(key) { return this.paths[key]; }, setPath(key, value) { this.paths[key] = value; },
     requestSingleInstanceLock: () => true, isReady: () => true,
-    whenReady: () => Promise.resolve(), setAboutPanelOptions() {}, getVersion: () => '1.0.0',
+    getLocale: () => systemLocale, whenReady: () => Promise.resolve(), setAboutPanelOptions() {}, getVersion: () => '1.0.0',
     quit() { this.quitCalls++; this.emit('before-quit'); },
     exit(code) { exits.push(code); },
   });
@@ -453,4 +454,35 @@ test('hung private page load times out, releases switch lock and permits return 
   assert.equal(h.get(settings).status, 'disconnected');
   assert.equal((await h.save(settings, { mode: 'builtin' })).ok, true);
   assert.equal(h.liveMain()[0].lastUrl, `${ownedOrigin}/`);
+});
+
+test('system language selects native menus on first launch and a manual preference survives launch', async () => {
+  const first = await harness({systemLocale:'en-US'});
+  assert.ok(first.menuItem('Connection Settings'));
+  assert.equal(first.call('qingdan-desktop:get-language',first.event(first.liveMain()[0])).locale,'en');
+  const manual = await harness({systemLocale:'en-US',languagePreference:'zh-CN'});
+  assert.ok(manual.menuItem('服务器连接'));
+  assert.equal(manual.call('qingdan-desktop:get-language',manual.event(manual.liveMain()[0])).preference,'zh-CN');
+  const fallback = await harness({systemLocale:'fr-FR',languagePreference:'malformed'});
+  assert.ok(fallback.menuItem('Connection Settings'));
+});
+test('language writes require the current trusted main frame and a closed enum', async () => {
+  const h = await harness(); const main = h.liveMain()[0]; const settings=h.openSettings();
+  const valid=h.event(main), savedBefore=new Map(h.files);
+  for(const choice of ['fr',null,{},['en'],'en;process.exit()']) assert.throws(()=>h.call('qingdan-desktop:set-language',valid,choice),/Invalid language/);
+  assert.deepEqual(h.files,savedBefore);
+  assert.throws(()=>h.call('qingdan-desktop:set-language',{...valid,senderFrame:{url:main.lastUrl}},'en'),/Untrusted/);
+  assert.throws(()=>h.call('qingdan-desktop:set-language',{...valid,sender:{}},'en'),/Untrusted/);
+  const result=h.call('qingdan-desktop:set-language',h.event(settings),'en');
+  assert.equal(result.preference,'en');assert.equal(result.locale,'en');assert.ok(h.menuItem('Connection Settings'));
+  const saved=[...h.files.entries()].find(([name])=>name.endsWith('language.json'));assert.deepEqual(JSON.parse(saved[1]),{preference:'en'});
+  assert.equal(h.call('qingdan-desktop:get-language',valid).locale,'en');
+  h.call('qingdan-desktop:set-language',valid,'system');assert.ok(h.menuItem('服务器连接'));
+});
+test('native language changes never reload the status page or interrupt connection navigation',async()=>{
+ const h=await harness();h.backend.crash();await flush();const main=h.liveMain()[0];assert.equal(main.lastUrl,statusUrl);
+ const loads=main.loads.length;const first=h.call('qingdan-desktop:set-language',h.event(main),'en');
+ assert.equal(first.revision,1);assert.equal(main.loads.length,loads);
+ const second=h.call('qingdan-desktop:set-language',h.event(main),'zh-CN');
+ assert.equal(second.revision,2);assert.equal(h.call('qingdan-desktop:get-language',h.event(main)).revision,2);assert.equal(main.loads.length,loads);
 });

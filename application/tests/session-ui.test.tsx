@@ -1,3 +1,4 @@
+import{setLanguagePreference}from'../lib/i18n';setLanguagePreference('zh-CN');
 import{test}from'node:test';import assert from'node:assert/strict';import{Window}from'happy-dom';
 const window:any=new Window({url:'http://127.0.0.1:4310/'}),g=globalThis as any;for(const key of['window','document','navigator','location','history','HTMLElement','HTMLInputElement','HTMLTextAreaElement','Event','CustomEvent','MutationObserver','sessionStorage','localStorage'])Object.defineProperty(g,key,{value:window[key],configurable:true,writable:true});g.IS_REACT_ACT_ENVIRONMENT=true;g.requestAnimationFrame=(fn:any)=>setTimeout(()=>fn(Date.now()),0);g.cancelAnimationFrame=clearTimeout;
 let stored:any={version:1,accountId:'previous-synthetic-user',confirmedAt:new Date().toISOString(),active:true};

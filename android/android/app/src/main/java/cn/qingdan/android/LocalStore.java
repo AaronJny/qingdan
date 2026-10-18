@@ -618,8 +618,8 @@ public final class LocalStore implements AutoCloseable {
         return new String(output);
     }
     private static String message(Throwable error) {
-        String value = error.getMessage();
-        return value == null || value.isEmpty() ? "Local storage failed." : value.substring(0, Math.min(value.length(), 1000));
+        // Driver/OS diagnostics are not interface text and may contain paths or SQL values.
+        return NativeErrors.storageMessage(error.getMessage());
     }
     private void ensureOpen() { if (closed) throw new IllegalStateException("Local store is closed."); }
     @Override public synchronized void close() { if (!closed) { database.close(); closed = true; } }

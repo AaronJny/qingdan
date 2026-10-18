@@ -1,4 +1,5 @@
 'use strict';
+const { t } = require('./language.cjs');
 const { parseUrl, isServiceUrl, isStatusUrl, isSettingsResource, safeExternalUrl, safeDownloadFilename } = require('./policy.cjs');
 function installPermissions(session) {
   session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
@@ -23,7 +24,7 @@ function installServiceSession(session, connection, canUseService = () => true) 
       return isServiceUrl(value, connection) || url?.protocol === 'blob:' && url.origin === connection.origin;
     });
     if (!valid) { event.preventDefault(); return; }
-    item.setSaveDialogOptions({ title: '保存青单导出文件', defaultPath: safeDownloadFilename(item.getFilename()), buttonLabel: '保存' });
+    item.setSaveDialogOptions({ title: t("desktop.save.qingdan.export"), defaultPath: safeDownloadFilename(item.getFilename()), buttonLabel: t("desktop.save") });
   });
 }
 function installLocalSession(session) {

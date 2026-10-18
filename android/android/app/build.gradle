@@ -11,8 +11,8 @@ android {
         minSdk 26
         targetSdk 36
         // Explicit assignment avoids Groovy command-call/Elvis precedence.
-        versionCode = (System.getenv('QINGDAN_ANDROID_VERSION_CODE') ?: '3').toInteger()
-        versionName = (System.getenv('QINGDAN_ANDROID_VERSION_NAME') ?: '0.1.2')
+        versionCode = (System.getenv('QINGDAN_ANDROID_VERSION_CODE') ?: '4').toInteger()
+        versionName = (System.getenv('QINGDAN_ANDROID_VERSION_NAME') ?: '0.2.0')
         testInstrumentationRunner 'android.test.InstrumentationTestRunner'
     }
     // This deliverable is intentionally unsigned. Do not generate a debug key.
@@ -40,7 +40,7 @@ tasks.register('verifyBundledWeb') {
 tasks.named('preBuild').configure { dependsOn 'verifyBundledWeb' }
 
 tasks.register('compileSecurityPolicy', JavaCompile) {
-    source = files('src/main/java/cn/qingdan/android/OriginPolicy.java', 'src/main/java/cn/qingdan/android/ExportPayload.java', 'src/main/java/cn/qingdan/android/ExportBuffer.java', 'src/test/java/cn/qingdan/android/SecurityPolicyTest.java')
+    source = files('src/main/java/cn/qingdan/android/NativeErrors.java', 'src/main/java/cn/qingdan/android/NativeLanguage.java', 'src/main/java/cn/qingdan/android/OriginPolicy.java', 'src/main/java/cn/qingdan/android/ExportPayload.java', 'src/main/java/cn/qingdan/android/ExportBuffer.java', 'src/test/java/cn/qingdan/android/SecurityPolicyTest.java', 'src/test/java/cn/qingdan/android/LanguagePolicyTest.java', 'src/test/java/cn/qingdan/android/NativeErrorsTest.java')
     classpath = files()
     destinationDirectory = layout.buildDirectory.dir('security-tests/classes')
     options.release = 17
@@ -65,3 +65,17 @@ tasks.register('localStorePolicyTests', JavaExec) {
     mainClass = 'cn.qingdan.android.LocalStorePolicyTest'
     args file('../../webapp/drizzle').absolutePath
 }
+
+tasks.register('languagePolicyTests', JavaExec) {
+    dependsOn 'compileSecurityPolicy'
+    classpath = files(layout.buildDirectory.dir('security-tests/classes'))
+    mainClass = 'cn.qingdan.android.LanguagePolicyTest'
+}
+tasks.named('securityTests').configure { finalizedBy 'languagePolicyTests' }
+
+tasks.register('nativeErrorTests', JavaExec) {
+    dependsOn 'compileSecurityPolicy'
+    classpath = files(layout.buildDirectory.dir('security-tests/classes'))
+    mainClass = 'cn.qingdan.android.NativeErrorsTest'
+}
+tasks.named('securityTests').configure { finalizedBy 'nativeErrorTests' }

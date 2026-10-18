@@ -1,3 +1,4 @@
+import {getLocale} from './i18n';
 export type Kind = 'task'|'list'|'folder'|'tag'|'habit'|'habitLog'|'focus'|'settings'|'filter'|'countdown'|'template';
 export type CheckReminder={id:string;anchor:'absolute'|'start'|'end';at?:string;timeZone?:string;offset?:number};
 export type TaskStatus = 'open'|'done'|'wontdo';
@@ -11,6 +12,6 @@ export type Bootstrap={nextCursor?:string|null;records:AppRecord[];history:Histo
 export const uid=()=>crypto.randomUUID();
 export function localDate(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 export function addDays(day:string,n:number){const [y,m,d]=day.split('-').map(Number);const t=new Date(y,m-1,d+n,12);return localDate(t);}
-export function shortDate(day?:string){if(!day)return '';return new Date(day+'T12:00:00').toLocaleDateString('zh-CN',{month:'short',day:'numeric',weekday:'short'});}
+export function shortDate(day?:string){if(!day)return '';return new Date(day+'T12:00:00').toLocaleDateString(getLocale(),{month:'short',day:'numeric',weekday:'short'});}
 export function canEdit(r:AppRecord){return !r.role||r.role==='owner'||r.role==='edit';}
 export function isOverdue(d:RecordData,today=localDate(),now=new Date()){return !!d.dueDate&&d.status==='open'&&(d.dueDate<today||(d.dueDate===today&&!!d.dueTime&&d.dueTime<now.toTimeString().slice(0,5)));}

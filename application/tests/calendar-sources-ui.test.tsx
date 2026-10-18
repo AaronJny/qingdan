@@ -1,3 +1,4 @@
+import{setLanguagePreference}from'../lib/i18n';setLanguagePreference('zh-CN');
 import{test}from'node:test';import assert from'node:assert/strict';import{Window}from'happy-dom';
 const window:any=new Window({url:'https://qingdan.test/'}),g=globalThis as any;for(const key of ['window','document','navigator','location','HTMLElement','HTMLInputElement','Event','CustomEvent','MouseEvent','KeyboardEvent'])Object.defineProperty(g,key,{value:window[key],configurable:true,writable:true});g.IS_REACT_ACT_ENVIRONMENT=true;g.requestAnimationFrame=(fn:any)=>setTimeout(fn,0);g.cancelAnimationFrame=clearTimeout;
 const React=await import('react'),{act}=React,{createRoot}=await import('react-dom/client');const{default:Settings}=await import('../app/calendar-sources');const{CalendarView}=await import('../app/workspace-views');

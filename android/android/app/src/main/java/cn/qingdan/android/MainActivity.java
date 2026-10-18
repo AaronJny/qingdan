@@ -52,6 +52,7 @@ import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.FilterInputStream;
 import java.io.InputStream;
@@ -79,6 +80,7 @@ public final class MainActivity extends Activity {
     private LinearLayout shell;
     private FrameLayout webContainer;
     private TextView modeLabel;
+    private Button settingsButton;
     private WebView browser;
     private OriginPolicy policy;
     private LocalStore localStore;
@@ -99,6 +101,15 @@ public final class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         preferences = getSharedPreferences(PREFS, MODE_PRIVATE);
+        android.content.Context appContext = getApplicationContext();
+        NativeLanguage.setTranslator((key, locale) -> {
+            android.content.res.Configuration configuration = new android.content.res.Configuration(appContext.getResources().getConfiguration());
+            configuration.setLocale(Locale.forLanguageTag(locale));
+            android.content.Context localized = appContext.createConfigurationContext(configuration);
+            int id = appContext.getResources().getIdentifier(key.replace('.', '_'), "string", appContext.getPackageName());
+            return id == 0 ? key : localized.getString(id);
+        });
+        NativeLanguage.setPreference(NativeLanguage.normalizePreference(preferences.getString("language", "system")));
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         if (Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(false);
         createShell();
@@ -126,11 +137,11 @@ public final class MainActivity extends Activity {
         modeLabel = new TextView(this);
         modeLabel.setTextSize(14);
         modeLabel.setTextColor(Color.rgb(55, 65, 81));
-        modeLabel.setText("青单");
+        modeLabel.setText(NativeLanguage.text("app.name"));
         header.addView(modeLabel, new LinearLayout.LayoutParams(0, -1, 1));
         modeLabel.setGravity(Gravity.CENTER_VERTICAL);
-        Button settings = new Button(this);
-        settings.setText("模式 / 服务器");
+        Button settings = new Button(this); settingsButton = settings;
+        settings.setText(NativeLanguage.text("settings.mode"));
         settings.setTextSize(12);
         settings.setAllCaps(false);
         settings.setOnClickListener(v -> showModeDialog(false));
@@ -175,9 +186,15 @@ public final class MainActivity extends Activity {
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(dp(20), dp(4), dp(20), dp(4));
+        TextView languageLabel = new TextView(this); languageLabel.setText(NativeLanguage.text("language.label")); content.addView(languageLabel);
+        android.widget.Spinner language = new android.widget.Spinner(this);
+        String[] preferencesList = {"system", "zh-CN", "en"};
+        language.setAdapter(new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, new String[]{NativeLanguage.text("language.system"), "简体中文", "English"}));
+        language.setSelection("zh-CN".equals(NativeLanguage.preference()) ? 1 : "en".equals(NativeLanguage.preference()) ? 2 : 0);
+        content.addView(language);
         RadioGroup modes = new RadioGroup(this);
-        RadioButton local = new RadioButton(this); local.setId(View.generateViewId()); local.setText("本地模式 · 免账号，仅此设备");
-        RadioButton account = new RadioButton(this); account.setId(View.generateViewId()); account.setText("私服账号模式 · 连接自己的服务器");
+        RadioButton local = new RadioButton(this); local.setId(View.generateViewId()); local.setText(NativeLanguage.text("mode.local"));
+        RadioButton account = new RadioButton(this); account.setId(View.generateViewId()); account.setText(NativeLanguage.text("mode.server"));
         modes.addView(local); modes.addView(account); content.addView(modes);
         EditText endpoint = new EditText(this);
         endpoint.setSingleLine(true);
@@ -186,14 +203,14 @@ public final class MainActivity extends Activity {
         endpoint.setText(preferences.getString("endpoint", ""));
         content.addView(endpoint);
         TextView detail = new TextView(this);
-        detail.setText("私服需使用有效 HTTPS 证书和兼容的 /api 接口。切换模式或服务器不会迁移、合并或删除数据。账号登录和本地数据互相独立。");
+        detail.setText(NativeLanguage.text("mode.description"));
         detail.setTextSize(13); detail.setPadding(0, dp(8), 0, dp(12)); content.addView(detail);
         modes.check(policy != null && !policy.isLocal() ? account.getId() : local.getId());
         endpoint.setEnabled(modes.getCheckedRadioButtonId() == account.getId());
         modes.setOnCheckedChangeListener((group, checked) -> endpoint.setEnabled(checked == account.getId()));
-        AlertDialog dialog = new AlertDialog.Builder(this).setTitle("青单运行模式").setView(content)
-                .setPositiveButton("打开", null).setNegativeButton("取消", (d, w) -> { if (required && browser == null) moveTaskToBack(true); })
-                .setNeutralButton("清除本机网页数据…", null).create();
+        AlertDialog dialog = new AlertDialog.Builder(this).setTitle(NativeLanguage.text("mode.title")).setView(content)
+                .setPositiveButton(NativeLanguage.text("common.open"), null).setNegativeButton(NativeLanguage.text("common.cancel"), (d, w) -> { if (required && browser == null) moveTaskToBack(true); })
+                .setNeutralButton(NativeLanguage.text("data.clear.action"), null).create();
         dialog.setCanceledOnTouchOutside(!required);
         dialog.setOnShowListener(ignored -> {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
@@ -202,6 +219,7 @@ public final class MainActivity extends Activity {
                             ? OriginPolicy.local() : OriginPolicy.parseEndpoint(endpoint.getText().toString());
                     SharedPreferences.Editor editor = preferences.edit().putString("mode", chosen.isLocal() ? "local" : "account");
                     if (!chosen.isLocal()) editor.putString("endpoint", chosen.origin());
+                    if (!setNativeLanguage(preferencesList[language.getSelectedItemPosition()])) return;
                     editor.apply(); dialog.dismiss(); openOrigin(chosen);
                 } catch (IllegalArgumentException error) { endpoint.setError(error.getMessage()); }
             });
@@ -211,9 +229,9 @@ public final class MainActivity extends Activity {
     }
 
     private void confirmClearWebData() {
-        new AlertDialog.Builder(this).setTitle("清除所有模式的本机网页数据？")
-                .setMessage("这会退出所有私服登录，删除所有模式的网页缓存、离线副本和未同步网页草稿。本地 SQLite 记录与附件不受影响，服务器数据也不会删除。此操作无法恢复。")
-                .setNegativeButton("取消", null).setPositiveButton("清除", (dialog, which) -> {
+        new AlertDialog.Builder(this).setTitle(NativeLanguage.text("data.clear.title"))
+                .setMessage(NativeLanguage.text("data.clear.description"))
+                .setNegativeButton(NativeLanguage.text("common.cancel"), null).setPositiveButton(NativeLanguage.text("common.clear"), (dialog, which) -> {
                     OriginPolicy reload = policy;
                     destroyBrowser();
                     WebStorage.getInstance().deleteAllData();
@@ -232,11 +250,11 @@ public final class MainActivity extends Activity {
         if (selected.isLocal()) {
             try { localStore = new LocalStore(this); }
             catch (Exception error) {
-                showNativeError("本地数据初始化失败。为保护已有数据，青单没有重建数据库。", error.getMessage());
+                showNativeError(NativeLanguage.text("storage.initialize.failed"), NativeErrors.storageMessage(error.getCause() == null ? error.getMessage() : error.getCause().getMessage()));
                 return;
             }
         }
-        modeLabel.setText(selected.isLocal() ? "青单 · 本地" : "青单 · 私服");
+        modeLabel.setText(selected.isLocal() ? NativeLanguage.text("mode.local.title") : NativeLanguage.text("mode.server.title"));
         WebView view = new WebView(this);
         browser = view;
         WebSettings settings = view.getSettings();
@@ -268,7 +286,7 @@ public final class MainActivity extends Activity {
         view.setDownloadListener((url, agent, disposition, mime, size) -> {
             if (browser == view && !selected.isLocal() && selected.route(url) == OriginPolicy.Route.API && trustedRoot(view)) {
                 offerSave(new PendingSave(selected, url, agent, android.webkit.URLUtil.guessFileName(url, disposition, mime), mime, null));
-            } else toast("请使用青单内的导出按钮保存此文件");
+            } else toast(NativeLanguage.text("export.use.button"));
         });
         ServiceWorkerController workers = ServiceWorkerController.getInstance();
         workers.getServiceWorkerWebSettings().setAllowFileAccess(false);
@@ -290,7 +308,7 @@ public final class MainActivity extends Activity {
         TextView message = new TextView(this);
         message.setText(title + (detail == null ? "" : "\n\n" + detail));
         notice.addView(message, new LinearLayout.LayoutParams(-1, -2));
-        Button retry = new Button(this); retry.setText("重新打开页面");
+        Button retry = new Button(this); retry.setText(NativeLanguage.text("page.reopen"));
         retry.setOnClickListener(view -> { if (policy != null) openOrigin(policy); });
         notice.addView(retry, new LinearLayout.LayoutParams(-2, -2));
         webContainer.addView(notice, new FrameLayout.LayoutParams(-1, -1));
@@ -361,27 +379,27 @@ public final class MainActivity extends Activity {
             if (origin.route(url) == OriginPolicy.Route.ROOT) return false;
             if (!origin.isLocal() && origin.route(url) == OriginPolicy.Route.API && "GET".equals(request.getMethod()) && trustedRoot(view)) {
                 offerSave(new PendingSave(origin, url, view.getSettings().getUserAgentString(), "qingdan-download", "application/octet-stream", null));
-            } else if (request.hasGesture()) toast("应用内只允许当前服务器的青单页面");
+            } else if (request.hasGesture()) toast(NativeLanguage.text("navigation.blocked"));
             return true;
         }
         @Override public void onPageStarted(WebView view, String url, android.graphics.Bitmap icon) {
             if (view == browser) nativeDocumentReady = false;
         }
         @Override public void onPageFinished(WebView view, String url) {
-            if (trustedRoot(view)) { nativeDocumentReady = true; reportKeyboardVisibility(); evaluateLifecycle(resumed ? "resume" : "pause"); reportNotificationPermission(notificationPermission()); }
+            if (trustedRoot(view)) { nativeDocumentReady = true; reportLanguage(); reportKeyboardVisibility(); evaluateLifecycle(resumed ? "resume" : "pause"); reportNotificationPermission(notificationPermission()); }
         }
         @Override public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
             if (view == browser) {
                 destroyBrowser();
-                showNativeError("网页进程已停止。可以重新打开页面；青单没有删除或重建数据。", null);
+                showNativeError(NativeLanguage.text("page.process.stopped"), null);
             }
             return true;
         }
         @Override public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-            handler.cancel(); toast("服务器 HTTPS 证书无效，连接已停止");
+            handler.cancel(); toast(NativeLanguage.text("server.certificate.invalid"));
         }
         @Override public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-            if (request.isForMainFrame()) toast("青单页面无法打开，请检查服务器设置或重新打开应用");
+            if (request.isForMainFrame()) toast(NativeLanguage.text("page.open.failed"));
         }
     }
 
@@ -408,13 +426,30 @@ public final class MainActivity extends Activity {
         String path = request.getUrl().getPath();
         String asset = route == OriginPolicy.Route.ROOT ? "web/index.html" : "web" + path;
         try {
-            InputStream body = "HEAD".equals(request.getMethod()) ? new ByteArrayInputStream(new byte[0]) : getAssets().open(asset);
+            boolean languageBootstrap = "/assets/qingdan-native-language.js".equals(path);
+            InputStream body;
+            if ("HEAD".equals(request.getMethod())) body = new ByteArrayInputStream(new byte[0]);
+            else if (languageBootstrap) body = new ByteArrayInputStream(NativeLanguage.bootstrapScript().getBytes(StandardCharsets.UTF_8));
+            else if (route == OriginPolicy.Route.ROOT) {
+                // Seed only the interface preference before the bundled application executes.
+                // It is an external same-origin script under the existing strict APK CSP.
+                ByteArrayOutputStream html = new ByteArrayOutputStream();
+                try (InputStream input = getAssets().open(asset)) {
+                    byte[] buffer = new byte[4096]; int count;
+                    while ((count = input.read(buffer)) != -1) {
+                        if (html.size() + count > 262144) throw new IOException("Bundled page is too large");
+                        html.write(buffer, 0, count);
+                    }
+                }
+                String document = new String(html.toByteArray(), StandardCharsets.UTF_8).replace("<head>", "<head><script src=\"/assets/qingdan-native-language.js\"></script>");
+                body = new ByteArrayInputStream(document.getBytes(StandardCharsets.UTF_8));
+            } else body = getAssets().open(asset);
             Map<String, String> headers = new HashMap<>();
             headers.put("Content-Security-Policy", origin.contentSecurityPolicy());
             headers.put("X-Content-Type-Options", "nosniff");
             headers.put("Referrer-Policy", "no-referrer");
             headers.put("Cross-Origin-Resource-Policy", "same-origin");
-            headers.put("Cache-Control", route == OriginPolicy.Route.ROOT ? "no-store" : "public, max-age=31536000, immutable");
+            headers.put("Cache-Control", route == OriginPolicy.Route.ROOT || languageBootstrap ? "no-store" : "public, max-age=31536000, immutable");
             return new WebResourceResponse(mimeFor(asset), "UTF-8", 200, "OK", headers, body);
         } catch (IOException error) { return blocked(404, "Not Found"); }
     }
@@ -424,7 +459,7 @@ public final class MainActivity extends Activity {
         headers.put("Cache-Control", "no-store"); headers.put("Content-Security-Policy", "default-src 'none'");
         headers.put("X-Content-Type-Options", "nosniff");
         return new WebResourceResponse("text/plain", "UTF-8", code, reason, headers,
-                new ByteArrayInputStream("Request blocked by Qingdan host".getBytes(StandardCharsets.UTF_8)));
+                new ByteArrayInputStream(NativeLanguage.text("request.blocked").getBytes(StandardCharsets.UTF_8)));
     }
 
     private static String mimeFor(String path) {
@@ -446,7 +481,7 @@ public final class MainActivity extends Activity {
     private final class HostChromeClient extends WebChromeClient {
         @Override public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
             if (!trustedRoot(view) || params.getMode() == FileChooserParams.MODE_SAVE) { callback.onReceiveValue(null); return true; }
-            if (uploadCallback != null) { callback.onReceiveValue(null); toast("请先完成或取消当前文件选择"); return true; }
+            if (uploadCallback != null) { callback.onReceiveValue(null); toast(NativeLanguage.text("file.selection.pending")); return true; }
             uploadCallback = callback;
             Intent picker = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE);
             String[] accepted = params.getAcceptTypes();
@@ -459,7 +494,7 @@ public final class MainActivity extends Activity {
             picker.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE);
             picker.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             try { startActivityForResult(picker, PICK_UPLOAD); }
-            catch (ActivityNotFoundException error) { uploadCallback.onReceiveValue(null); uploadCallback = null; toast("没有可用的文件选择器"); }
+            catch (ActivityNotFoundException error) { uploadCallback.onReceiveValue(null); uploadCallback = null; toast(NativeLanguage.text("file.picker.unavailable")); }
             return true;
         }
         @Override public void onPermissionRequest(PermissionRequest request) { request.deny(); }
@@ -470,7 +505,9 @@ public final class MainActivity extends Activity {
         Uri uri = Uri.parse(url);
         String command = uri.getHost();
         try {
-            if ("export".equals(command)) {
+            if ("language".equals(command)) {
+                setNativeLanguage(NativeLanguage.parseCommand(url));
+            } else if ("export".equals(command)) {
                 ExportPayload payload = ExportPayload.parse(url);
                 offerSave(new PendingSave(policy, null, null, payload.filename, payload.mime, payload.bytes));
             } else if ("notifications".equals(command)) {
@@ -484,13 +521,13 @@ public final class MainActivity extends Activity {
     }
 
     private void offerSave(PendingSave save) {
-        if (pendingSave != null) { save.erase(); toast("请先完成或取消当前保存"); return; }
+        if (pendingSave != null) { save.erase(); toast(NativeLanguage.text("file.save.pending")); return; }
         if (save.sourceUrl != null && (save.origin.isLocal() || save.origin.route(save.sourceUrl) != OriginPolicy.Route.API)) { save.erase(); return; }
         pendingSave = save;
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
                 .setType(save.mime).putExtra(Intent.EXTRA_TITLE, save.filename);
         try { startActivityForResult(intent, SAVE_DOWNLOAD); }
-        catch (ActivityNotFoundException error) { pendingSave.erase(); pendingSave = null; toast("没有可用的保存文件选择器"); }
+        catch (ActivityNotFoundException error) { pendingSave.erase(); pendingSave = null; toast(NativeLanguage.text("file.save.picker.unavailable")); }
     }
 
     @Override protected void onActivityResult(int request, int result, Intent data) {
@@ -511,19 +548,19 @@ public final class MainActivity extends Activity {
             if (save == null) return;
             Uri destination = result == RESULT_OK && data != null ? data.getData() : null;
             if (destination == null || !"content".equals(destination.getScheme())) { save.erase(); return; }
-            toast("正在保存…");
+            toast(NativeLanguage.text("file.saving"));
             io.execute(() -> {
                 try {
                     try (OutputStream output = getContentResolver().openOutputStream(destination, "wt")) {
-                        if (output == null) throw new IOException("无法写入选择的文件");
+                        if (output == null) throw new IOException(NativeLanguage.text("file.write.failed"));
                         if (save.bytes != null) output.write(save.bytes);
                         else download(save, output);
                         output.flush();
                     }
-                    main.post(() -> toast("文件已保存"));
+                    main.post(() -> toast(NativeLanguage.text("file.saved")));
                 } catch (Exception error) {
                     // The destination is user-owned: do not silently delete it after a partial write.
-                    main.post(() -> toast("保存失败，选择的文件可能不完整：" + error.getMessage()));
+                    main.post(() -> toast(NativeLanguage.text("file.save.failed")));
                 } finally { save.erase(); }
             });
         }
@@ -533,7 +570,7 @@ public final class MainActivity extends Activity {
         String current = save.sourceUrl;
         long deadline = android.os.SystemClock.elapsedRealtime() + 90_000;
         for (int redirect = 0; redirect <= 3; redirect++) {
-            if (save.origin.route(current) != OriginPolicy.Route.API) throw new IOException("下载目标不属于当前服务器 /api");
+            if (save.origin.route(current) != OriginPolicy.Route.API) throw new IOException(NativeLanguage.text("download.origin.invalid"));
             HttpsURLConnection connection = (HttpsURLConnection) new java.net.URL(current).openConnection();
             connection.setInstanceFollowRedirects(false); connection.setConnectTimeout(15_000); connection.setReadTimeout(20_000);
             connection.setRequestProperty("User-Agent", save.agent == null ? "QingdanAndroid/0.1" : save.agent);
@@ -545,27 +582,27 @@ public final class MainActivity extends Activity {
                 if (status >= 300 && status <= 399) {
                     String location = connection.getHeaderField("Location");
                     URI base = OriginPolicy.uri(current);
-                    if (location == null || base == null) throw new IOException("下载重定向无效");
+                    if (location == null || base == null) throw new IOException(NativeLanguage.text("download.redirect.invalid"));
                     try { current = base.resolve(location).toString(); }
-                    catch (IllegalArgumentException error) { throw new IOException("下载重定向无效"); }
-                    if (save.origin.route(current) != OriginPolicy.Route.API) throw new IOException("拒绝跨服务器或非 /api 下载重定向");
-                    if (redirect == 3) throw new IOException("下载重定向次数过多");
+                    catch (IllegalArgumentException error) { throw new IOException(NativeLanguage.text("download.redirect.invalid")); }
+                    if (save.origin.route(current) != OriginPolicy.Route.API) throw new IOException(NativeLanguage.text("download.redirect.blocked"));
+                    if (redirect == 3) throw new IOException(NativeLanguage.text("download.redirect.excessive"));
                     continue;
                 }
-                if (status < 200 || status > 299) throw new IOException("服务器返回 " + status);
-                if (connection.getContentLengthLong() > ExportPayload.MAX_BYTES) throw new IOException("下载文件不能超过 25 MB");
+                if (status < 200 || status > 299) throw new IOException(NativeLanguage.text("server.response.status") + " " + status);
+                if (connection.getContentLengthLong() > ExportPayload.MAX_BYTES) throw new IOException(NativeLanguage.text("download.size.limit"));
                 try (InputStream input = connection.getInputStream()) {
                     byte[] buffer = new byte[16 * 1024]; long count = 0; int read;
                     while ((read = input.read(buffer)) != -1) {
-                        if (android.os.SystemClock.elapsedRealtime() > deadline) throw new IOException("下载超时");
-                        count += read; if (count > ExportPayload.MAX_BYTES) throw new IOException("下载文件不能超过 25 MB");
+                        if (android.os.SystemClock.elapsedRealtime() > deadline) throw new IOException(NativeLanguage.text("download.timeout"));
+                        count += read; if (count > ExportPayload.MAX_BYTES) throw new IOException(NativeLanguage.text("download.size.limit"));
                         output.write(buffer, 0, read);
                     }
                 }
                 return;
             } finally { connection.disconnect(); }
         }
-        throw new IOException("下载重定向次数过多");
+        throw new IOException(NativeLanguage.text("download.redirect.excessive"));
     }
 
     private WebResourceResponse interceptRemoteRead(OriginPolicy origin, WebResourceRequest request) {
@@ -648,8 +685,8 @@ public final class MainActivity extends Activity {
                 return new WebResourceResponse(ExportPayload.safeMime(mime), "UTF-8", status, reason, headers, body);
             } catch (Exception error) {
                 if (connection != null) connection.disconnect();
-                if (error instanceof javax.net.ssl.SSLException) return apiFailure("TLS_INVALID", "服务器 HTTPS 证书或安全连接无效");
-                if (!receivedResponse && error instanceof IOException) return apiFailure("NETWORK_ERROR", "连接不可用，未确认输入会保留");
+                if (error instanceof javax.net.ssl.SSLException) return apiFailure("TLS_INVALID", NativeLanguage.text("server.tls.invalid"));
+                if (!receivedResponse && error instanceof IOException) return apiFailure("NETWORK_ERROR", NativeLanguage.text("server.network.unavailable"));
                 return blocked(502, "Bad Gateway");
             }
         }
@@ -675,8 +712,29 @@ public final class MainActivity extends Activity {
         void erase() { if (bytes != null) { java.util.Arrays.fill(bytes, (byte) 0); bytes = null; } }
     }
 
+    private void refreshNativeLabels() {
+        setTitle(NativeLanguage.text("app.name"));
+        if (settingsButton != null) settingsButton.setText(NativeLanguage.text("settings.mode"));
+        if (modeLabel != null) modeLabel.setText(policy == null ? NativeLanguage.text("app.name") : NativeLanguage.text(policy.isLocal() ? "mode.local.title" : "mode.server.title"));
+        createNotificationChannel();
+    }
+    private boolean setNativeLanguage(String value) {
+        if (!NativeLanguage.validPreference(value)) return false;
+        if (!preferences.edit().putString("language", value).commit()) { toast(NativeLanguage.text("language.save.failed")); reportLanguage(); return false; }
+        NativeLanguage.setPreference(value);
+        refreshNativeLabels();
+        reportLanguage();
+        return true;
+    }
+    private void reportLanguage() {
+        if (!nativeDocumentReady || !trustedRoot(browser)) return;
+        // Both values come only from the closed enum, never page-controlled script.
+        String value = NativeLanguage.preference(), locale = NativeLanguage.locale();
+        browser.evaluateJavascript("window.__QINGDAN_NATIVE_LOCALE__='" + locale + "';window.__QINGDAN_NATIVE_LANGUAGE__='" + value + "';window.__QINGDAN_NATIVE_LANGUAGE_READY__=true;window.__qingdanSetLanguagePreference&&window.__qingdanSetLanguagePreference('" + value + "');", null);
+    }
+
     private void createNotificationChannel() {
-        getSystemService(NotificationManager.class).createNotificationChannel(new NotificationChannel("focus", getString(cn.qingdan.android.R.string.notification_channel_name), NotificationManager.IMPORTANCE_DEFAULT));
+        getSystemService(NotificationManager.class).createNotificationChannel(new NotificationChannel("focus", NativeLanguage.text("notifications.focus"), NotificationManager.IMPORTANCE_DEFAULT));
     }
     private void requestNotifications(boolean gesture) {
         if (notificationRequestPending) return;
@@ -684,10 +742,10 @@ public final class MainActivity extends Activity {
             notificationRequestPending = true;
             // Async JS handlers may lose Chromium's transient gesture bit. An explicit
             // native consent button keeps the permission request user-initiated.
-            new AlertDialog.Builder(this).setTitle("开启青单通知？")
-                    .setMessage("允许后，应用在前台运行时可发送专注计时提醒。不会安排后台精确闹钟。")
-                    .setNegativeButton("暂不开启", (d, w) -> { notificationRequestPending = false; reportNotificationPermission(notificationPermission()); })
-                    .setPositiveButton("继续", (d, w) -> { notificationRequestPending = false; requestNotifications(true); })
+            new AlertDialog.Builder(this).setTitle(NativeLanguage.text("notifications.enable.title"))
+                    .setMessage(NativeLanguage.text("notifications.enable.description"))
+                    .setNegativeButton(NativeLanguage.text("notifications.not.now"), (d, w) -> { notificationRequestPending = false; reportNotificationPermission(notificationPermission()); })
+                    .setPositiveButton(NativeLanguage.text("common.continue"), (d, w) -> { notificationRequestPending = false; requestNotifications(true); })
                     .setOnCancelListener(d -> { notificationRequestPending = false; reportNotificationPermission(notificationPermission()); }).show();
             return;
         }
@@ -710,7 +768,7 @@ public final class MainActivity extends Activity {
     }
     private void showNotification(String title, String body) {
         if (!resumed || !"granted".equals(notificationPermission())) return;
-        String safeTitle = title == null || title.isEmpty() ? "青单" : title.substring(0, Math.min(title.length(), 120));
+        String safeTitle = title == null || title.isEmpty() ? NativeLanguage.text("app.name") : title.substring(0, Math.min(title.length(), 120));
         String safeBody = body == null ? "" : body.substring(0, Math.min(body.length(), 500));
         Intent intent = new Intent(this, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent open = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -748,7 +806,7 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onResume() {
         super.onResume(); resumed = true;
-        if (browser != null) { browser.onResume(); evaluateLifecycle("resume"); reportNotificationPermission(notificationPermission()); }
+        if (browser != null) { refreshNativeLabels(); reportLanguage(); browser.onResume(); evaluateLifecycle("resume"); reportNotificationPermission(notificationPermission()); }
     }
     @Override protected void onPause() {
         resumed = false; evaluateLifecycle("pause");

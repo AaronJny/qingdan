@@ -33,7 +33,7 @@ public final class OriginPolicy {
     }
 
     private static IllegalArgumentException invalid() {
-        return new IllegalArgumentException("请输入完整 HTTPS 源地址，例如 https://qingdan.example.com；不要带用户名、密码、路径或参数。证书必须有效。");
+        return new IllegalArgumentException(NativeLanguage.text("endpoint.invalid"));
     }
 
     public static OriginPolicy local() { return new OriginPolicy(LOCAL_HOST, 443); }

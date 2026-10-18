@@ -31,17 +31,20 @@ function put(directory, name, data = 'fixture', mode = 0o644) {
 function macFixture(directory) {
   const app = path.join(directory, '青单.app'), version = '1.2.3';
   put(app, 'Contents/Info.plist', plist.build({ CFBundleName: '青单', CFBundleDisplayName: '青单',
-    CFBundleExecutable: '青单', CFBundleIdentifier: 'app.qingdan.desktop', CFBundleVersion: version,
+    CFBundleDevelopmentRegion: 'en', CFBundleExecutable: '青单', CFBundleIdentifier: 'app.qingdan.desktop', CFBundleVersion: version,
     CFBundleShortVersionString: version, LSMinimumSystemVersion: '13.0', CFBundleIconFile: 'icon.icns' }));
   put(app, 'Contents/MacOS/青单', 'main executable', 0o755);
   put(app, 'Contents/Resources/app.asar');
+  for (const [locale,display] of [['en','Qingdan'],['zh_CN','青单'],['zh','青单']]) put(app, `Contents/Resources/${locale}.lproj/InfoPlist.strings`, `"CFBundleDisplayName" = "${display}";\n"CFBundleName" = "${display}";\n`);
   put(app, 'Contents/Resources/icon.icns', fs.readFileSync(path.join(root, 'build/icon.icns')));
   for (const notice of ['LICENSE.electron.txt', 'LICENSES.chromium.html']) put(app, 'Contents/Resources/' + notice);
   for (const suffix of helpers) {
     const name = 'Electron Helper' + suffix, base = 'Contents/Frameworks/' + name + '.app/Contents/';
-    put(app, base + 'Info.plist', plist.build({ CFBundleName: name, CFBundleDisplayName: '青单辅助程序',
+    put(app, base + 'Info.plist', plist.build({ CFBundleName: name, CFBundleDisplayName: name, CFBundleDevelopmentRegion: 'en',
       CFBundleExecutable: name, CFBundleIdentifier: 'app.qingdan.desktop.helper' + (suffix ? '.' + suffix.trim().replace(/[()]/g, '') : '') }));
     put(app, base + 'MacOS/' + name, 'helper executable', 0o755);
+    const chineseSuffix = {'':'',' (GPU)':'（图形）',' (Plugin)':'（插件）',' (Renderer)':'（渲染器）'}[suffix];
+    for (const [locale,display] of [['en','Qingdan Helper'+suffix],['zh_CN','青单辅助程序'+chineseSuffix],['zh','青单辅助程序'+chineseSuffix]]) put(app, base + `Resources/${locale}.lproj/InfoPlist.strings`, `"CFBundleDisplayName" = "${display}";\n"CFBundleName" = "${name}";\n`);
   }
   put(app, 'Contents/Frameworks/Runtime.framework/Versions/A/Runtime');
   if (!windows) {
@@ -226,4 +229,13 @@ test('Python ZIP preflight validates CRCs and rejects traversal, collisions, ext
   const offset = data.indexOf(Buffer.from('valid')); assert(offset >= 0); data[offset] ^= 1; fs.writeFileSync(zip, data);
   const corrupt = spawnSync(python, [path.join(root, 'scripts/inspect-desktop-zip.py'), zip, '--platform', 'mac'], { encoding: 'utf8' });
   assert.notEqual(corrupt.status, 0); assert.match(corrupt.stderr, /Bad CRC/);
+});
+test('macOS archive verification requires intact English and Chinese display-name resources',t=>{
+ const root=fixture(t),app=macFixture(root);
+ const localized=path.join(app,'Contents/Resources/en.lproj/InfoPlist.strings');
+ fs.writeFileSync(localized,'"CFBundleDisplayName" = "Changed";\n"CFBundleName" = "Qingdan";\n');
+ assert.throws(()=>verifier.verifyMacBundle(app,'1.2.3'),/Missing en display name/);
+ fs.writeFileSync(localized,'"CFBundleDisplayName" = "Qingdan";\n"CFBundleName" = "Qingdan";\n');
+ fs.unlinkSync(path.join(app,'Contents/Resources/zh_CN.lproj/InfoPlist.strings'));
+ assert.throws(()=>verifier.verifyMacBundle(app,'1.2.3'),/ENOENT/);
 });

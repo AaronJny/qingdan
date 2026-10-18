@@ -6,6 +6,7 @@
  * assets/chinese-calendar.ts coverage. Unknown statutory years always error.
  */
 import { Temporal } from '@js-temporal/polyfill';
+import { t } from '../lib/i18n.ts';
 import { gregorianToLunar, lunarAnniversaryInYear, matchesChineseDay } from './chinese-calendar.ts';
 import type { ChineseDayKind, LunarAnniversaryOptions } from './chinese-calendar.ts';
 
@@ -228,32 +229,45 @@ export interface ParsedChineseTask {
   unsupported: string[];
 }
 export interface ChineseParseOptions { today: DateOnly; timeZone?: string }
-/** Bounded deterministic parsing, not an NLP/holiday engine. Chinese 周X means
- * the next matching weekday, including today. Conflicting date/time tokens are
+/** Bounded deterministic Chinese/English parsing, not an NLP/holiday engine.
+ * Chinese 周X and English weekday names mean the next match, including today. Conflicting date/time tokens are
  * returned as unsupported and left in the title for manual review. */
 export function parseChineseTask(input: string, options: ChineseParseOptions): ParsedChineseTask {
   validateOccurrence({ date: options.today, timeZone: options.timeZone });
   const unsupported: string[] = [], tags: string[] = [];
-  if (/(?:工作日|节假日|法定假日|调休|农历|春节|中秋|国庆)/u.test(input)) unsupported.push('节假日、调休或农历自然语言尚不解析，请在日历或重复规则中手动设置');
-  if (/(?:每(?:天|日|周|星期|月|年|隔|\s*[一二三四五六七八九十\d]+\s*[天日周月年])|隔\s*[一二三四五六七八九十\d]+\s*[天日周月年]|[一二三四五六七八九十\d]+[天日周月年](?:后|前)|第[一二三四五六七八九十\d]+个|上周|上星期|下下周|月底|月末|下个月|下月|明年|本周|本星期)/u.test(input)) unsupported.push('不支持复杂相对日期或自然语言重复规则，请手动设置');
+  if (/(?:工作日|节假日|法定假日|调休|农历|春节|中秋|国庆)/u.test(input)) unsupported.push(t('core.naturalLanguageHolidaysMakeupWorkdaysAndLunarDates'));
+  if (/(?:每(?:天|日|周|星期|月|年|隔|\s*[一二三四五六七八九十\d]+\s*[天日周月年])|隔\s*[一二三四五六七八九十\d]+\s*[天日周月年]|[一二三四五六七八九十\d]+[天日周月年](?:后|前)|第[一二三四五六七八九十\d]+个|上周|上星期|下下周|月底|月末|下个月|下月|明年|本周|本星期)/u.test(input)) unsupported.push(t('core.complexRelativeDatesAndNaturalLanguageRecurrenceRules'));
   let title = input.replace(/(?:^|\s)#([^\s#]+)/gu, (_, tag: string) => { if (!tags.includes(tag)) tags.push(tag); return ' '; });
+  // These phrases have deliberately unsupported week-boundary/recurrence semantics.
+  // Keep their date/time text intact rather than extracting a weekday inside them.
+  const unsupportedEnglish = /(?<![\p{L}\p{N}_])(?:(?:next|last|this)[\s-]+(?:week(?:end)?|month|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday)|(?:every|each)\s+(?:(?:other|one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+)?(?:day|week(?:day|end)?|month|year|monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?|daily|weekly|monthly|yearly|annually)(?![\p{L}\p{N}_])/iu.test(title);
+  if (unsupportedEnglish) unsupported.push(t('domain.parser.unsupportedEnglish'));
   const priorities = [...title.matchAll(/(?:^|\s)!([123])(?=\s|$)/g)];
   let priority: 1 | 2 | 3 | undefined;
-  if (priorities.length > 1) unsupported.push('多个优先级标记，请手动确认');
+  if (priorities.length > 1) unsupported.push(t('core.multiplePriorityMarkersPleaseConfirmManually'));
   else if (priorities.length === 1) { priority = Number(priorities[0][1]) as 1 | 2 | 3; title = title.replace(/(?:^|\s)![123](?=\s|$)/g, ' '); }
-  const tokens = [...title.matchAll(/\d{4}-\d{2}-\d{2}|今天|明天|后天|(?:下)?(?:周|星期)[一二三四五六日天]/gu)].filter(match => {
+  const tokens = [...title.matchAll(/\d{4}-\d{2}-\d{2}|今天|明天|后天|(?:下)?(?:周|星期)[一二三四五六日天]|(?<![\p{L}\p{N}_])(?:day\s+after\s+tomorrow|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)(?![\p{L}\p{N}_])/giu)].filter(match => {
     // Do not extract a fake due date from e.g. 每周三, 上周三 or 下下周三.
     if (!/(?:周|星期)/u.test(match[0])) return true;
     const prefix = title.slice(0, match.index);
     return !/[每本上下]$/u.test(prefix);
   });
+  const hasEnglishDate = tokens.some(match => /^[a-z]/i.test(match[0]));
+  const timeTokens = [...title.matchAll(/(?<![\d:])\d{1,2}:\d{2}(?![\d:])/g)];
+  // With English/conflicting phrases, leave all date/time tokens for review.
+  const deferDateTime = unsupportedEnglish || hasEnglishDate && (tokens.length > 1 || timeTokens.length > 1);
   let date: DateOnly | undefined;
-  if (tokens.length > 1) unsupported.push('多个日期标记，请手动确认');
-  else if (tokens.length === 1) {
-    const token = tokens[0][0];
-    if (/^\d/.test(token)) { if (isDateOnly(token)) date = token; else unsupported.push(`无效日期：${token}`); }
+  if (tokens.length > 1) unsupported.push(t('core.multipleDateMarkersPleaseConfirmManually'));
+  else if (tokens.length === 1 && !deferDateTime) {
+    const token = tokens[0][0], english = token.toLowerCase().replace(/\s+/g, ' ');
+    if (/^\d/.test(token)) { if (isDateOnly(token)) date = token; else unsupported.push(t('core.invalidDateValue', { p0: token })); }
+    else if (['today', 'tomorrow', 'day after tomorrow'].includes(english)) date = addLocalDays(options.today, ['today', 'tomorrow', 'day after tomorrow'].indexOf(english));
+    else if (/^(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/.test(english)) {
+      const day = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(english);
+      date = addLocalDays(options.today, (day - localWeekday(options.today) + 7) % 7);
+    }
     else if (['今天', '明天', '后天'].includes(token)) date = addLocalDays(options.today, ['今天', '明天', '后天'].indexOf(token));
-    else if (/^下/.test(token)) unsupported.push('不支持“下周/下星期”的周边界推断，请手动设置日期');
+    else if (/^下/.test(token)) unsupported.push(t('core.weekBoundariesForNextWeekAreNotInferred'));
     else {
       const day = ({ 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 日: 0, 天: 0 } as Record<string, Weekday>)[token.at(-1)!];
       date = addLocalDays(options.today, (day - localWeekday(options.today) + 7) % 7);
@@ -262,13 +276,13 @@ export function parseChineseTask(input: string, options: ChineseParseOptions): P
   }
   const times = [...title.matchAll(/(?<![\d:])\d{1,2}:\d{2}(?![\d:])/g)];
   let time: LocalTime | undefined;
-  if (times.length > 1) unsupported.push('多个时间标记，请手动确认');
-  else if (times.length === 1) {
+  if (times.length > 1) unsupported.push(t('core.multipleTimeMarkersPleaseConfirmManually'));
+  else if (times.length === 1 && !deferDateTime) {
     const token = times[0][0], normalized = token.padStart(5, '0');
-    if (isLocalTime(normalized)) { time = normalized; title = title.replace(token, ' '); } else unsupported.push(`无效时间：${token}`);
+    if (isLocalTime(normalized)) { time = normalized; title = title.replace(token, ' '); } else unsupported.push(t('core.invalidTimeValue', { p0: token }));
   }
-  if (/\d{1,2}:\d{2}:\d{2}/u.test(title)) unsupported.push('不支持含秒的时间，请使用 HH:mm');
-  if (/(?:上午|下午|晚上|早上|中午|凌晨)\s*\d+(?:点|时)|\d+点(?:半|\d+分)?/u.test(title)) unsupported.push('不支持中文口语时间，请使用 HH:mm');
+  if (/\d{1,2}:\d{2}:\d{2}/u.test(title)) unsupported.push(t('core.timesWithSecondsAreNotSupportedUseHh'));
+  if (/(?:上午|下午|晚上|早上|中午|凌晨)\s*\d+(?:点|时)|\d+点(?:半|\d+分)?/u.test(title)) unsupported.push(t('core.colloquialChineseTimesAreNotSupportedUseHh'));
   const result: ParsedChineseTask = { title: title.replace(/\s+/g, ' ').trim(), tags, unsupported: [...new Set(unsupported)] };
   if (priority !== undefined) result.priority = priority;
   if (date || time) { result.due = { date: date ?? options.today }; if (time) result.due.time = time; if (options.timeZone) result.due.timeZone = options.timeZone; }

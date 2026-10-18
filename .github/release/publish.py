@@ -300,17 +300,23 @@ def main(argv=None):
     manifest_path.write_bytes(encoded_json(manifest))
     files.append(manifest_path)
     require(len(files) == (26 if complete else 23), 'Unexpected release candidate count')
-    status = '五类成品均已生成并通过对应构建与包装检查。' if complete else '草稿：macOS、Windows、Linux 客户端与服务端成品已生成。Android 可安装 APK 尚未完成，当前不会发布 unsigned APK。请先完成 Android 发布签名配置，然后重跑发布工作流。'
-    notes = '\n'.join([f'# 青单 {tag}', '', status, '',
-                       '- macOS：Apple Silicon arm64 DMG；没有 Developer ID 签名或 Apple 公证，系统可能拦截。不要关闭 Gatekeeper 或移除隔离属性。',
-                       '- Windows：x64 ZIP，解压后运行 Qingdan.exe，无需单独安装 Node。程序未签名。',
-                       '- Linux：x64 AppImage，共用 Electron 前端/内置后端；需要系统正常支持 Chromium sandbox。',
-                       '- 服务端：ZIP 包含 Linux x64/macOS arm64 官方 Node、锁定依赖、迁移和一键启动/停止/初始化管理员脚本；独立解压 Linux HTTP 验收已通过。',
-                       f'- Android：独立客户端 {android_version}，内置业务基准 1.0.1。' + ('使用仓库已配置发布身份签名的 release APK；覆盖升级需要签名一致，升级前请导出完整备份。' if complete else '等待可用发布签名；APK 尚缺。'),
-                       '', f'使用说明、功能介绍与部署步骤见 [项目文档](https://github.com/{repository}/blob/{commit}/README.md)。项目源码采用 AGPL-3.0-only，第三方组件保留各自许可与声明。',
-                       '', '各平台检查报告与 SHA256 随成品附带。归档/后端验收不等于桌面 GUI 或 Android 真机验收。',
-                       '', f'构建来源：{commit}', f'构建工作流：{build_url}',
-                       f'发布来源：{publishing_commit}', f'发布工作流：{publish_url}', ''])
+    status = '五类安装与部署包已就绪。 / All five platform packages are ready.' if complete else '草稿：Android 签名安装包尚未就绪。 / Draft: the signed Android package is not ready.'
+    notes = '\n'.join([f'# 青单 / Qingdan {tag}', '', status, '',
+                       '## 更新 / What’s new',
+                       '- 网页、桌面端和 Android 支持简体中文与 English，首次跟随系统，也可在设置中即时切换。',
+                       '- 日期、星期、时间、数量和提醒随界面语言显示；任务、笔记和自定义名称保持原样。',
+                       '- Simplified Chinese and English across web, desktop and Android. Follow your system language or switch instantly in Settings.',
+                       '- Localized dates, weekdays, times, counts and notifications. Your tasks, notes and custom names stay as you wrote them.',
+                       '', '## 下载 / Downloads',
+                       '- macOS：Apple Silicon arm64 DMG；尚无 Developer ID 签名或 Apple 公证，系统可能拦截。请勿关闭 Gatekeeper 或移除隔离属性。',
+                       '- macOS: Apple Silicon arm64 DMG. No Developer ID signature or Apple notarization; macOS may block it. Do not disable Gatekeeper or remove quarantine attributes.',
+                       '- Windows：x64 ZIP，解压后运行 Qingdan.exe，无需另装 Node。程序未签名。 / x64 portable ZIP; extract and run Qingdan.exe. Node is included. The executable is unsigned.',
+                       '- Linux：x64 AppImage，需要系统正常支持 Chromium sandbox。 / x64 AppImage; requires working Chromium sandbox support.',
+                       '- 服务端 / Server：ZIP 内含运行环境与一键启动、停止及初始化管理员脚本。 / ZIP with bundled runtimes and one-click start, stop and administrator setup scripts.',
+                       f'- Android：{android_version}，保留独立业务基准 1.0.1。' + ('已使用现有发布身份签名；覆盖升级须签名一致，升级前请导出完整备份。 / Signed with the existing release identity. Updates require the same signing identity; export a full backup before upgrading.' if complete else '等待发布签名。 / Awaiting release signing.'),
+                       '', f'[中文说明](https://github.com/{repository}/blob/{commit}/README.md) · [English guide](https://github.com/{repository}/blob/{commit}/README.en.md)',
+                       '', '各包附检查报告与 SHA-256。打包和后端检查不代表全部设备上的 GUI 或真机验收。 / Verification reports and SHA-256 checksums are included. Package and backend checks do not establish GUI or physical-device acceptance on every device.',
+                       '', f'[构建与发布检查 / Build and release checks]({publish_url})', ''])
     notes_path = root.parent / 'release-notes.md'
     notes_path.write_text(notes)
     old = remote_release(repository, tag, optional=True)

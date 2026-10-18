@@ -1,3 +1,4 @@
+import{setLanguagePreference}from'../lib/i18n';setLanguagePreference('zh-CN');
 import{test}from'node:test';import assert from'node:assert/strict';import{Window}from'happy-dom';
 const window:any=new Window({url:'http://127.0.0.1:4310/'}),g=globalThis as any;for(const key of['window','document','navigator','location','HTMLElement','Event','CustomEvent','localStorage','sessionStorage'])Object.defineProperty(g,key,{value:window[key],configurable:true,writable:true});g.IS_REACT_ACT_ENVIRONMENT=true;
 const React=await import('react'),{act}=React,{createRoot}=await import('react-dom/client'),{default:TaskAttachments}=await import('../app/task-attachments'),{draftStore}=await import('../lib/client-storage'),{attachmentPendingKey}=await import('../lib/attachment-upload'),{configureSession}=await import('../lib/client');
