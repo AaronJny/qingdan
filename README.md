@@ -56,16 +56,16 @@
 
 ## 下载与安装
 
-前往 [Releases](https://github.com/AaronJny/qingdan/releases/latest) 下载适合自己系统的版本。当前发行版为 [v1.2.1](https://github.com/AaronJny/qingdan/releases/tag/v1.2.1)，包含桌面端、服务端和 Android 客户端。
+前往 [Releases](https://github.com/AaronJny/qingdan/releases/latest) 下载适合自己系统的版本。当前发行版为 [v1.3.1](https://github.com/AaronJny/qingdan/releases/tag/v1.3.1)，包含桌面端、服务端和 Android 客户端。
 
 | 平台 | 下载 | 使用方式与要求 |
 | --- | --- | --- |
-| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-mac-arm64.dmg) | macOS 13 及以上；正常退出旧版后，将应用拖入 Applications |
-| macOS · Intel | [x64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-mac-x64.dmg) | macOS 13 及以上；将应用拖入 Applications |
-| Windows · x64 | [便携 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-win-x64.zip) | 完整解压后运行 `Qingdan.exe`，不要只复制 EXE |
-| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-linux-x64.AppImage) | 添加可执行权限后运行；系统要求与 FUSE 启动说明见[桌面说明](desktop/README.md) |
-| 自托管服务端 / 网页端 | [含运行时 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/qingdan-server-v1.2.1.zip) | 内置 Linux x64 / macOS arm64 运行时和启动脚本，无需另外安装 Node.js 或 npm |
-| Android | [0.2.1 APK](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-0.2.1-android.apk) | Android 8.0 及以上，并需保持系统 WebView 更新；安装与签名注意事项见[Android 说明](android/README.md) |
+| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.3.1/Qingdan-1.3.1-mac-arm64.dmg) | macOS 13 及以上；正常退出旧版后，将应用拖入 Applications |
+| macOS · Intel | [x64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.3.1/Qingdan-1.3.1-mac-x64.dmg) | macOS 13 及以上；将应用拖入 Applications |
+| Windows · x64 | [便携 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.3.1/Qingdan-1.3.1-win-x64.zip) | 完整解压后运行 `Qingdan.exe`，不要只复制 EXE |
+| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.3.1/Qingdan-1.3.1-linux-x64.AppImage) | 添加可执行权限后运行；系统要求与 FUSE 启动说明见[桌面说明](desktop/README.md) |
+| 自托管服务端 / 网页端 | [含运行时 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.3.1/qingdan-server-v1.3.1.zip) | 内置 Linux x64 / macOS arm64 运行时和启动脚本，无需另外安装 Node.js 或 npm |
+| Android | [0.3.1 APK](https://github.com/AaronJny/qingdan/releases/download/v1.3.1/Qingdan-0.3.1-android.apk) | Android 8.0 及以上，并需保持系统 WebView 更新；安装与签名注意事项见[Android 说明](android/README.md) |
 
 ### 已知平台限制
 
