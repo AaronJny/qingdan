@@ -432,8 +432,12 @@ class WorkflowContract(unittest.TestCase):
         self.assertIn('run-id: ${{ github.event.workflow_run.id }}', text)
         self.assertIn('persist-credentials: false', text)
         for path in workflows.glob('*.yml'):
-            if path.name != 'release-cleanup.yml':
+            if path.name not in {'release-cleanup.yml', 'release-legacy-cleanup.yml'}:
                 self.assertNotIn('actions: write', path.read_text())
+            else:
+                allowed = path.read_text()
+                self.assertNotIn('actions: write', allowed.split('jobs:')[0])
+                self.assertEqual(allowed.count('actions: write'), 1)
         self.assertEqual(text.count('actions: write'), 1)
         self.assertNotIn('actions: write', text.split('jobs:')[0])
 

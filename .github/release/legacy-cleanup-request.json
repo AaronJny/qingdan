@@ -1,0 +1,105 @@
+{
+  "schema": "qingdan-legacy-cleanup-request-v1",
+  "purpose": "Delete only the nine approved redundant temporary Actions artifacts from successful v1.1.2 run 39044915950. Preserve Release assets, logs, history, and all other runs.",
+  "repositoryId": 1411240828,
+  "releaseId": 415884140,
+  "priorVerificationReceiptSha256": "769dde53bd9e136eee59ca88612a278af466cc3312ad2b551f51e479ff1627cb",
+  "receipt": {
+    "schema": "qingdan-cleanup-receipt-v1",
+    "repository": "AaronJny/qingdan",
+    "runId": 39044915950,
+    "runAttempt": 1,
+    "sourceCommit": "eb92ddcc6f84baf803320ad6ebc3033b623e2944",
+    "version": "1.1.2",
+    "androidVersion": "0.1.2",
+    "publisherResult": {
+      "url": "https://github.com/AaronJny/qingdan/releases/tag/v1.1.2",
+      "draft": false
+    },
+    "manifestText": "{\n  \"schema\": \"qingdan-release-assets-v1\",\n  \"version\": \"1.1.2\",\n  \"sourceCommit\": \"eb92ddcc6f84baf803320ad6ebc3033b623e2944\",\n  \"complete\": true,\n  \"requiredPlatforms\": [\n    \"macos\",\n    \"windows\",\n    \"server\",\n    \"linux\",\n    \"android\"\n  ],\n  \"deliverables\": {\n    \"macos\": \"Qingdan-1.1.2-mac-arm64.dmg\",\n    \"windows\": \"Qingdan-1.1.2-win-x64.zip\",\n    \"server\": \"qingdan-server-v1.1.2.zip\",\n    \"linux\": \"Qingdan-1.1.2-linux-x64.AppImage\",\n    \"android\": \"Qingdan-0.1.2-android.apk\"\n  },\n  \"missingPlatforms\": [],\n  \"assets\": [\n    {\n      \"name\": \"LINUX-START-HERE.txt\",\n      \"bytes\": 874,\n      \"sha256\": \"ac3cecde2d3d19c85dba6e983f77190c52cfd4a339500dc76af82443b3d0dd65\"\n    },\n    {\n      \"name\": \"MAC-START-HERE.txt\",\n      \"bytes\": 926,\n      \"sha256\": \"cc7e5ad773a1e8be977efe7a4b976279286aa9dbf764da2cbb97b62512b7a9f6\"\n    },\n    {\n      \"name\": \"Qingdan-0.1.2-android.apk\",\n      \"bytes\": 6134949,\n      \"sha256\": \"460eef41395efe209337bd1542ef94ccef785d59db51d831db8a0b2a6b73c04c\"\n    },\n    {\n      \"name\": \"Qingdan-0.1.2-android.apk.verification.json\",\n      \"bytes\": 2102,\n      \"sha256\": \"baf4e77eaba7e84cff2956ab086d603978a23abae8e20e74df3faedaa923f89b\"\n    },\n    {\n      \"name\": \"Qingdan-1.1.2-linux-x64.AppImage\",\n      \"bytes\": 118337212,\n      \"sha256\": \"34dfaf7949d1c00453d8b33add9e7f27e89785267c08e8120cd59a007dea20ff\"\n    },\n    {\n      \"name\": \"Qingdan-1.1.2-mac-arm64.dmg\",\n      \"bytes\": 131323121,\n      \"sha256\": \"1d8e93523c250003cc3ac10b67c7693179751d034212854c369b4a4966ce68d1\"\n    },\n    {\n      \"name\": \"Qingdan-1.1.2-mac-arm64.zip\",\n      \"bytes\": 131327736,\n      \"sha256\": \"19d1b29b6314572c80869e6319a73369c57229fce27a15427b0eb779acf1791d\"\n    },\n    {\n      \"name\": \"Qingdan-1.1.2-win-x64.zip\",\n      \"bytes\": 154556294,\n      \"sha256\": \"eedc48ea65e2bb31187fe819c8eb58f1d04d9a9d71b850371dc962b903f23886\"\n    },\n    {\n      \"name\": \"SHA256SUMS-android.txt\",\n      \"bytes\": 92,\n      \"sha256\": \"bd552344327819182ffd87e9bdfd93b790eb52203e9e3ef84b0047c5f87474b6\"\n    },\n    {\n      \"name\": \"SHA256SUMS-linux.txt\",\n      \"bytes\": 99,\n      \"sha256\": \"5bfdd01452857f2f8d018d76cbb505a5d6197e918a31e4d34da978f474b53a3e\"\n    },\n    {\n      \"name\": \"SHA256SUMS-macos.txt\",\n      \"bytes\": 188,\n      \"sha256\": \"6f0763517894725dcdb7991e296e13079c4b23871a444465974689d8842b033f\"\n    },\n    {\n      \"name\": \"SHA256SUMS-windows.txt\",\n      \"bytes\": 92,\n      \"sha256\": \"034afc6bb0f8e99477332247b6b8fafc494087b3d033b635ce35fa58c4787b85\"\n    },\n    {\n      \"name\": \"WINDOWS-START-HERE.txt\",\n      \"bytes\": 681,\n      \"sha256\": \"0dd4147e5db230931ff724eb5501022fcf91d213e4603653474e4ea0d2db6210\"\n    },\n    {\n      \"name\": \"backend-verification-linux.json\",\n      \"bytes\": 753,\n      \"sha256\": \"37e903bc961dd97611e482646f58f495de9f831dd33e7ee7229419ab64d8cd05\"\n    },\n    {\n      \"name\": \"backend-verification-macos.json\",\n      \"bytes\": 753,\n      \"sha256\": \"37e903bc961dd97611e482646f58f495de9f831dd33e7ee7229419ab64d8cd05\"\n    },\n    {\n      \"name\": \"backend-verification-windows.json\",\n      \"bytes\": 753,\n      \"sha256\": \"37e903bc961dd97611e482646f58f495de9f831dd33e7ee7229419ab64d8cd05\"\n    },\n    {\n      \"name\": \"qingdan-server-v1.1.2.sha256\",\n      \"bytes\": 92,\n      \"sha256\": \"aa29a4a2bb3f35e4d2c6a7e97f60c15a84a4618146e543b1b7d6fd2a906e32db\"\n    },\n    {\n      \"name\": \"qingdan-server-v1.1.2.verification.json\",\n      \"bytes\": 2228,\n      \"sha256\": \"bc76dd63078d3249137c737a4cf7dfa0ffd75de5a9fed360a5efb78e58b299d7\"\n    },\n    {\n      \"name\": \"qingdan-server-v1.1.2.zip\",\n      \"bytes\": 85106489,\n      \"sha256\": \"ed0c45036a2011b1acf6fa908154a8b7efc132bd0ead010cb9bf5b7d8825b9e2\"\n    },\n    {\n      \"name\": \"verified-linux-appimage-x64.json\",\n      \"bytes\": 20523,\n      \"sha256\": \"389326201edb5332e8b33e5bd8f7e04244a3a53a9e6a9ed68247381aab1647d6\"\n    },\n    {\n      \"name\": \"verified-linux-x64.json\",\n      \"bytes\": 1966,\n      \"sha256\": \"196313090413b016bc077dd7d8c9e940c1c010f20f38680e039d84868ae36592\"\n    },\n    {\n      \"name\": \"verified-mac-arm64-archives.json\",\n      \"bytes\": 9541,\n      \"sha256\": \"af9be8bcedd7007339d77c5d1e953d3c4b2aa7c552846a41da9dbe2b4dd13d95\"\n    },\n    {\n      \"name\": \"verified-mac-arm64.json\",\n      \"bytes\": 1966,\n      \"sha256\": \"c26b8cd3e2ff90d2347074408cd75eb18fc2d571eb33b335e6d7ab99e72abbbe\"\n    },\n    {\n      \"name\": \"verified-win-x64-archives.json\",\n      \"bytes\": 4429,\n      \"sha256\": \"763242f9cb6891535df9206a282d920e3f24c75faa42c1e34cb4385b7136c532\"\n    },\n    {\n      \"name\": \"verified-win-x64.json\",\n      \"bytes\": 1966,\n      \"sha256\": \"f1b5c23afd5d3e4e8bf4dae7bbfe676abe0889d405c5c1d2830f01577b4404d9\"\n    }\n  ],\n  \"limitations\": [\n    \"macOS has no Developer ID signature or Apple notarization.\",\n    \"Windows executable is unsigned.\",\n    \"Desktop GUI acceptance and Android physical-device acceptance are not established by archive/backend checks.\",\n    \"Android client uses independent application 1.0.1 business-code baseline.\"\n  ],\n  \"sourceRunId\": \"39044915950\",\n  \"sourceRunUrl\": \"https://github.com/AaronJny/qingdan/actions/runs/39044915950\",\n  \"publishingCommit\": \"eb92ddcc6f84baf803320ad6ebc3033b623e2944\",\n  \"publishingRunId\": \"39044915950\",\n  \"publishingRunUrl\": \"https://github.com/AaronJny/qingdan/actions/runs/39044915950\"\n}\n"
+  },
+  "releaseAssetIds": {
+    "LINUX-START-HERE.txt": 650823508,
+    "MAC-START-HERE.txt": 650823505,
+    "Qingdan-0.1.2-android.apk": 650823506,
+    "Qingdan-0.1.2-android.apk.verification.json": 650823507,
+    "Qingdan-1.1.2-linux-x64.AppImage": 650823510,
+    "Qingdan-1.1.2-mac-arm64.dmg": 650823534,
+    "Qingdan-1.1.2-mac-arm64.zip": 650823532,
+    "Qingdan-1.1.2-win-x64.zip": 650823541,
+    "RELEASE-MANIFEST.json": 650823805,
+    "SHA256SUMS-android.txt": 650823548,
+    "SHA256SUMS-linux.txt": 650823574,
+    "SHA256SUMS-macos.txt": 650823588,
+    "SHA256SUMS-windows.txt": 650823619,
+    "WINDOWS-START-HERE.txt": 650823642,
+    "backend-verification-linux.json": 650823665,
+    "backend-verification-macos.json": 650823695,
+    "backend-verification-windows.json": 650823727,
+    "qingdan-server-v1.1.2.sha256": 650823731,
+    "qingdan-server-v1.1.2.verification.json": 650823741,
+    "qingdan-server-v1.1.2.zip": 650823749,
+    "verified-linux-appimage-x64.json": 650823758,
+    "verified-linux-x64.json": 650823778,
+    "verified-mac-arm64-archives.json": 650823779,
+    "verified-mac-arm64.json": 650823796,
+    "verified-win-x64-archives.json": 650823803,
+    "verified-win-x64.json": 650823804
+  },
+  "artifacts": [
+    {
+      "id": 12104739535,
+      "name": "windows-eb92ddcc6f84baf803320ad6ebc3033b623e2944",
+      "bytes": 154388475,
+      "sha256": "d59d93a2bac9e4c174cfd09e7cdc6f1f4a808c25b85b7dd5f9ce049e5cf845e1"
+    },
+    {
+      "id": 12105059404,
+      "name": "server-eb92ddcc6f84baf803320ad6ebc3033b623e2944",
+      "bytes": 84353525,
+      "sha256": "2b6a7538fa3b35ea3ea6b1929ab8366e1be494630ddeb675d7904c3d72fb31cc"
+    },
+    {
+      "id": 12105168562,
+      "name": "verified-application",
+      "bytes": 923383,
+      "sha256": "e029064218f3a8022ad0fc3c003818728c8cb3a9407ae453675430269ff0c4e0"
+    },
+    {
+      "id": 12105203744,
+      "name": "linux-eb92ddcc6f84baf803320ad6ebc3033b623e2944",
+      "bytes": 117770626,
+      "sha256": "ec21b059ebbac16c855f06128fc04a47c88920afb671c11208050599584ff022"
+    },
+    {
+      "id": 12105223326,
+      "name": "backend-verification",
+      "bytes": 552,
+      "sha256": "8490f5d58db2b59c696bf842dfb257ad8bc8c65f6f7a7c73f80b9562e72f9b8d"
+    },
+    {
+      "id": 12105253613,
+      "name": "macos-eb92ddcc6f84baf803320ad6ebc3033b623e2944",
+      "bytes": 261985462,
+      "sha256": "af0c5a0bee224a5e971f21b559aad15e854c5c1f24f1ad97ac22c7dbf31af51a"
+    },
+    {
+      "id": 12105293013,
+      "name": "android-eb92ddcc6f84baf803320ad6ebc3033b623e2944",
+      "bytes": 3721393,
+      "sha256": "7590a09e1ac46927d3e5682aa9ea699fc739b1581a2bbbac7d775ab07a6c0e66"
+    },
+    {
+      "id": 12105536185,
+      "name": "backend-verification-native-macos",
+      "bytes": 564,
+      "sha256": "a8db80fbcff61398720a5cbef26ed38be06280103a0d1c9eb64c12d169ed83ce"
+    },
+    {
+      "id": 12105920373,
+      "name": "backend-verification-native-windows",
+      "bytes": 568,
+      "sha256": "8e99c5c0e92cdf12171848f273596fcd45bcface154c36875f44727d77d09f5a"
+    }
+  ]
+}

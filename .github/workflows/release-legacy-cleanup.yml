@@ -1,0 +1,32 @@
+name: 清理已核验旧版发布的指定临时产物
+
+on:
+  push:
+    branches: ['main']
+    paths: ['.github/release/legacy-cleanup-request.json']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-legacy-cleanup-${{ github.repository }}-39044915950
+  cancel-in-progress: false
+
+jobs:
+  cleanup-approved-legacy-run:
+    name: 仅清理 v1.1.2 指定九个临时产物
+    if: github.repository == 'AaronJny/qingdan' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: 检查固定旧版清理权限与完整性边界
+        run: python3 -m unittest discover -s .github/release/tests -p 'test_legacy_cleanup.py' -v
+      - name: 重新核对全部正式资源与原始成功运行后删除指定临时产物
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/release/legacy_cleanup.py --delete
