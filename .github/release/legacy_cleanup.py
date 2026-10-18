@@ -29,6 +29,53 @@ REQUEST_SHA256 = '1e5753295cc682bb8e9dc5fddcc47e0228d4361b11af432d85574b3c19088f
 BASE = f'/repos/{REPOSITORY}'
 
 
+class ImmutableLegacyPolicy:
+    """Explicit historical contract, usable only for the one approved source."""
+    def inventory(self, receipt, repository, run_id, commit):
+        require(repository == REPOSITORY and run_id == RUN_ID and commit == COMMIT
+                and receipt.get('version') == '1.1.2' and receipt.get('androidVersion') == '0.1.2'
+                and receipt.get('runAttempt') == 1, 'Legacy policy source differs')
+        require(hashlib.sha256(receipt.get('manifestText', '').encode('utf-8')).hexdigest() ==
+                '5dc4eee13df36498e93f4e96d6f24f425f258c531c3caf5bd3f83ea76ec479c4',
+                'Legacy policy requires the exact immutable published manifest')
+        platforms = ['macos', 'windows', 'server', 'linux', 'android']
+        deliverables = {'macos': 'Qingdan-1.1.2-mac-arm64.dmg',
+                        'windows': 'Qingdan-1.1.2-win-x64.zip',
+                        'server': 'qingdan-server-v1.1.2.zip',
+                        'linux': 'Qingdan-1.1.2-linux-x64.AppImage',
+                        'android': 'Qingdan-0.1.2-android.apk'}
+        # Literal historical names deliberately do not use the evolving publisher.
+        names = {
+            'Qingdan-1.1.2-mac-arm64.dmg', 'Qingdan-1.1.2-mac-arm64.zip',
+            'verified-mac-arm64.json', 'verified-mac-arm64-archives.json',
+            'backend-verification-macos.json', 'MAC-START-HERE.txt', 'SHA256SUMS-macos.txt',
+            'Qingdan-1.1.2-win-x64.zip', 'verified-win-x64.json',
+            'verified-win-x64-archives.json', 'backend-verification-windows.json',
+            'WINDOWS-START-HERE.txt', 'SHA256SUMS-windows.txt',
+            'Qingdan-1.1.2-linux-x64.AppImage', 'verified-linux-x64.json',
+            'verified-linux-appimage-x64.json', 'backend-verification-linux.json',
+            'LINUX-START-HERE.txt', 'SHA256SUMS-linux.txt',
+            'qingdan-server-v1.1.2.zip', 'qingdan-server-v1.1.2.sha256',
+            'qingdan-server-v1.1.2.verification.json', 'Qingdan-0.1.2-android.apk',
+            'Qingdan-0.1.2-android.apk.verification.json', 'SHA256SUMS-android.txt',
+        }
+        require(len(names) == 25, 'Historical publication inventory changed')
+        return platforms, deliverables, names
+
+    def artifact_names(self, commit):
+        require(commit == COMMIT, 'Legacy artifact source differs')
+        return {cleanup.RECEIPT_NAME, 'verified-application', 'backend-verification',
+                'backend-verification-native-windows', 'backend-verification-native-macos',
+                *[f'{platform}-{COMMIT}' for platform in ('macos', 'windows', 'server', 'linux', 'android')]}
+
+
+LEGACY_POLICY = ImmutableLegacyPolicy()
+
+
+def receipt_records(receipt):
+    return cleanup.receipt_records(receipt, REPOSITORY, RUN_ID, COMMIT, policy=LEGACY_POLICY)
+
+
 def load_request(path=REQUEST_PATH):
     raw = path.read_bytes()
     require(hashlib.sha256(raw).hexdigest() == REQUEST_SHA256, 'Legacy cleanup request hash differs; preserve everything')
@@ -39,13 +86,13 @@ def load_request(path=REQUEST_PATH):
     receipt = request['receipt']
     require(receipt.get('runAttempt') == 1 and receipt.get('version') == '1.1.2'
             and receipt.get('androidVersion') == '0.1.2', 'Legacy source attempt or version differs')
-    records = cleanup.receipt_records(receipt, REPOSITORY, RUN_ID, COMMIT)
+    records = receipt_records(receipt)
     require(set(request['releaseAssetIds']) == set(records)
             and all(cleanup.positive(value) for value in request['releaseAssetIds'].values())
             and len(set(request['releaseAssetIds'].values())) == 26, 'Legacy Release asset IDs differ')
     artifacts = request['artifacts']
     require(len(artifacts) == 9 and {item['id'] for item in artifacts} == ARTIFACT_IDS
-            and {item['name'] for item in artifacts} == cleanup.allowed_names(COMMIT) - {cleanup.RECEIPT_NAME},
+            and {item['name'] for item in artifacts} == LEGACY_POLICY.artifact_names(COMMIT) - {cleanup.RECEIPT_NAME},
             'Legacy temporary artifact scope differs')
     return request
 
@@ -77,7 +124,7 @@ class ExactLegacyAPI:
 
     def artifact(self, item):
         require(item.get('id') in ARTIFACT_IDS, 'Unapproved artifact ID; preserve the run')
-        cleanup.verify_artifact(item, REPOSITORY, REPOSITORY_ID, RUN_ID, COMMIT)
+        cleanup.verify_artifact(item, REPOSITORY, REPOSITORY_ID, RUN_ID, COMMIT, policy=LEGACY_POLICY)
         expected = self.artifacts[item['id']]
         require(item.get('name') == expected['name'] and item.get('size_in_bytes') == expected['bytes']
                 and item.get('digest') == 'sha256:' + expected['sha256'],
@@ -128,9 +175,9 @@ def execute(api, request, delete=False):
     if delete:
         # Core verifies all evidence before any mutation, then rechecks Release
         # inventory/digests, tag and terminal run state before every artifact DELETE.
-        return cleanup.cleanup(scoped, receipt, REPOSITORY, RUN_ID, COMMIT)
-    cleanup.inspect(scoped, REPOSITORY, RUN_ID, COMMIT, 1)
-    cleanup.verify_release(scoped, receipt, REPOSITORY, RUN_ID, COMMIT)
+        return cleanup.cleanup(scoped, receipt, REPOSITORY, RUN_ID, COMMIT, policy=LEGACY_POLICY)
+    cleanup.inspect(scoped, REPOSITORY, RUN_ID, COMMIT, 1, policy=LEGACY_POLICY)
+    cleanup.verify_release(scoped, receipt, REPOSITORY, RUN_ID, COMMIT, policy=LEGACY_POLICY)
     return []
 
 

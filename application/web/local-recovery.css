@@ -1,0 +1,8 @@
+.local-recovery-notice{flex:none;flex-wrap:wrap}
+#root:has(>.local-recovery-notice,>.native-storage-failure-notice){height:100dvh;display:flex;flex-direction:column}
+#root:has(>.local-recovery-notice,>.native-storage-failure-notice)>.app-shell{height:auto;flex:1;min-height:0}
+#root:has(>.local-recovery-notice,>.native-storage-failure-notice)>.signin{flex:1;min-height:0}
+
+.native-storage-failure-notice{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 24px;margin:0}
+.native-storage-failure-notice>div{flex:1;min-width:240px}
+.native-storage-failure-notice p+p{margin-top:6px}

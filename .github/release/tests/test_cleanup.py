@@ -18,17 +18,17 @@ BASE = '/repos/' + REPOSITORY
 
 def receipt_fixture():
     records = [{'name': name, 'bytes': 2048, 'sha256': 'b' * 64}
-               for name in sorted(cleanup.publish.candidate_names('1.2.0', '0.2.0', True))]
-    manifest = cleanup.publish.manifest_value('1.2.0', COMMIT, True,
-                                              cleanup.expected_deliverables('1.2.0', '0.2.0'), records)
+               for name in sorted(cleanup.publish.candidate_names('1.2.1', '0.2.1', True))]
+    manifest = cleanup.publish.manifest_value('1.2.1', COMMIT, True,
+                                              cleanup.expected_deliverables('1.2.1', '0.2.1'), records)
     manifest.update({'sourceRunId': str(RUN), 'publishingRunId': str(RUN),
                      'sourceRunUrl': f'https://github.com/{REPOSITORY}/actions/runs/{RUN}',
                      'publishingRunUrl': f'https://github.com/{REPOSITORY}/actions/runs/{RUN}',
                      'publishingCommit': COMMIT})
     return {'schema': 'qingdan-cleanup-receipt-v1', 'repository': REPOSITORY,
             'runId': RUN, 'runAttempt': 1, 'sourceCommit': COMMIT,
-            'version': '1.2.0', 'androidVersion': '0.2.0',
-            'publisherResult': {'url': f'https://github.com/{REPOSITORY}/releases/tag/v1.2.0', 'draft': False},
+            'version': '1.2.1', 'androidVersion': '0.2.1',
+            'publisherResult': {'url': f'https://github.com/{REPOSITORY}/releases/tag/v1.2.1', 'draft': False},
             'manifestText': cleanup.publish.encoded_json(manifest).decode()}
 
 
@@ -38,7 +38,7 @@ class FakeAPI:
                     'status': 'completed', 'conclusion': 'success', 'event': 'push', 'run_attempt': 1,
                     'repository': {'id': 8, 'full_name': REPOSITORY},
                     'head_repository': {'id': 8, 'full_name': REPOSITORY}}
-        self.release = {'id': 44, 'tag_name': 'v1.2.0', 'target_commitish': COMMIT,
+        self.release = {'id': 44, 'tag_name': 'v1.2.1', 'target_commitish': COMMIT,
                         'draft': False, 'html_url': receipt['publisherResult']['url']}
         records = cleanup.receipt_records(receipt, REPOSITORY, RUN, COMMIT)
         self.assets = [{'id': number, 'name': name, 'size': record['bytes'], 'state': 'uploaded',
@@ -64,9 +64,9 @@ class FakeAPI:
             return None
         if path == f'{BASE}/actions/runs/{RUN}':
             return copy.deepcopy(self.run)
-        if path == f'{BASE}/releases/tags/v1.2.0':
+        if path == f'{BASE}/releases/tags/v1.2.1':
             return copy.deepcopy(self.release)
-        if path == f'{BASE}/git/ref/tags/v1.2.0':
+        if path == f'{BASE}/git/ref/tags/v1.2.1':
             return copy.deepcopy(self.tag)
         if path.startswith(BASE + '/actions/artifacts/'):
             number = int(path.rsplit('/', 1)[-1])
@@ -172,7 +172,7 @@ class CleanupSafety(unittest.TestCase):
             with self.subTest(change=change):
                 self.receipt = receipt_fixture()
                 self.change_manifest(change)
-                self.reject('five complete')
+                self.reject('complete required targets')
 
     def test_manifest_inventory_requires_exact_names_unique_records_valid_digests(self):
         for change in [lambda m: m['assets'].pop(),
@@ -244,6 +244,68 @@ class CleanupSafety(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'completed workflow_run'):
                 cleanup.event_identity()
 
+    def test_current_receipt_contains_exactly_32_live_release_assets(self):
+        records = cleanup.receipt_records(self.receipt, REPOSITORY, RUN, COMMIT)
+        self.assertEqual(len(records), 32)
+        self.assertEqual(len(self.api.assets), 32)
+        self.assertEqual(len(json.loads(self.receipt['manifestText'])['assets']), 31)
+        self.assertIn('Qingdan-1.2.1-mac-x64.dmg', records)
+        self.assertIn('Qingdan-1.2.1-mac-x64.zip', records)
+        self.assertEqual(set(cleanup.expected_deliverables('1.2.1', '0.2.1')),
+                         {'macos-arm64', 'macos-x64', 'windows', 'server', 'linux', 'android'})
+        self.assertEqual(len(self.clean()), 12)
+        self.assertEqual(len(self.api.assets), 32)
+
+    def test_current_cleanup_allowlist_is_exactly_arch_scoped(self):
+        names = {cleanup.RECEIPT_NAME, 'verified-application', 'backend-verification',
+                 'backend-verification-native-windows', 'backend-verification-native-macos-arm64',
+                 'backend-verification-native-macos-x64', 'windows-' + COMMIT, 'server-' + COMMIT,
+                 'linux-' + COMMIT, 'android-' + COMMIT, 'macos-arm64-' + COMMIT, 'macos-x64-' + COMMIT}
+        self.assertEqual(cleanup.allowed_names(COMMIT), names)
+        self.assertEqual(len(names), 12)
+        for name in ('macos-' + COMMIT, 'backend-verification-native-macos'):
+            self.api = FakeAPI(self.receipt)
+            self.api.artifacts[-1]['name'] = name
+            self.reject('Unexpected temporary artifact')
+
+    def test_missing_or_cross_arch_intel_deliverable_never_allows_deletion(self):
+        for change in (lambda m: m['deliverables'].pop('macos-x64'),
+                       lambda m: m['requiredPlatforms'].remove('macos-x64'),
+                       lambda m: m['deliverables'].update({'macos-x64': 'Qingdan-1.2.1-mac-arm64.dmg'}),
+                       lambda m: m['assets'].__setitem__(0, {'name': 'backend-verification-macos.json',
+                           'bytes': 2048, 'sha256': 'b' * 64})):
+            with self.subTest(change=change):
+                self.receipt = receipt_fixture()
+                self.api = FakeAPI(self.receipt)
+                self.change_manifest(change)
+                self.reject()
+
+    def test_same_count_wrong_or_duplicate_remote_inventory_preserves_all_artifacts(self):
+        for name in ('backend-verification-macos.json', 'Qingdan-1.2.1-mac-arm64.dmg'):
+            self.api = FakeAPI(self.receipt)
+            intel = next(a for a in self.api.assets if a['name'] == 'Qingdan-1.2.1-mac-x64.dmg')
+            intel['name'] = name
+            self.assertEqual(len(self.api.assets), 32)
+            self.reject('inventory')
+
+    def test_live_artifact_id_change_cannot_redirect_deletion(self):
+        request = self.api.request
+        def changed(path, method='GET', missing_ok=False):
+            item = request(path, method, missing_ok)
+            if method == 'GET' and path.startswith(BASE + '/actions/artifacts/'):
+                item['id'] += 1
+                item['url'] = f'https://api.github.com{BASE}/actions/artifacts/{item["id"]}'
+            return item
+        with patch.object(self.api, 'request', side_effect=changed):
+            self.reject('identity changed')
+
+    def test_old_historical_receipt_is_rejected_by_default_current_policy(self):
+        request = json.loads((Path(__file__).parents[1] / 'legacy-cleanup-request.json').read_text())
+        receipt = request['receipt']
+        with self.assertRaisesRegex(ValueError, 'complete required targets'):
+            cleanup.receipt_records(receipt, receipt['repository'], receipt['runId'], receipt['sourceCommit'])
+        self.assertEqual(self.api.deleted, [])
+
 
 class ReceiptEntryPoints(unittest.TestCase):
     def setUp(self):
@@ -268,7 +330,7 @@ class ReceiptEntryPoints(unittest.TestCase):
     def seal(self):
         request_path = self.root / '.github/release/request.json'
         request_path.parent.mkdir(parents=True, exist_ok=True)
-        request_path.write_text(json.dumps({'version': '1.2.0', 'androidVersion': '0.2.0'}))
+        request_path.write_text(json.dumps({'version': '1.2.1', 'androidVersion': '0.2.1'}))
         previous = Path.cwd()
         try:
             os.chdir(self.root)
@@ -282,7 +344,7 @@ class ReceiptEntryPoints(unittest.TestCase):
         receipt = json.loads(self.output.read_text())
         self.assertEqual(receipt, self.receipt)
         api = FakeAPI(receipt)
-        self.assertEqual(len(cleanup.cleanup(api, receipt, REPOSITORY, RUN, COMMIT)), 10)
+        self.assertEqual(len(cleanup.cleanup(api, receipt, REPOSITORY, RUN, COMMIT)), 12)
 
     def test_draft_or_failed_partial_publisher_result_emits_no_receipt(self):
         for result in [{'url': self.receipt['publisherResult']['url'], 'draft': True}, {}, None]:

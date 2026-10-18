@@ -7,6 +7,8 @@ const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 const plist = require('plist');
 const verifier = require('../scripts/verify-desktop-archives.cjs');
+const { thin } = require('./fixtures/macho.cjs');
+const host = (arch = 'arm64') => ({ platform: 'darwin', arch, machine: arch === 'x64' ? 'x86_64' : 'arm64', translated: false, runnerArch: arch === 'x64' ? 'X64' : 'ARM64' });
 const root = path.resolve(__dirname, '..');
 const helpers = ['', ' (GPU)', ' (Plugin)', ' (Renderer)'];
 const windows = process.platform === 'win32';
@@ -28,12 +30,12 @@ function fixture(t) {
 function put(directory, name, data = 'fixture', mode = 0o644) {
   const file = path.join(directory, name); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, data, { mode }); return file;
 }
-function macFixture(directory) {
+function macFixture(directory, arch = 'arm64') {
   const app = path.join(directory, '青单.app'), version = '1.2.3';
   put(app, 'Contents/Info.plist', plist.build({ CFBundleName: '青单', CFBundleDisplayName: '青单',
     CFBundleDevelopmentRegion: 'en', CFBundleExecutable: '青单', CFBundleIdentifier: 'app.qingdan.desktop', CFBundleVersion: version,
     CFBundleShortVersionString: version, LSMinimumSystemVersion: '13.0', CFBundleIconFile: 'icon.icns' }));
-  put(app, 'Contents/MacOS/青单', 'main executable', 0o755);
+  put(app, 'Contents/MacOS/青单', thin(arch), 0o755);
   put(app, 'Contents/Resources/app.asar');
   for (const [locale,display] of [['en','Qingdan'],['zh_CN','青单'],['zh','青单']]) put(app, `Contents/Resources/${locale}.lproj/InfoPlist.strings`, `"CFBundleDisplayName" = "${display}";\n"CFBundleName" = "${display}";\n`);
   put(app, 'Contents/Resources/icon.icns', fs.readFileSync(path.join(root, 'build/icon.icns')));
@@ -42,11 +44,12 @@ function macFixture(directory) {
     const name = 'Electron Helper' + suffix, base = 'Contents/Frameworks/' + name + '.app/Contents/';
     put(app, base + 'Info.plist', plist.build({ CFBundleName: name, CFBundleDisplayName: name, CFBundleDevelopmentRegion: 'en',
       CFBundleExecutable: name, CFBundleIdentifier: 'app.qingdan.desktop.helper' + (suffix ? '.' + suffix.trim().replace(/[()]/g, '') : '') }));
-    put(app, base + 'MacOS/' + name, 'helper executable', 0o755);
+    put(app, base + 'MacOS/' + name, thin(arch), 0o755);
     const chineseSuffix = {'':'',' (GPU)':'（图形）',' (Plugin)':'（插件）',' (Renderer)':'（渲染器）'}[suffix];
     for (const [locale,display] of [['en','Qingdan Helper'+suffix],['zh_CN','青单辅助程序'+chineseSuffix],['zh','青单辅助程序'+chineseSuffix]]) put(app, base + `Resources/${locale}.lproj/InfoPlist.strings`, `"CFBundleDisplayName" = "${display}";\n"CFBundleName" = "${name}";\n`);
   }
-  put(app, 'Contents/Frameworks/Runtime.framework/Versions/A/Runtime');
+  put(app, 'Contents/Frameworks/Runtime.framework/Versions/A/Runtime', thin(arch));
+  put(app, 'Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework', thin(arch));
   if (!windows) {
     fs.symlinkSync('A', path.join(app, 'Contents/Frameworks/Runtime.framework/Versions/Current'));
     fs.symlinkSync('Versions/Current/Runtime', path.join(app, 'Contents/Frameworks/Runtime.framework/Runtime'));
@@ -119,14 +122,14 @@ test('archive snapshots canonicalize ancestor aliases without allowing lexical o
   }
 });
 test('macOS verifies Chinese identity, helpers, icon, version, executable permissions and runtime notices', t => {
-  const app = macFixture(fixture(t)); assert.equal(verifier.verifyMacBundle(app, '1.2.3').metadata.helperNamesVerified.length, 4);
-  assert.throws(() => verifier.verifyMacBundle(app, '9.9.9'), /CFBundleShortVersionString/);
+  const app = macFixture(fixture(t)); assert.equal(verifier.verifyMacBundle(app, '1.2.3', 'arm64').metadata.helperNamesVerified.length, 4);
+  assert.throws(() => verifier.verifyMacBundle(app, '9.9.9', 'arm64'), /CFBundleShortVersionString/);
   const helper = path.join(app, 'Contents/Frameworks/Electron Helper (Renderer).app/Contents/MacOS/Electron Helper (Renderer)');
   if (!windows) {
-    fs.chmodSync(helper, 0o644); assert.throws(() => verifier.verifyMacBundle(app, '1.2.3'), /Nonexecutable/); fs.chmodSync(helper, 0o755);
+    fs.chmodSync(helper, 0o644); assert.throws(() => verifier.verifyMacBundle(app, '1.2.3', 'arm64'), /Nonexecutable/); fs.chmodSync(helper, 0o755);
   }
   fs.unlinkSync(path.join(app, 'Contents/Resources/LICENSES.chromium.html'));
-  assert.throws(() => verifier.verifyMacBundle(app, '1.2.3'), /ENOENT/);
+  assert.throws(() => verifier.verifyMacBundle(app, '1.2.3', 'arm64'), /ENOENT/);
 });
 test('Windows verifies x64 PE and required extraction-and-run runtime assets/notices', t => {
   const directory = windowsFixture(path.join(fixture(t), 'win')); assert.equal(verifier.verifyWindowsPayload(directory).metadata.peMachine, 'amd64');
@@ -150,8 +153,8 @@ test('native command plans use read-only mounts, ditto and literal-path Expand-A
   assert.equal(signatureCalls[1].options.captureStderr, true);
   assert.throws(() => verifier.nativeCommands('mac', () => 'Signature=Developer ID\nAuthority=Someone').verifyMacSignature('/a.app'), /ad-hoc integrity seal/);
 });
-test('complete macOS pipeline compares each format and detaches before cleanup; fixture commands are not native evidence', { skip: windows }, t => {
-  const directory = fixture(t), unpacked = macFixture(path.join(directory, 'original'));
+for (const arch of ['arm64', 'x64']) test(`complete ${arch} macOS pipeline compares each format and detaches before cleanup; fixture commands are not native evidence`, { skip: windows }, t => {
+  const directory = fixture(t), unpacked = macFixture(path.join(directory, 'original'), arch);
   const zip = put(directory, 'app.zip'), dmg = put(directory, 'app.dmg'), report = path.join(directory, 'report.json');
   const actions = [];
   const commands = {
@@ -164,9 +167,16 @@ test('complete macOS pipeline compares each format and detaches before cleanup; 
     detachDmg: target => { actions.push('detach'); assert(fs.existsSync(path.join(target, '青单.app'))); },
     verifyPackaged: payload => { actions.push('packaged'); return fakePackaged(payload); },
   };
-  const result = verifier.verifyArchives({ platform: 'mac', arch: 'arm64', version: '1.2.3', unpacked, zip, dmg, report }, commands, 'darwin');
+  const result = verifier.verifyArchives({ platform: 'mac', arch, version: '1.2.3', unpacked, zip, dmg, report }, commands, 'darwin', host(arch));
   assert.deepEqual(actions, ['extract', 'packaged', 'verify', 'mount', 'readonly', 'packaged', 'detach']);
   assert.deepEqual(result.artifacts.map(item => item.format), ['zip', 'dmg']);
+  assert.equal(result.nativeHost.arch, arch);
+  assert.equal(result.unpackedPayloadMetadata.macArchitecture.targetArch, arch);
+  for (const artifact of result.artifacts) {
+    assert.equal(artifact.arch, arch);
+    assert(artifact.metadata.macArchitecture.machOFiles.length >= 6);
+    assert(artifact.metadata.macArchitecture.machOFiles.every(file => file.architectures.length === 1 && file.architectures[0] === arch));
+  }
   assert.equal(result.nativeGuiTested, false); assert.equal(result.electronUtilityProcessTested, false); assert.equal(result.backendApiSmokeTested, false);
   assert.equal(result.originalPayloadUnchanged, true); assert.equal(result.artifacts[1].applicationsLinkVerified, true);
   assert.deepEqual(JSON.parse(fs.readFileSync(report, 'utf8')), result);
@@ -179,11 +189,11 @@ test('failed mounted payload checks detach; partial attach failures never recurs
     mountDmg: (_, target) => copy(unpacked, path.join(target, '青单.app')), checkReadOnly: () => {},
     detachDmg: () => { detached = true; } };
   const options = { platform: 'mac', arch: 'arm64', version: '1.2.3', unpacked, zip, dmg, report: path.join(directory, 'report.json') };
-  assert.throws(() => verifier.verifyArchives(options, commands, 'darwin'), /ENOENT/); assert.equal(detached, true); assert(!fs.existsSync(options.report));
+  assert.throws(() => verifier.verifyArchives(options, commands, 'darwin', host()), /ENOENT/); assert.equal(detached, true); assert(!fs.existsSync(options.report));
   let mountpoint;
   commands.mountDmg = (_, target) => { mountpoint = target; put(target, 'sentinel'); throw Error('interrupted attach'); };
   commands.detachDmg = () => { throw Error('detach blocked'); };
-  assert.throws(() => verifier.verifyArchives(options, commands, 'darwin'), /detach blocked/);
+  assert.throws(() => verifier.verifyArchives(options, commands, 'darwin', host()), /detach blocked/);
   assert(fs.existsSync(path.join(mountpoint, 'sentinel')), 'must retain potentially mounted directory');
   fs.rmSync(path.dirname(mountpoint), { recursive: true, force: true }); // Fixture was never mounted.
 });
@@ -234,8 +244,29 @@ test('macOS archive verification requires intact English and Chinese display-nam
  const root=fixture(t),app=macFixture(root);
  const localized=path.join(app,'Contents/Resources/en.lproj/InfoPlist.strings');
  fs.writeFileSync(localized,'"CFBundleDisplayName" = "Changed";\n"CFBundleName" = "Qingdan";\n');
- assert.throws(()=>verifier.verifyMacBundle(app,'1.2.3'),/Missing en display name/);
+ assert.throws(()=>verifier.verifyMacBundle(app,'1.2.3','arm64'),/Missing en display name/);
  fs.writeFileSync(localized,'"CFBundleDisplayName" = "Qingdan";\n"CFBundleName" = "Qingdan";\n');
  fs.unlinkSync(path.join(app,'Contents/Resources/zh_CN.lproj/InfoPlist.strings'));
- assert.throws(()=>verifier.verifyMacBundle(app,'1.2.3'),/ENOENT/);
+ assert.throws(()=>verifier.verifyMacBundle(app,'1.2.3','arm64'),/ENOENT/);
+});
+
+for (const arch of ['arm64', 'x64']) test(`macOS ${arch} refuses mislabeled main/helper/framework/native-module bytes`, t => {
+  const wrong = arch === 'x64' ? 'arm64' : 'x64';
+  const app = macFixture(fixture(t), arch);
+  assert.equal(verifier.verifyMacBundle(app, '1.2.3', arch).metadata.macArchitecture.targetArch, arch);
+  for (const relative of ['Contents/MacOS/青单', 'Contents/Frameworks/Electron Helper (GPU).app/Contents/MacOS/Electron Helper (GPU)', 'Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework', 'Contents/Resources/app.asar.unpacked/backend/node_modules/native/addon.node']) {
+    const file = put(app, relative, thin(wrong), 0o755);
+    assert.throws(() => verifier.verifyMacBundle(app, '1.2.3', arch), /Mach-O architecture must be exactly/);
+    fs.writeFileSync(file, thin(arch));
+  }
+  const options = { platform: 'mac', arch, version: '1.2.3' };
+  assert.throws(() => verifier.verifyArchives(options, {}, 'darwin', host(wrong)), /Native host architecture/);
+});
+test('macOS archive paths, filenames and reports select the explicit architecture', () => {
+  for (const arch of ['x64', 'arm64']) {
+    const result = verifier.parseArgs(['mac', '--arch', arch, '--zip', '/tmp/test.zip', '--dmg', '/tmp/test.dmg']);
+    assert.equal(result.arch, arch);
+    assert.equal(path.basename(result.report), `verified-mac-${arch}-archives.json`);
+    assert.equal(path.basename(path.dirname(result.unpacked)), arch === 'x64' ? 'mac' : 'mac-arm64');
+  }
 });

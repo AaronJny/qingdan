@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   publish-verified:
-    name: 仅恢复已通过五平台验收的原始成品发布
+    name: 仅恢复已通过全部六目标验收的原始成品发布
     runs-on: ubuntu-24.04
     permissions:
       contents: write

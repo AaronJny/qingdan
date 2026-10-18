@@ -1,3 +1,4 @@
+import copy
 import importlib.util
 import json
 import os
@@ -11,34 +12,106 @@ spec = importlib.util.spec_from_file_location('qingdan_publish', Path(__file__).
 publish = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(publish)
 
+def local_session_evidence(arch):
+    common = sorted(publish.LOCAL_SESSION_ASSERTIONS)
+    return {
+        'schema': 'qingdan-real-local-session-smoke-v1', 'passed': True,
+        'platform': 'darwin', 'arch': arch, 'packagedAppTested': False,
+        'keychainAccessInstrumented': False, 'realUserProfileAccessed': False,
+        'actualProcessRestart': True, 'sameOriginAcrossRestart': True,
+        'runtime': {'sourceCookieEncryption': False, 'testCookieEncryption': True,
+                    'onlyCookieEncryptionFuseChanged': True, 'sourceFuseWireUnchanged': True,
+                    'macTestCopyAdHocReset': True},
+        'phases': [{'phase': phase, 'passed': True, 'pid': index + 10, 'arch': arch,
+                    'electron': publish.ELECTRON_VERSION, 'stage': 'complete',
+                    'keychainAccessInstrumented': False, 'origin': 'http://127.0.0.1:12345',
+                    'partition': 'qingdan-desktop-memory-local-' + 'a' * 20,
+                    'sessions': [{'persistent': False, 'storagePathNull': True}],
+                    'assertions': common + ([
+                        'synchronous bridge write is durable before returning to the renderer',
+                        'renderer recreation hydrates the production durable store',
+                    ] if phase == 'write' else [
+                        'same-origin process restart retains native draft while Chromium localStorage is empty',
+                    ])} for index, phase in enumerate(('write', 'read'))],
+    }
+
+
+def packaged_recovery_evidence(arch, package):
+    return {'schema': 'qingdan-packaged-recovery-smoke-v1', 'passed': True,
+            'platform': 'darwin', 'arch': arch, 'electron': publish.ELECTRON_VERSION,
+            'classicLevel': '3.0.0', 'stockElectronNodeMode': True,
+            'packagedAsarModuleLoaded': True, 'packagedUnpackedBindingLoaded': True,
+            'syntheticWriteReadReopenPassed': True, 'stockRuntimeFuseWireUnchanged': True,
+            'packagedPayloadUnchanged': True, 'productAppLaunched': False, 'nativeGuiTested': False,
+            'keychainAccessInstrumented': False, 'realUserProfileAccessed': False,
+            'asarSha256': package['asarSha256'], 'executableSha256': package['executableSha256'],
+            'bindingEntry': f'node_modules/classic-level/prebuilds/darwin-{arch}/classic-level.node',
+            'bindingSha256': 'f' * 64}
+
+
 class Assets(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         self.addCleanup(self.temp.cleanup)
-        for name in ['Qingdan-1.1.1-win-x64.zip','qingdan-server-v1.1.1.zip']:
+        for name in ['Qingdan-1.2.1-win-x64.zip','qingdan-server-v1.2.1.zip']:
             self.zip(name)
-        (self.root/'Qingdan-1.1.1-mac-arm64.dmg').write_bytes(b'\0'*1100+b'koly'+b'\0'*508)
-        (self.root/'Qingdan-1.1.1-linux-x64.AppImage').write_bytes(b'\x7fELF'+b'\0'*4+b'AI\x02'+b'\0'*1500)
-        self.zip('Qingdan-1.1.1-mac-arm64.zip')
-        self.json('qingdan-server-v1.1.1.verification.json',{'version':'1.1.1','status':'passed','smoke':{'status':'passed'}})
-        for platform,arch in [('mac','arm64'),('win','x64'),('linux','x64')]:
-            self.json(f'verified-{platform}-{arch}.json',{'version':'1.1.1','backendVersion':'1.1.1','fusesVerified':{'RunAsNode':False}})
-        for name in publish.candidate_names('1.1.1', '0.1.1', False):
+        for arch in ('arm64', 'x64'):
+            (self.root/f'Qingdan-1.2.1-mac-{arch}.dmg').write_bytes(b'\0'*1100+b'koly'+b'\0'*508)
+            self.zip(f'Qingdan-1.2.1-mac-{arch}.zip')
+        (self.root/'Qingdan-1.2.1-linux-x64.AppImage').write_bytes(b'\x7fELF'+b'\0'*4+b'AI\x02'+b'\0'*1500)
+        self.json('qingdan-server-v1.2.1.verification.json',{'version':'1.2.1','status':'passed','smoke':{'status':'passed'}})
+        for platform,arch in [('win','x64'),('linux','x64')]:
+            self.json(f'verified-{platform}-{arch}.json',{'version':'1.2.1','backendVersion':'1.2.1','fusesVerified':{'RunAsNode':False}})
+        for name in publish.candidate_names('1.2.1', '0.2.1', False):
             if not (self.root / name).exists():
                 (self.root / name).write_text('{}' if name.endswith('.json') else 'test evidence')
         self.mac_evidence()
+
     def mac_evidence(self):
-        names = [f'Qingdan-1.1.1-mac-arm64.{ext}' for ext in ('dmg', 'zip')]
-        self.json('verified-mac-arm64-archives.json', {'artifacts': [
-            {'filename': name, 'bytes': (self.root/name).stat().st_size,
-             'sha256': publish.digest(self.root/name)} for name in names], 'appName': '青单.app'})
-        (self.root/'SHA256SUMS-macos.txt').write_text(''.join(
-            f'{publish.digest(self.root/name)}  {name}\n' for name in names))
+        for arch in ('arm64', 'x64'):
+            names = [f'Qingdan-1.2.1-mac-{arch}.{ext}' for ext in ('dmg', 'zip')]
+            architecture = {'targetArch': arch, 'allMachOMatchTarget': True,
+                            'machOFiles': [{'path': 'Contents/MacOS/青单', 'format': 'mach-o64',
+                                            'architectures': [arch]}], 'nativeNodeModules': []}
+            binding_path = f'Contents/Resources/app.asar.unpacked/node_modules/classic-level/prebuilds/darwin-{arch}/classic-level.node'
+            architecture['nativeNodeModules'].append(binding_path)
+            architecture['machOFiles'].append({'path': binding_path, 'format': 'mach-o64', 'architectures': [arch]})
+            host = {'platform': 'darwin', 'arch': arch, 'translated': False,
+                    'machine': 'arm64' if arch == 'arm64' else 'x86_64',
+                    'runnerArch': 'ARM64' if arch == 'arm64' else 'X64'}
+            package = {'platform': 'mac', 'arch': arch, 'version': '1.2.1', 'backendVersion': '1.2.1',
+                       'executableSha256': ('a' if arch == 'arm64' else 'b') * 64, 'asarSha256': 'c' * 64,
+                       'backendSourceSnapshotSha256': 'd' * 64, 'fusesVerified': publish.FUSES,
+                       'macArchitecture': architecture, 'nativeHost': host,
+                       'finalRecoveryBinding': {'entry': f'node_modules/classic-level/prebuilds/darwin-{arch}/classic-level.node',
+                           'sha256': 'f' * 64, 'bytes': 1024, 'unpacked': True, 'finalDiskBytes': True}}
+            package['localSessionSmoke'] = local_session_evidence(arch)
+            package['packagedRecoverySmoke'] = packaged_recovery_evidence(arch, package)
+            self.json(f'verified-mac-{arch}.json', package)
+            self.json(f'backend-verification-macos-{arch}.json', {
+                'version': '1.2.1', 'runtimePlatform': 'darwin', 'runtimeArch': arch,
+                'sourceSnapshotSha256': 'd' * 64, 'nativeNodeModules': [],
+                'smoke': {key: True for key in ('loopbackStartup', 'currentVersionHandshake', 'frontend',
+                    'offlineShellAssets', 'migrations', 'calendarWorker', 'syntheticTask', 'gracefulRestartPersistence')}})
+            metadata = {'macArchitecture': architecture}
+            self.json(f'verified-mac-{arch}-archives.json', {
+                'platform': 'mac', 'arch': arch, 'version': '1.2.1', 'nativeHost': host,
+                'nativeArchiveToolsUsed': True, 'originalPayloadUnchanged': True,
+                'unpackedPayloadMetadata': metadata, 'artifacts': [
+                    {'filename': name, 'format': name.rsplit('.', 1)[1], 'platform': 'mac', 'arch': arch,
+                     'bytes': (self.root/name).stat().st_size, 'sha256': publish.digest(self.root/name),
+                     'freshNativeExtractionVerified': True, 'nativeReadOnlyMountVerified': True,
+                     'applicationsLinkVerified': True, 'metadata': metadata, 'packagedVerification': package,
+                     'payloadMatched': {'allFileBytesMatched': True, 'allPathsMatched': True,
+                                        'unixModesMatched': True, 'inventorySha256': 'e' * 64}}
+                    for name in names], 'appName': '青单.app'})
+            (self.root/f'SHA256SUMS-macos-{arch}.txt').write_text(''.join(
+                f'{publish.digest(self.root/name)}  {name}\n' for name in names))
     def android(self):
-        self.zip('Qingdan-0.1.1-android.apk')
-        apk = self.root/'Qingdan-0.1.1-android.apk'
-        self.json(apk.name+'.verification.json',{'installable_candidate':True,'signature':{'verified':True,'v2_verified':True},'manifest_identity_verified':True,'zip_16k_alignment_verified':True,'apk':apk.name,'bytes':apk.stat().st_size,'sha256':publish.digest(apk),'manifest':{'application_id':'cn.qingdan.android','version_name':'0.1.1'}})
+        self.zip('Qingdan-0.2.1-android.apk')
+        apk = self.root/'Qingdan-0.2.1-android.apk'
+        self.json(apk.name+'.verification.json',{'installable_candidate':True,'signature':{'verified':True,'v2_verified':True},'manifest_identity_verified':True,'zip_16k_alignment_verified':True,'apk':apk.name,'bytes':apk.stat().st_size,'sha256':publish.digest(apk),'manifest':{'application_id':'cn.qingdan.android','version_name':'0.2.1'}})
         (self.root/'SHA256SUMS-android.txt').write_text(f'{publish.digest(apk)}  {apk.name}\n')
 
     def zip(self,name):
@@ -47,18 +120,18 @@ class Assets(unittest.TestCase):
     def json(self,name,value):
         (self.root/name).write_text(json.dumps(value))
     def collect(self,ready=False):
-        return publish.collect(self.root,'1.1.1','0.1.1',ready)
-    def test_draft_requires_all_four_independent_deliverables(self):
+        return publish.collect(self.root,'1.2.1','0.2.1',ready)
+    def test_draft_requires_all_five_non_android_targets(self):
         expected,files=self.collect()
-        self.assertEqual(set(expected),{'macos','windows','linux','server'})
+        self.assertEqual(set(expected),{'macos-arm64','macos-x64','windows','linux','server'})
     def test_complete_requires_actual_apk(self):
         with self.assertRaisesRegex(ValueError,'Missing android'):
             self.collect(True)
         self.android()
         self.assertIn('android',self.collect(True)[0])
     def test_signature_report_must_pass(self):
-        self.zip('Qingdan-0.1.1-android.apk')
-        self.json('Qingdan-0.1.1-android.apk.verification.json',{'installable_candidate':False})
+        self.zip('Qingdan-0.2.1-android.apk')
+        self.json('Qingdan-0.2.1-android.apk.verification.json',{'installable_candidate':False})
         with self.assertRaisesRegex(ValueError,'signature'):
             self.collect(True)
     def test_unsigned_or_unapproved_apk_cannot_publish(self):
@@ -74,23 +147,23 @@ class Assets(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'regular files'):
             self.collect()
     def test_fake_dmg_rejected(self):
-        (self.root/'Qingdan-1.1.1-mac-arm64.dmg').write_bytes(b'\0'*1600)
+        (self.root/'Qingdan-1.2.1-mac-arm64.dmg').write_bytes(b'\0'*1600)
         with self.assertRaisesRegex(ValueError,'UDIF'):
             self.collect()
     def test_fake_appimage_rejected(self):
-        (self.root/'Qingdan-1.1.1-linux-x64.AppImage').write_bytes(b'\x7fELF'+b'\0'*1600)
+        (self.root/'Qingdan-1.2.1-linux-x64.AppImage').write_bytes(b'\x7fELF'+b'\0'*1600)
         with self.assertRaisesRegex(ValueError,'AppImage'):
             self.collect()
     def test_server_smoke_must_have_run(self):
-        self.json('qingdan-server-v1.1.1.verification.json',{'version':'1.1.1','status':'passed','smoke':{'status':'not_run'}})
+        self.json('qingdan-server-v1.2.1.verification.json',{'version':'1.2.1','status':'passed','smoke':{'status':'not_run'}})
         with self.assertRaisesRegex(ValueError,'runtime smoke'):
             self.collect()
     def test_packaged_backend_version_must_match(self):
-        self.json('verified-win-x64.json',{'version':'1.1.1','backendVersion':'1.1.0','fusesVerified':True})
+        self.json('verified-win-x64.json',{'version':'1.2.1','backendVersion':'1.2.0','fusesVerified':True})
         with self.assertRaisesRegex(ValueError,'snapshot'):
             self.collect()
     def test_checksum_streaming(self):
-        self.assertEqual(publish.digest(self.root/'Qingdan-1.1.1-win-x64.zip'),__import__('hashlib').sha256((self.root/'Qingdan-1.1.1-win-x64.zip').read_bytes()).hexdigest())
+        self.assertEqual(publish.digest(self.root/'Qingdan-1.2.1-win-x64.zip'),__import__('hashlib').sha256((self.root/'Qingdan-1.2.1-win-x64.zip').read_bytes()).hexdigest())
     def test_404_optional_only(self):
         result=__import__('subprocess').CompletedProcess([],1,'','HTTP 404: Not Found')
         with patch.object(publish.subprocess,'run',return_value=result):
@@ -105,53 +178,53 @@ class Reconcile(Assets):
         return {'id': asset_id, 'name': name or path.name, 'size': path.stat().st_size,
                 'digest': 'sha256:' + publish.digest(path)}
     def test_normalizes_ascii_names_and_evidence_without_changing_payload(self):
-        before = {ext: publish.digest(self.root/f'Qingdan-1.1.1-mac-arm64.{ext}') for ext in ('dmg', 'zip')}
+        before = {ext: publish.digest(self.root/f'Qingdan-1.2.1-mac-arm64.{ext}') for ext in ('dmg', 'zip')}
         for ext in before:
-            (self.root/f'Qingdan-1.1.1-mac-arm64.{ext}').rename(self.root/f'青单-1.1.1-mac-arm64.{ext}')
-        for name in ('verified-mac-arm64-archives.json', 'SHA256SUMS-macos.txt'):
+            (self.root/f'Qingdan-1.2.1-mac-arm64.{ext}').rename(self.root/f'青单-1.2.1-mac-arm64.{ext}')
+        for name in ('verified-mac-arm64-archives.json', 'SHA256SUMS-macos-arm64.txt'):
             path = self.root/name
-            path.write_text(path.read_text().replace('Qingdan-1.1.1-mac', '青单-1.1.1-mac'))
-        publish.normalize_macos(self.root, '1.1.1')
-        self.assertEqual(self.collect()[0]['macos'], 'Qingdan-1.1.1-mac-arm64.dmg')
+            path.write_text(path.read_text().replace('Qingdan-1.2.1-mac', '青单-1.2.1-mac'))
+        publish.normalize_macos(self.root, '1.2.1')
+        self.assertEqual(self.collect()[0]['macos-arm64'], 'Qingdan-1.2.1-mac-arm64.dmg')
         self.assertEqual(json.loads((self.root/'verified-mac-arm64-archives.json').read_text())['appName'], '青单.app')
         normalized = {path.name: path.read_bytes() for path in self.root.iterdir()}
-        publish.normalize_macos(self.root, '1.1.1')
+        publish.normalize_macos(self.root, '1.2.1')
         self.assertEqual(normalized, {path.name: path.read_bytes() for path in self.root.iterdir()})
         for ext, value in before.items():
-            self.assertEqual(publish.digest(self.root/f'Qingdan-1.1.1-mac-arm64.{ext}'), value)
+            self.assertEqual(publish.digest(self.root/f'Qingdan-1.2.1-mac-arm64.{ext}'), value)
     def test_safe_legacy_asset_rename_plan(self):
-        path = self.root/'Qingdan-1.1.1-mac-arm64.dmg'
-        remote = {'assets': [self.asset(path, 51, '-1.1.1-mac-arm64.dmg')]}
-        self.assertEqual(publish.draft_plan(remote, [path], {}, '1.1.1'), ([(51, path.name)], [], []))
+        path = self.root/'Qingdan-1.2.1-mac-arm64.dmg'
+        remote = {'assets': [self.asset(path, 51, '-1.2.1-mac-arm64.dmg')]}
+        self.assertEqual(publish.draft_plan(remote, [path], {}, '1.2.1'), ([(51, path.name)], [], []))
     def test_unknown_asset_rejected(self):
-        path = self.root/'Qingdan-1.1.1-mac-arm64.dmg'
+        path = self.root/'Qingdan-1.2.1-mac-arm64.dmg'
         remote = {'assets': [self.asset(path, name='unknown.dmg')]}
         with self.assertRaisesRegex(ValueError, 'Unknown existing draft asset'):
-            publish.draft_plan(remote, [path], {}, '1.1.1')
+            publish.draft_plan(remote, [path], {}, '1.2.1')
     def test_mismatched_digest_rejected(self):
-        path = self.root/'Qingdan-1.1.1-mac-arm64.dmg'
-        asset = self.asset(path, name='-1.1.1-mac-arm64.dmg')
+        path = self.root/'Qingdan-1.2.1-mac-arm64.dmg'
+        asset = self.asset(path, name='-1.2.1-mac-arm64.dmg')
         asset['digest'] = 'sha256:' + 'f' * 64
         with self.assertRaisesRegex(ValueError, 'size/digest differs'):
-            publish.draft_plan({'assets': [asset]}, [path], {}, '1.1.1')
+            publish.draft_plan({'assets': [asset]}, [path], {}, '1.2.1')
     def test_missing_digest_rejected(self):
-        path = self.root/'Qingdan-1.1.1-mac-arm64.dmg'
+        path = self.root/'Qingdan-1.2.1-mac-arm64.dmg'
         asset = self.asset(path)
         del asset['digest']
         with self.assertRaisesRegex(ValueError, 'size/digest differs'):
-            publish.draft_plan({'assets': [asset]}, [path], {}, '1.1.1')
+            publish.draft_plan({'assets': [asset]}, [path], {}, '1.2.1')
     def test_duplicate_existing_candidate_preserved(self):
-        path = self.root/'Qingdan-1.1.1-mac-arm64.dmg'
-        remote = {'assets': [self.asset(path, 1), self.asset(path, 2, '-1.1.1-mac-arm64.dmg')]}
+        path = self.root/'Qingdan-1.2.1-mac-arm64.dmg'
+        remote = {'assets': [self.asset(path, 1), self.asset(path, 2, '-1.2.1-mac-arm64.dmg')]}
         with self.assertRaisesRegex(ValueError, 'Duplicate existing draft candidate'):
-            publish.draft_plan(remote, [path], {}, '1.1.1')
+            publish.draft_plan(remote, [path], {}, '1.2.1')
     def test_only_verified_original_metadata_may_be_replaced(self):
-        path = self.root/'SHA256SUMS-macos.txt'
+        path = self.root/'SHA256SUMS-macos-arm64.txt'
         old = publish.byte_record(path.name, b'original trusted evidence')
         remote = {'assets': [{'id': 1, 'name': path.name, 'size': old['bytes'], 'digest': 'sha256:' + old['sha256']}]}
-        self.assertEqual(publish.draft_plan(remote, [path], {path.name: old}, '1.1.1'), ([], [path.name], []))
+        self.assertEqual(publish.draft_plan(remote, [path], {path.name: old}, '1.2.1'), ([], [path.name], []))
     def test_final_inventory_requires_every_digest_and_no_duplicate(self):
-        path = self.root/'Qingdan-1.1.1-mac-arm64.dmg'
+        path = self.root/'Qingdan-1.2.1-mac-arm64.dmg'
         release = {'target_commitish': 'a'*40, 'assets': [self.asset(path)]}
         publish.verify_remote_inventory(release, [path], 'a'*40)
         release['assets'].append(self.asset(path, 2))
@@ -159,34 +232,34 @@ class Reconcile(Assets):
             publish.verify_remote_inventory(release, [path], 'a'*40)
     def test_exact_complete_inventory_count(self):
         self.android()
-        self.assertEqual(len(self.collect(True)[1]), 25)
+        self.assertEqual(len(self.collect(True)[1]), 31)
         (self.root/'unexpected.txt').write_text('unexpected')
         with self.assertRaisesRegex(ValueError, 'exact candidate set'):
             self.collect(True)
     def test_rest_assets_are_used_for_numeric_ids_and_digests(self):
         overview = {'apiUrl':'https://api.github.com/repos/owner/repo/releases/123'}
-        rest = {'tag_name':'v1.1.1','assets':[],'id':123}
+        rest = {'tag_name':'v1.2.1','assets':[],'id':123}
         with patch.object(publish, 'gh', side_effect=[json.dumps(overview), json.dumps(rest)]) as github:
-            self.assertEqual(publish.remote_release('owner/repo','v1.1.1'), rest)
+            self.assertEqual(publish.remote_release('owner/repo','v1.2.1'), rest)
             self.assertEqual(github.call_args_list[1].args, ('api', overview['apiUrl']))
 
-    def test_main_recovers_verified_legacy_draft_with_original_provenance(self):
+    def test_main_recovers_verified_alias_draft_with_original_provenance(self):
         self.android()
         for ext in ('dmg', 'zip'):
-            (self.root/f'Qingdan-1.1.1-mac-arm64.{ext}').rename(self.root/f'青单-1.1.1-mac-arm64.{ext}')
-        for name in ('verified-mac-arm64-archives.json', 'SHA256SUMS-macos.txt'):
+            (self.root/f'Qingdan-1.2.1-mac-arm64.{ext}').rename(self.root/f'青单-1.2.1-mac-arm64.{ext}')
+        for name in ('verified-mac-arm64-archives.json', 'SHA256SUMS-macos-arm64.txt'):
             path = self.root/name
-            path.write_text(path.read_text().replace('Qingdan-1.1.1-mac', '青单-1.1.1-mac'))
+            path.write_text(path.read_text().replace('Qingdan-1.2.1-mac', '青单-1.2.1-mac'))
         source = 'a' * 40
         records = [publish.file_record(path) for path in sorted(self.root.iterdir())]
-        expected = {'macos': '青单-1.1.1-mac-arm64.dmg', 'windows': 'Qingdan-1.1.1-win-x64.zip',
-                    'server': 'qingdan-server-v1.1.1.zip', 'linux': 'Qingdan-1.1.1-linux-x64.AppImage',
-                    'android': 'Qingdan-0.1.1-android.apk'}
+        expected = {'macos-arm64': '青单-1.2.1-mac-arm64.dmg', 'macos-x64': 'Qingdan-1.2.1-mac-x64.dmg', 'windows': 'Qingdan-1.2.1-win-x64.zip',
+                    'server': 'qingdan-server-v1.2.1.zip', 'linux': 'Qingdan-1.2.1-linux-x64.AppImage',
+                    'android': 'Qingdan-0.2.1-android.apk'}
         legacy_manifest = publish.byte_record('RELEASE-MANIFEST.json', publish.encoded_json(
-            publish.manifest_value('1.1.1', source, True, expected, records)))
+            publish.manifest_value('1.2.1', source, True, expected, records)))
         records.append(legacy_manifest)
-        state = {'tag_name': 'v1.1.1', 'draft': True, 'target_commitish': source,
-                 'html_url': 'https://github.com/owner/repo/releases/tag/v1.1.1',
+        state = {'tag_name': 'v1.2.1', 'draft': True, 'target_commitish': source,
+                 'html_url': 'https://github.com/owner/repo/releases/tag/v1.2.1',
                  'assets': [{'id': i + 1, 'name': r['name'].replace('青单-', '-'),
                              'size': r['bytes'], 'digest': 'sha256:' + r['sha256']} for i, r in enumerate(records)]}
         calls = []
@@ -216,30 +289,38 @@ class Reconcile(Assets):
         env = {'GITHUB_REPOSITORY': 'owner/repo', 'GITHUB_SHA': 'b' * 40, 'GITHUB_RUN_ID': '200',
                'GITHUB_STEP_SUMMARY': str(self.root.parent / (self.root.name + '-summary'))}
         self.addCleanup(lambda: Path(env['GITHUB_STEP_SUMMARY']).unlink(missing_ok=True))
-        # This recovery fixture deliberately models v1.1.1. It must not depend
+        # This recovery fixture deliberately models v1.2.1. It must not depend
         # on the repository's current intentional release request.
         read_text = Path.read_text
         def fixture_text(path, *args, **kwargs):
             if path == Path('.github/release/request.json'):
-                return json.dumps({'version': '1.1.1', 'androidVersion': '0.1.1'})
+                return json.dumps({'version': '1.2.1', 'androidVersion': '0.2.1'})
             return read_text(path, *args, **kwargs)
         with patch.dict(os.environ, env), patch.object(publish, 'gh', side_effect=github), \
                 patch.object(Path, 'read_text', fixture_text):
             publish.main(['--assets', str(self.root), '--android-result', 'success',
                           '--source-commit', source, '--source-run-id', '100'])
         self.assertFalse(state['draft'])
-        self.assertEqual(len(state['assets']), 26)
+        self.assertEqual(len(state['assets']), 32)
         patches = [call for call in calls if call[:3] == ('api', '--method', 'PATCH')]
         self.assertEqual(len(patches), 2)
         uploads = [call for call in calls if call[:2] == ('release', 'upload')]
         self.assertEqual({Path(p).name for p in uploads[0][6:]},
-                         {'verified-mac-arm64-archives.json', 'SHA256SUMS-macos.txt', 'RELEASE-MANIFEST.json'})
+                         {'verified-mac-arm64-archives.json', 'SHA256SUMS-macos-arm64.txt', 'RELEASE-MANIFEST.json'})
         manifest = json.loads((self.root/'RELEASE-MANIFEST.json').read_text())
         self.assertEqual(manifest['sourceCommit'], source)
         self.assertEqual(manifest['sourceRunId'], '100')
         self.assertEqual(manifest['publishingRunId'], '200')
         self.assertTrue(manifest['sourceRunUrl'].endswith('/100'))
         self.assertTrue(manifest['publishingRunUrl'].endswith('/200'))
+        notes = (self.root.parent / 'release-notes.md').read_text()
+        for arch in ('arm64', 'x64'):
+            for extension in ('dmg', 'zip'):
+                self.assertIn(f'https://github.com/owner/repo/releases/download/v1.2.1/Qingdan-1.2.1-mac-{arch}.{extension}', notes)
+        self.assertIn('Intel', notes)
+        self.assertIn('lack Developer ID signing and Apple notarization', notes)
+        self.assertNotIn('SHA-256', notes)
+        self.assertNotIn('GUI or physical-device acceptance', notes)
     def test_source_overrides_validate_before_github(self):
         env = {'GITHUB_REPOSITORY': 'owner/repo', 'GITHUB_SHA': 'b' * 40, 'GITHUB_RUN_ID': '200'}
         for source, run, error in [('a'*39, '100', 'Invalid workflow source'),
@@ -251,4 +332,198 @@ class Reconcile(Assets):
                               '--source-commit', source, '--source-run-id', run])
             github.assert_not_called()
 
+
+class IntelTargets(Assets):
+    def change_report(self, name, change):
+        report = json.loads((self.root / name).read_text())
+        change(report)
+        self.json(name, report)
+
+    def test_runtime_binding_hash_matches_final_package_zip_and_dmg_bytes(self):
+        # All replacements remain valid SHA-256 syntax. ASAR/executable hashes
+        # stay unchanged, so only the independent final-unpacked-byte check can
+        # catch this discrepancy (native signing can legitimately alter bytes).
+        for arch in ('arm64', 'x64'):
+            package_name, archive_name = f'verified-mac-{arch}.json', f'verified-mac-{arch}-archives.json'
+            for name, change in (
+                (package_name, lambda r: r['packagedRecoverySmoke'].update(bindingSha256='e' * 64)),
+                (package_name, lambda r: r['finalRecoveryBinding'].update(sha256='e' * 64)),
+                (archive_name, lambda r: r['artifacts'][0]['packagedVerification']['finalRecoveryBinding'].update(sha256='e' * 64)),
+                (archive_name, lambda r: r['artifacts'][1]['packagedVerification']['finalRecoveryBinding'].update(sha256='e' * 64)),
+            ):
+                with self.subTest(arch=arch, name=name, change=change):
+                    self.mac_evidence()
+                    self.change_report(name, change)
+                    with self.assertRaisesRegex(ValueError, 'packaged payload'):
+                        self.collect()
+            self.mac_evidence()
+            # A matching arbitrary smoke+baseline digest still cannot stand in
+            # for the independently read ZIP and DMG binding digests.
+            self.change_report(package_name, lambda r: (
+                r['finalRecoveryBinding'].update(sha256='e' * 64),
+                r['packagedRecoverySmoke'].update(bindingSha256='e' * 64)))
+            with self.assertRaisesRegex(ValueError, 'packaged payload'):
+                self.collect()
+
+    def test_exact_current_manifest_inventory_is_independently_pinned(self):
+        expected = {
+            'Qingdan-1.2.1-mac-arm64.dmg', 'Qingdan-1.2.1-mac-arm64.zip',
+            'Qingdan-1.2.1-mac-x64.dmg', 'Qingdan-1.2.1-mac-x64.zip',
+            'verified-mac-arm64.json', 'verified-mac-arm64-archives.json',
+            'verified-mac-x64.json', 'verified-mac-x64-archives.json',
+            'backend-verification-macos-arm64.json', 'backend-verification-macos-x64.json',
+            'SHA256SUMS-macos-arm64.txt', 'SHA256SUMS-macos-x64.txt', 'MAC-START-HERE.txt',
+            'Qingdan-1.2.1-win-x64.zip', 'verified-win-x64.json', 'verified-win-x64-archives.json',
+            'backend-verification-windows.json', 'WINDOWS-START-HERE.txt', 'SHA256SUMS-windows.txt',
+            'Qingdan-1.2.1-linux-x64.AppImage', 'verified-linux-x64.json', 'verified-linux-appimage-x64.json',
+            'backend-verification-linux.json', 'LINUX-START-HERE.txt', 'SHA256SUMS-linux.txt',
+            'qingdan-server-v1.2.1.zip', 'qingdan-server-v1.2.1.sha256', 'qingdan-server-v1.2.1.verification.json',
+            'Qingdan-0.2.1-android.apk', 'Qingdan-0.2.1-android.apk.verification.json', 'SHA256SUMS-android.txt',
+        }
+        self.assertEqual(len(expected), 31)
+        self.assertEqual(publish.candidate_names('1.2.1', '0.2.1', True), expected)
+        self.assertEqual(len(publish.candidate_names('1.2.1', '0.2.1', False)), 28)
+        self.android()
+        deliverables, files = self.collect(True)
+        manifest = publish.manifest_value('1.2.1', 'a' * 40, True, deliverables, [])
+        self.assertEqual(manifest['requiredPlatforms'],
+                         ['macos-arm64', 'macos-x64', 'windows', 'server', 'linux', 'android'])
+        self.assertEqual(set(deliverables), set(manifest['requiredPlatforms']))
+        self.assertEqual({path.name for path in files}, expected)
+
+    def test_missing_intel_payload_never_publishes_even_when_arm_exists(self):
+        (self.root / 'Qingdan-1.2.1-mac-x64.dmg').unlink()
+        with self.assertRaisesRegex(ValueError, 'Missing macos-x64'):
+            self.collect()
+
+    def test_missing_intel_zip_or_report_fails_exact_inventory(self):
+        for name in ('Qingdan-1.2.1-mac-x64.zip', 'verified-mac-x64-archives.json',
+                     'backend-verification-macos-x64.json', 'SHA256SUMS-macos-x64.txt'):
+            with self.subTest(name=name):
+                path = self.root / name
+                content = path.read_bytes()
+                path.unlink()
+                with self.assertRaisesRegex(ValueError, 'exact candidate set'):
+                    self.collect()
+                path.write_bytes(content)
+
+    def test_wrong_package_architecture_or_version_fails(self):
+        for change in (lambda r: r.update(arch='arm64'), lambda r: r.update(platform='win'),
+                       lambda r: r.update(version='1.2.0'),
+                       lambda r: r['macArchitecture'].update(targetArch='arm64'),
+                       lambda r: r['macArchitecture'].update(allMachOMatchTarget=False),
+                       lambda r: r['macArchitecture'].update(machOFiles=[])):
+            with self.subTest(change=change):
+                self.mac_evidence()
+                self.change_report('verified-mac-x64.json', change)
+                with self.assertRaises(ValueError):
+                    self.collect()
+
+    def test_cross_arch_or_universal_macho_file_rejected_at_every_layer(self):
+        changes = [lambda r, arch: r['macArchitecture']['machOFiles'][0].update(architectures=arch),
+                   lambda r, arch: r['unpackedPayloadMetadata']['macArchitecture']['machOFiles'][0].update(architectures=arch),
+                   lambda r, arch: r['artifacts'][0]['metadata']['macArchitecture']['machOFiles'][0].update(architectures=arch),
+                   lambda r, arch: r['artifacts'][0]['packagedVerification']['macArchitecture']['machOFiles'][0].update(architectures=arch)]
+        for index, change in enumerate(changes):
+            for architectures in (['arm64'], ['x64', 'arm64'], []):
+                with self.subTest(layer=index, architectures=architectures):
+                    self.mac_evidence()
+                    name = 'verified-mac-x64.json' if index == 0 else 'verified-mac-x64-archives.json'
+                    self.change_report(name, lambda r: change(r, architectures))
+                    with self.assertRaisesRegex(ValueError, 'Mach-O file architecture'):
+                        self.collect()
+
+    def test_native_host_cannot_be_translated_or_opposite_architecture(self):
+        for name in ('verified-mac-x64.json', 'verified-mac-x64-archives.json'):
+            for change in (lambda r: r['nativeHost'].update(translated=True),
+                           lambda r: r['nativeHost'].update(machine='arm64'),
+                           lambda r: r['nativeHost'].update(runnerArch='ARM64'),
+                           lambda r: r.pop('nativeHost')):
+                with self.subTest(name=name, change=change):
+                    self.mac_evidence()
+                    self.change_report(name, change)
+                    with self.assertRaisesRegex(ValueError, 'matching native host'):
+                        self.collect()
+
+    def test_mac_archive_hash_size_name_and_target_each_fail_closed(self):
+        for change in (lambda r: r.update(arch='arm64'),
+                       lambda r: r['artifacts'][0].update(arch='arm64'),
+                       lambda r: r['artifacts'][0].update(filename='Qingdan-1.2.1-mac-arm64.zip'),
+                       lambda r: r['artifacts'][0].update(bytes=1025),
+                       lambda r: r['artifacts'][0].update(sha256='f' * 64),
+                       lambda r: r['artifacts'].__setitem__(1, r['artifacts'][0]),
+                       lambda r: r['artifacts'][0]['packagedVerification'].update(executableSha256='f' * 64),
+                       lambda r: r['artifacts'][0]['payloadMatched'].update(allFileBytesMatched=False),
+                       lambda r: r.update(originalPayloadUnchanged=False)):
+            with self.subTest(change=change):
+                self.mac_evidence()
+                self.change_report('verified-mac-x64-archives.json', change)
+                with self.assertRaises(ValueError):
+                    self.collect()
+
+    def test_invalid_intel_zip_cannot_be_rescued_by_report_and_checksum(self):
+        (self.root / 'Qingdan-1.2.1-mac-x64.zip').write_bytes(b'not a zip archive' * 128)
+        self.mac_evidence()
+        with self.assertRaises(zipfile.BadZipFile):
+            self.collect()
+
+    def test_backend_report_cannot_cross_arch_or_skip_runtime_checks(self):
+        for change in (lambda r: r.update(runtimeArch='arm64'),
+                       lambda r: r.update(runtimePlatform='linux'),
+                       lambda r: r.update(sourceSnapshotSha256='f' * 64),
+                       lambda r: r['smoke'].update(gracefulRestartPersistence=False),
+                       lambda r: r.update(nativeNodeModules=[{'path': 'node_modules/test.node',
+                           'format': 'mach-o64', 'architectures': ['arm64']}])):
+            with self.subTest(change=change):
+                self.mac_evidence()
+                self.change_report('backend-verification-macos-x64.json', change)
+                with self.assertRaises(ValueError):
+                    self.collect()
+
+    def test_arch_specific_checksums_cannot_refer_to_opposite_target(self):
+        path = self.root / 'SHA256SUMS-macos-x64.txt'
+        path.write_text((self.root / 'SHA256SUMS-macos-arm64.txt').read_text())
+        with self.assertRaisesRegex(ValueError, 'checksum inventory'):
+            self.collect()
+
+    def test_generic_legacy_evidence_names_are_not_current_candidates(self):
+        for name in ('backend-verification-macos.json', 'SHA256SUMS-macos.txt'):
+            path = self.root / name
+            path.write_text('old evidence')
+            with self.assertRaisesRegex(ValueError, 'exact candidate set'):
+                self.collect()
+            path.unlink()
+
+    def test_intel_alias_normalization_preserves_arch_and_payload(self):
+        before = {ext: publish.digest(self.root / f'Qingdan-1.2.1-mac-x64.{ext}') for ext in ('dmg', 'zip')}
+        for ext in before:
+            (self.root / f'Qingdan-1.2.1-mac-x64.{ext}').rename(self.root / f'青单-1.2.1-mac-x64.{ext}')
+        for name in ('verified-mac-x64-archives.json', 'SHA256SUMS-macos-x64.txt'):
+            path = self.root / name
+            path.write_text(path.read_text().replace('Qingdan-1.2.1-mac-x64', '青单-1.2.1-mac-x64'))
+        publish.normalize_macos(self.root, '1.2.1')
+        self.assertEqual(self.collect()[0]['macos-x64'], 'Qingdan-1.2.1-mac-x64.dmg')
+        for ext, value in before.items():
+            self.assertEqual(publish.digest(self.root / f'Qingdan-1.2.1-mac-x64.{ext}'), value)
+
+    def test_local_filename_alias_collisions_abort_before_renaming(self):
+        for alias in ('青单-1.2.1-mac-x64.dmg', '-1.2.1-mac-x64.dmg'):
+            path = self.root / alias
+            path.write_bytes(b'collision')
+            before = {p.name: p.read_bytes() for p in self.root.iterdir()}
+            with self.assertRaisesRegex(ValueError, 'Duplicate local Mac candidate'):
+                publish.normalize_macos(self.root, '1.2.1')
+            self.assertEqual(before, {p.name: p.read_bytes() for p in self.root.iterdir()})
+            path.unlink()
+
+    def test_macho_path_collisions_and_unverified_native_modules_rejected(self):
+        for change in (lambda r: r['macArchitecture']['machOFiles'].append(copy.deepcopy(r['macArchitecture']['machOFiles'][0])),
+                       lambda r: r['macArchitecture']['machOFiles'][0].update(path='../escape'),
+                       lambda r: r['macArchitecture'].update(nativeNodeModules=['Contents/Resources/unverified.node'])):
+            self.mac_evidence()
+            self.change_report('verified-mac-x64.json', change)
+            with self.assertRaises(ValueError):
+                self.collect()
+
 if __name__=='__main__':unittest.main()
+

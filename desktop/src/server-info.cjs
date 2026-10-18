@@ -30,3 +30,22 @@ async function probeServer(connection, fetch_, { timeoutMs = 5000 } = {}) {
   } finally { clearTimeout(timer); controller.abort(); }
 }
 module.exports = { validateInfo, probeServer, MAX_BYTES };
+
+// Establish the stable database identity before exposing any local draft key.
+// This reads no credential store and never retains the response's CSRF token.
+async function probeLocalPrincipal(connection, fetch_, { timeoutMs = 5000 } = {}) {
+  if (!connection.builtin) throw new Error('Local identity requires the owned backend');
+  const controller = new AbortController(), timer = setTimeout(()=>controller.abort(),timeoutMs);
+  const target = new URL('/api/auth/me',connection.serverUrl).href;
+  try {
+    const response = await fetch_(target,{method:'GET',headers:{Accept:'application/json'},credentials:'omit',redirect:'error',cache:'no-store',referrerPolicy:'no-referrer',signal:controller.signal});
+    if (!response.ok || response.redirected || response.url && response.url !== target || !/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type')||'') || Number(response.headers.get('content-length')||0)>MAX_BYTES) throw new Error('Local identity verification failed');
+    const reader=response.body?.getReader(); if (!reader) throw new Error('Local identity response is empty');
+    const chunks=[]; let size=0;
+    try { while (true) { const {done,value}=await reader.read(); if(done)break;size+=value.byteLength;if(size>MAX_BYTES){await reader.cancel();throw new Error('Local identity response is too large');}chunks.push(Buffer.from(value)); } } finally { reader.releaseLock(); }
+    const value=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    if(value.mode!=='local'||!require('./local-business-schema.cjs').LOCAL_ID.test(value.user?.userId))throw new Error('Local database identity is invalid');
+    return value.user.userId;
+  } finally {clearTimeout(timer);controller.abort();}
+}
+module.exports.probeLocalPrincipal=probeLocalPrincipal;

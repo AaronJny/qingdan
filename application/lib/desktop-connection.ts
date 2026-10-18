@@ -4,7 +4,12 @@ export type DesktopConnection = {
   status: 'connecting' | 'connected' | 'disconnected';
   serverMode: 'local' | 'accounts' | null;
 };
+export type LocalRecoveryStatus = {status:'none'|'pending';requiresReview:boolean;acknowledgedContinue:boolean;candidateCount:number;conflictCount:number};
 export type DesktopBridge = {
+  /** True only for the trusted built-in local window, before application startup. */
+  localBusinessStorageRequired?: boolean;
+  getLocalRecovery?(): Promise<LocalRecoveryStatus>;
+  openLocalRecovery?(): Promise<{ok:true}>;
   getConnection(): Promise<DesktopConnection>;
   openConnectionSettings(): Promise<{ ok: boolean }>;
 };

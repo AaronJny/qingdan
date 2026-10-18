@@ -1,5 +1,34 @@
 'use strict';
 module.exports = Object.freeze({
+  "desktop.recovery.more":{"zh-CN":"下一页候选","en":"Next candidates"},
+  "desktop.recovery.unreadable":{"zh-CN":"此候选无法安全解码，原始资料保留在导出文件和本机备份中。","en":"This candidate cannot be decoded safely. Original evidence remains in the export and local backup."},
+  "desktop.recovery.kind.language":{"zh-CN":"语言偏好","en":"Language preference"},
+  "desktop.recovery.kind.quick.draft":{"zh-CN":"快速录入草稿","en":"Quick-entry draft"},
+  "desktop.recovery.kind.tags.draft":{"zh-CN":"批量标签草稿","en":"Batch tag draft"},
+  "desktop.recovery.kind.pending.create":{"zh-CN":"未确认的新建操作","en":"Unconfirmed creation"},
+  "desktop.recovery.kind.pending.write":{"zh-CN":"未确认的修改操作","en":"Unconfirmed change"},
+  "desktop.recovery.kind.pending.import":{"zh-CN":"未确认的导入操作","en":"Unconfirmed import"},
+  "desktop.recovery.kind.pending.template":{"zh-CN":"未确认的模板操作","en":"Unconfirmed template operation"},
+  "desktop.recovery.kind.matrix.draft":{"zh-CN":"四象限规则草稿","en":"Eisenhower matrix rule draft"},
+  "desktop.recovery.kind.calendar.batch":{"zh-CN":"批量日程草稿","en":"Batch scheduling draft"},
+  "desktop.recovery.kind.task.draft":{"zh-CN":"任务详情草稿","en":"Task detail draft"},
+  "desktop.recovery.kind.checklist.draft":{"zh-CN":"检查项草稿","en":"Checklist item draft"},
+  "desktop.recovery.kind.subtask.draft":{"zh-CN":"子任务草稿","en":"Subtask draft"},
+  "desktop.recovery.kind.comment.draft":{"zh-CN":"评论草稿","en":"Comment draft"},
+  "desktop.recovery.kind.focus.note":{"zh-CN":"专注笔记","en":"Focus note"},
+  "desktop.recovery.kind.view":{"zh-CN":"视图偏好","en":"View preference"},
+  "desktop.recovery.kind.pending.backup":{"zh-CN":"未确认的备份操作","en":"Unconfirmed backup operation"},
+  "desktop.recovery.kind.habit.groups":{"zh-CN":"习惯分组修改","en":"Habit group change"},
+  "desktop.recovery.kind.reminder.actions":{"zh-CN":"未确认的提醒操作","en":"Unconfirmed reminder actions"},
+  "desktop.recovery.kind.offline.preference":{"zh-CN":"离线访问偏好","en":"Offline access preference"},
+  "desktop.recovery.kind.offline.copy":{"zh-CN":"离线数据副本","en":"Offline data copy"},
+  "desktop.recovery.kind.offline.session":{"zh-CN":"离线会话记录","en":"Offline session record"},
+  "desktop.recovery.kind.comment.mentions":{"zh-CN":"评论提及选择","en":"Comment mention selection"},
+  "desktop.recovery.kind.background.upload":{"zh-CN":"未确认的背景上传","en":"Unconfirmed background upload"},
+  "desktop.recovery.kind.attachment.upload":{"zh-CN":"未确认的附件上传","en":"Unconfirmed attachment upload"},
+  "desktop.recovery.kind.list.transfer":{"zh-CN":"未确认的清单转让","en":"Unconfirmed list transfer"},
+  "desktop.recovery.kind.form.draft":{"zh-CN":"表单草稿","en":"Form draft"},
+  "desktop.recovery.kind.other":{"zh-CN":"其他保留输入","en":"Other preserved input"},
   "desktop.qingdan": {
     "zh-CN": "青单",
     "en": "Qingdan"
@@ -499,5 +528,85 @@ module.exports = Object.freeze({
   "desktop.connection.current": {
     "zh-CN": "当前：{{name}}（{{state}}）",
     "en": "Current: {{name}} ({{state}})"
+  },
+  "desktop.recovery.title": {
+    "zh-CN": "查看旧版本机输入",
+    "en": "Review previous local input"
+  },
+  "desktop.recovery.intro": {
+    "zh-CN": "原有任务和附件仍保存在本机。旧版草稿、未确认操作和偏好保留在原位置；已读取的内容仅作为待核对候选，没有自动提交。",
+    "en": "Saved tasks and attachments remain on this computer. Previous drafts, unconfirmed operations and preferences are preserved in their original location. Readable entries are review candidates only; nothing is submitted automatically."
+  },
+  "desktop.recovery.limits": {
+    "zh-CN": "读取候选不代表完整恢复。损坏或截断的记录可能未被读取；已关闭进程的临时输入和未保存的文件内容可能无法恢复。",
+    "en": "Reading candidates does not establish complete recovery. Damaged or truncated records may be missing. Temporary input from a closed process and unsaved file contents may not be recoverable."
+  },
+  "desktop.recovery.loading": {
+    "zh-CN": "正在读取恢复状态…",
+    "en": "Reading recovery status…"
+  },
+  "desktop.recovery.view": {
+    "zh-CN": "查看候选内容",
+    "en": "View candidates"
+  },
+  "desktop.recovery.export": {
+    "zh-CN": "导出待核对资料",
+    "en": "Export review file"
+  },
+  "desktop.recovery.candidates": {
+    "zh-CN": "保留的候选输入",
+    "en": "Preserved input candidates"
+  },
+  "desktop.recovery.review": {
+    "zh-CN": "请将候选与现有任务核对后再手动采用；未确认操作需要核对原操作标识和提交结果，避免重复或覆盖新修改。",
+    "en": "Compare candidates with saved tasks before using them. Unconfirmed operations need their original operation IDs and results checked to avoid duplication or overwriting newer changes."
+  },
+  "desktop.recovery.continue": {
+    "zh-CN": "使用已保存任务，保留旧输入待核对",
+    "en": "Use saved tasks and keep previous input pending"
+  },
+  "desktop.recovery.later": {
+    "zh-CN": "以后可从“帮助 → 查看旧版本机输入”或任务页面的提示返回。继续使用不会删除原始资料，也不会标记恢复完成。",
+    "en": "Return later from Help → Review previous local input or the notice in your workspace. Continuing does not delete the original data or mark recovery complete."
+  },
+  "desktop.recovery.error": {
+    "zh-CN": "此操作未完成。原始资料仍保留，请重新尝试或检查磁盘空间及访问权限。",
+    "en": "This action did not complete. Original data is preserved. Retry or check available disk space and access permissions."
+  },
+  "desktop.recovery.none": {
+    "zh-CN": "没有发现需要核对的旧版本机存储。",
+    "en": "No previous local storage was found for review."
+  },
+  "desktop.recovery.pending": {
+    "zh-CN": "有旧版输入或尚未确认的存储需要核对。您可以先查看或导出，再继续使用已保存任务。",
+    "en": "Previous input or unverified storage needs review. You can inspect or export it before continuing with saved tasks."
+  },
+  "desktop.recovery.preferences": {
+    "zh-CN": "已读取的候选包含旧版偏好；未确认是否存在其他未读输入。原始资料保留待核对。",
+    "en": "The readable candidates include previous preferences. Other unread input may exist. Original data remains preserved for review."
+  },
+  "desktop.recovery.conflicts": {
+    "zh-CN": "不同旧版窗口的候选可能不一致，包含某处存在而另一处没有的内容。请逐项核对。",
+    "en": "Candidates from previous windows may differ, including entries present in one and absent in another. Review each version."
+  },
+  "desktop.recovery.candidate": {
+    "zh-CN": "候选",
+    "en": "Candidate"
+  },
+  "desktop.recovery.no.candidates": {
+    "zh-CN": "没有可安全显示的候选。原始资料和恢复诊断仍保留在本机，可导出核对。",
+    "en": "No candidates can be safely displayed. Original data and recovery diagnostics remain on this computer and can be exported for review."
+  },
+  "desktop.recovery.exported": {
+    "zh-CN": "待核对资料已导出；恢复状态仍为待核对。",
+    "en": "Review file exported. Recovery remains pending."
+  },
+  "desktop.recovery.waiting": {
+    "zh-CN": "旧版本机输入需要核对。请在恢复窗口查看，或选择保留旧输入并继续使用已保存任务。",
+    "en": "Previous local input needs review. Use the recovery window to inspect it or keep it pending and continue with saved tasks."
+  },
+  "desktop.recovery.storage.failed": {
+    "zh-CN": "本机输入存储无法安全读取。原始文件未更改；请先检查磁盘或访问权限，再重新连接。",
+    "en": "Local input storage could not be read safely. Original files were not changed. Check disk space or access permissions, then reconnect."
   }
 });

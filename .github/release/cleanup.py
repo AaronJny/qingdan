@@ -19,7 +19,7 @@ publish = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(publish)
 require = publish.require
 RECEIPT_NAME = 'verified-release-publication'
-PLATFORMS = ['macos', 'windows', 'server', 'linux', 'android']
+PLATFORMS = list(publish.PLATFORMS)
 ORIGIN = 'https://api.github.com'
 
 
@@ -112,14 +112,31 @@ def verify_run(run, repository, run_id, commit, attempt=None):
 
 
 def expected_deliverables(version, android_version):
-    return {'macos': f'Qingdan-{version}-mac-arm64.dmg',
-            'windows': f'Qingdan-{version}-win-x64.zip',
-            'server': f'qingdan-server-v{version}.zip',
-            'linux': f'Qingdan-{version}-linux-x64.AppImage',
-            'android': f'Qingdan-{android_version}-android.apk'}
+    return publish.expected_deliverables(version, android_version)
 
 
-def receipt_records(receipt, repository, run_id, commit):
+def allowed_names(commit):
+    return {RECEIPT_NAME, 'verified-application', 'backend-verification',
+            'backend-verification-native-windows',
+            'backend-verification-native-macos-arm64', 'backend-verification-native-macos-x64',
+            *[f'{platform}-{commit}' for platform in PLATFORMS]}
+
+
+class CurrentReleasePolicy:
+    """Only the explicit current six-target inventory. No historical fallback."""
+    def inventory(self, receipt, repository, run_id, commit):
+        version, android_version = receipt['version'], receipt['androidVersion']
+        return (PLATFORMS, expected_deliverables(version, android_version),
+                publish.candidate_names(version, android_version, True))
+
+    def artifact_names(self, commit):
+        return allowed_names(commit)
+
+
+CURRENT_POLICY = CurrentReleasePolicy()
+
+
+def receipt_records(receipt, repository, run_id, commit, *, policy=CURRENT_POLICY):
     identity(repository, run_id, commit)
     require(receipt.get('schema') == 'qingdan-cleanup-receipt-v1'
             and receipt.get('repository') == repository and receipt.get('runId') == run_id
@@ -128,6 +145,7 @@ def receipt_records(receipt, repository, run_id, commit):
     version, android_version = receipt.get('version'), receipt.get('androidVersion')
     require(all(isinstance(v, str) and re.fullmatch(r'\d+\.\d+\.\d+', v)
                 for v in (version, android_version)), 'Invalid publication versions')
+    platforms, deliverables, names = policy.inventory(receipt, repository, run_id, commit)
     url = f'https://github.com/{repository}/releases/tag/v{version}'
     result = receipt.get('publisherResult', {})
     require(result.get('draft') is False and result.get('url') == url,
@@ -138,16 +156,15 @@ def receipt_records(receipt, repository, run_id, commit):
     run_url = f'https://github.com/{repository}/actions/runs/{run_id}'
     require(manifest.get('schema') == 'qingdan-release-assets-v1' and manifest.get('version') == version
             and manifest.get('complete') is True and manifest.get('missingPlatforms') == []
-            and manifest.get('requiredPlatforms') == PLATFORMS
-            and manifest.get('deliverables') == expected_deliverables(version, android_version),
-            'Release does not contain exactly the five complete platform families')
+            and manifest.get('requiredPlatforms') == platforms
+            and manifest.get('deliverables') == deliverables,
+            'Release does not contain exactly the complete required targets')
     require(manifest.get('sourceCommit') == commit and manifest.get('publishingCommit') == commit
             and manifest.get('sourceRunId') == str(run_id) and manifest.get('publishingRunId') == str(run_id)
             and manifest.get('sourceRunUrl') == run_url and manifest.get('publishingRunUrl') == run_url,
             'Manifest is not tied to this successful source and publishing run')
     records = manifest.get('assets')
-    names = publish.candidate_names(version, android_version, True)
-    require(isinstance(records, list) and len(records) == len(names) == 25,
+    require(isinstance(records, list) and len(records) == len(names),
             'Incomplete publication manifest')
     by_name = {}
     for record in records:
@@ -179,8 +196,8 @@ def seal(assets, result_path, output):
     Path(output).write_bytes(publish.encoded_json(receipt))
 
 
-def verify_release(api, receipt, repository, run_id, commit):
-    records = receipt_records(receipt, repository, run_id, commit)
+def verify_release(api, receipt, repository, run_id, commit, *, policy=CURRENT_POLICY):
+    records = receipt_records(receipt, repository, run_id, commit, policy=policy)
     base = f'/repos/{repository}'
     tag = 'v' + receipt['version']
     release = api.request(f'{base}/releases/tags/{tag}')
@@ -206,14 +223,8 @@ def verify_release(api, receipt, repository, run_id, commit):
     require(obj.get('type') == 'commit' and obj.get('sha') == commit, 'Release tag source differs')
 
 
-def allowed_names(commit):
-    return {RECEIPT_NAME, 'verified-application', 'backend-verification',
-            'backend-verification-native-windows', 'backend-verification-native-macos',
-            *[f'{platform}-{commit}' for platform in PLATFORMS]}
-
-
-def verify_artifact(artifact, repository, repository_id, run_id, commit):
-    require(positive(artifact.get('id')) and artifact.get('name') in allowed_names(commit),
+def verify_artifact(artifact, repository, repository_id, run_id, commit, *, policy=CURRENT_POLICY):
+    require(positive(artifact.get('id')) and artifact.get('name') in policy.artifact_names(commit),
             'Unexpected temporary artifact; preserve the run')
     source = artifact.get('workflow_run', {})
     require(source.get('id') == run_id and source.get('head_sha') == commit
@@ -223,24 +234,24 @@ def verify_artifact(artifact, repository, repository_id, run_id, commit):
             'Unexpected artifact API target')
 
 
-def inspect(api, repository, run_id, commit, attempt=None):
+def inspect(api, repository, run_id, commit, attempt=None, *, policy=CURRENT_POLICY):
     base = f'/repos/{repository}'
     run = api.request(f'{base}/actions/runs/{run_id}')
     repo_id = verify_run(run, repository, run_id, commit, attempt)
     artifacts = api.pages(f'{base}/actions/runs/{run_id}/artifacts', 'artifacts')
     names = set()
     for artifact in artifacts:
-        verify_artifact(artifact, repository, repo_id, run_id, commit)
+        verify_artifact(artifact, repository, repo_id, run_id, commit, policy=policy)
         require(artifact['name'] not in names, 'Duplicate temporary artifact name')
         names.add(artifact['name'])
     return run, artifacts
 
 
-def cleanup(api, receipt, repository, run_id, commit):
+def cleanup(api, receipt, repository, run_id, commit, *, policy=CURRENT_POLICY):
     # All evidence and the entire deletion set pass before the first deletion.
-    receipt_records(receipt, repository, run_id, commit)
-    _, artifacts = inspect(api, repository, run_id, commit, receipt['runAttempt'])
-    verify_release(api, receipt, repository, run_id, commit)
+    receipt_records(receipt, repository, run_id, commit, policy=policy)
+    _, artifacts = inspect(api, repository, run_id, commit, receipt['runAttempt'], policy=policy)
+    verify_release(api, receipt, repository, run_id, commit, policy=policy)
     base = f'/repos/{repository}'
     removed = []
     # Delete receipt last so an interrupted cleanup can be retried safely.
@@ -251,10 +262,11 @@ def cleanup(api, receipt, repository, run_id, commit):
         live = api.request(path, missing_ok=True)
         if live is None:
             continue
-        verify_artifact(live, repository, repo_id, run_id, commit)
-        require(live['name'] == artifact['name'], 'Artifact identity changed before deletion')
+        verify_artifact(live, repository, repo_id, run_id, commit, policy=policy)
+        require(live['id'] == artifact['id'] and live['name'] == artifact['name'],
+                'Artifact identity changed before deletion')
         # Recheck the release immediately before every irreversible artifact DELETE.
-        verify_release(api, receipt, repository, run_id, commit)
+        verify_release(api, receipt, repository, run_id, commit, policy=policy)
         verify_run(api.request(f'{base}/actions/runs/{run_id}'), repository, run_id, commit, receipt['runAttempt'])
         api.request(path, method='DELETE', missing_ok=True)
         removed.append(artifact['id'])

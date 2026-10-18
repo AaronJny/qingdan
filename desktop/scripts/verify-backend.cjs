@@ -53,7 +53,8 @@ function verifyBackend(root, expectedVersion) {
   const actualDependencyFiles = files(path.join(root, 'node_modules'), 'node_modules/').filter(name => name !== 'node_modules/.package-lock.json');
   assert.deepEqual(expectedDependencyFiles.sort(), actualDependencyFiles.sort(), 'Dependency manifest file coverage differs.');
   assert.deepEqual(dependencies.packages.map(item => item.location).sort(), Object.keys(lock.packages).filter(Boolean).sort(), 'Runtime lock closure differs.');
-  return { version: pkg.version, sourceSnapshotSha256: manifest.source_snapshot_sha256, runtimeFiles: actual.length, dependencyPackages: dependencies.packages.map(item => ({ name: item.name, version: item.version })), dependencyFiles: actualDependencyFiles.length };
+  const nativeNodeModules = process.platform === 'darwin' ? require('./verify-mac-architecture.cjs').verifyNativeNodeModules(root, process.arch) : undefined;
+  return { runtimePlatform: process.platform, runtimeArch: process.arch, ...(nativeNodeModules ? { nativeNodeModules } : {}), version: pkg.version, sourceSnapshotSha256: manifest.source_snapshot_sha256, runtimeFiles: actual.length, dependencyPackages: dependencies.packages.map(item => ({ name: item.name, version: item.version })), dependencyFiles: actualDependencyFiles.length };
 }
 async function verifyCalendarWorker(root) {
   const text = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Synthetic package smoke//EN\r\nBEGIN:VEVENT\r\nUID:package-smoke@example.test\r\nDTSTAMP:20261001T000000Z\r\nDTSTART:20261009T090000Z\r\nDTEND:20261009T100000Z\r\nSUMMARY:Synthetic calendar worker test\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';

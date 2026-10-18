@@ -1,14 +1,18 @@
+import{assertNativeMutationAllowed}from'./business-storage';
 import{translateError}from'./i18n';
 import{invalidateOfflineSession}from'./offline-session';
 let csrfToken='';
 export function configureSession(token:string){csrfToken=token;}
-export function mutationHeaders(expectedAccountId?:string):Record<string,string>{return{'x-qingdan':'1','x-qingdan-csrf':csrfToken,...(expectedAccountId?{'x-qingdan-expected-account':expectedAccountId}:{})};}
+function requestHeaders(expectedAccountId?:string):Record<string,string>{return{'x-qingdan':'1','x-qingdan-csrf':csrfToken,...(expectedAccountId?{'x-qingdan-expected-account':expectedAccountId}:{})};}
+export function mutationHeaders(expectedAccountId?:string):Record<string,string>{assertNativeMutationAllowed();return requestHeaders(expectedAccountId)}
 export async function api(path:string,body?:unknown,method='POST',expectedAccountId?:string,timeoutMs=0){
+ const requestMethod=body===undefined&&method==='POST'?'GET':method;
+ if(!['GET','HEAD','OPTIONS'].includes(requestMethod.toUpperCase()))assertNativeMutationAllowed();
  const controller=timeoutMs?new AbortController():undefined;
  const timer=controller?setTimeout(()=>controller.abort(),timeoutMs):undefined;
  try{
   let response:Response;
-  try{response=await fetch(path,{method:body===undefined&&method==='POST'?'GET':method,headers:body instanceof FormData?mutationHeaders(expectedAccountId):{'Content-Type':'application/json',...mutationHeaders(expectedAccountId)},body:body===undefined?undefined:body instanceof FormData?body:JSON.stringify(body),...(controller?{signal:controller.signal}:{})});}
+  try{response=await fetch(path,{method:requestMethod,headers:body instanceof FormData?requestHeaders(expectedAccountId):{'Content-Type':'application/json',...requestHeaders(expectedAccountId)},body:body===undefined?undefined:body instanceof FormData?body:JSON.stringify(body),...(controller?{signal:controller.signal}:{})});}
   catch{throw Object.assign(new Error(controller?.signal.aborted?'连接超时，原操作保留，恢复后核对结果。':'连接不可用，未确认输入会保留。'),{code:'NETWORK_ERROR'})}
   let data:any;
   try{data=await response.json()}catch{

@@ -19,8 +19,8 @@ ROOT = Path(__file__).resolve().parent.parent
 spec = importlib.util.spec_from_file_location("verify_apk", ROOT / "scripts/verify-apk.py")
 verifier = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(verifier)
-IDENTITY = {"application_id": "cn.qingdan.android", "version_name": "0.2.0", "version_code": 4, "min_sdk": 26, "target_sdk": 36}
-BADGING = """package: name='cn.qingdan.android' versionCode='4' versionName='0.2.0' platformBuildVersionName='16'
+IDENTITY = {"application_id": "cn.qingdan.android", "version_name": "0.2.1", "version_code": 5, "min_sdk": 26, "target_sdk": 36}
+BADGING = """package: name='cn.qingdan.android' versionCode='5' versionName='0.2.1' platformBuildVersionName='16'
 sdkVersion:'26'
 targetSdkVersion:'36'
 launchable-activity: name='cn.qingdan.android.MainActivity' label='青单' icon='res/drawable/ic_qingdan.xml'
@@ -154,7 +154,7 @@ class ApkVerificationTests(unittest.TestCase):
         self.assertEqual(verifier.verify_manifest(BADGING, IDENTITY), IDENTITY)
 
     def test_manifest_wrong_version_or_sdk_rejected(self):
-        for old, new in (("versionCode='4'", "versionCode='2'"), ("versionName='0.2.0'", "versionName='0.1.1'"), ("sdkVersion:'26'", "sdkVersion:'25'"), ("targetSdkVersion:'36'", "targetSdkVersion:'35'")):
+        for old, new in (("versionCode='5'", "versionCode='2'"), ("versionName='0.2.1'", "versionName='0.1.1'"), ("sdkVersion:'26'", "sdkVersion:'25'"), ("targetSdkVersion:'36'", "targetSdkVersion:'35'")):
             with self.subTest(new=new), self.assertRaisesRegex(verifier.VerificationError, "identity differs"):
                 verifier.verify_manifest(BADGING.replace(old, new), IDENTITY)
 

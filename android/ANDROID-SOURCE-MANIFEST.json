@@ -1,7 +1,7 @@
 {
   "schema": "qingdan-android-source-v1",
   "product": "qingdan",
-  "android_client_version": "0.2.0",
+  "android_client_version": "0.2.1",
   "application_baseline_version": "1.0.1",
   "application_baseline_commit": "c3194463a8cf748242955c61da72969c652ea062",
   "application_baseline_source_zip_sha256": "3cf3e87df0fcbceda9a1053524ad0c1fdc2a595b36712a8d583a58fc5359372d",
@@ -191,7 +191,7 @@
       "path": "webapp/app/workspace-dialogs.tsx",
       "change": "copy-only cleanup",
       "baseline_sha256": "fcde7e275447288faee720abd3c4d8f998a9303d4724ab5ae73ff0a014ccec81",
-      "sha256": "e4fa919076554ca20dc43a44321684f49d58d1150c4aa25b5530d8d74a9f51bb"
+      "sha256": "114e4fe6e747db8093e5bac2c6daf8cad0465887413d97d13244596bcb5ab309"
     },
     {
       "path": "webapp/app/workspace-views.tsx",
@@ -236,6 +236,18 @@
       "sha256": "2e6a613191873c856078881d5690abbabce978bbaa41df138b49c530467253e8"
     },
     {
+      "path": "webapp/lib/business-storage.test.ts",
+      "change": "added",
+      "scope": "Regression verifies language storage uses ordinary WebView localStorage without invoking the Android task database bridge or adding desktop bridges.",
+      "sha256": "a936522b4028d5fb9cb8a58523c6003673d3afd7de23362e916aacf54c839d67"
+    },
+    {
+      "path": "webapp/lib/business-storage.ts",
+      "change": "added",
+      "scope": "Android-only platform boundary: the shared language runtime uses persistent WebView localStorage; the native task database bridge remains separate.",
+      "sha256": "b4338c6d8ce20d71c5e5251dd575c38903d85b816388be575c1c57358f47b0ee"
+    },
+    {
       "path": "webapp/lib/calendar-holidays.ts",
       "change": "android-adapted",
       "baseline_sha256": "c8c88f1e97a55c361daf91a95a0b7eaeadb84fdf822f9db29385b83b7f40b25c",
@@ -266,6 +278,24 @@
       "sha256": "5f95b812b74e8656d0ae9a16ec9115226208d8f989e860ba82ea3a1d51982eac"
     },
     {
+      "path": "webapp/lib/i18n.ts",
+      "change": "added",
+      "scope": "Shared bilingual language runtime with a platform-specific storage dependency; remains byte-identical to the main application runtime.",
+      "sha256": "a9f9e9aef3336cd85d623ad748b9ca5e567ceb00759d59e07bde20c215408e78"
+    },
+    {
+      "path": "webapp/lib/locales/core.en.json",
+      "change": "added",
+      "scope": "Shared English core catalog; remains byte-identical to the main application catalog.",
+      "sha256": "1674cf4119353c27bb30a38bb92a35ce17585c6e7c19ecb505b8f9243a34d561"
+    },
+    {
+      "path": "webapp/lib/locales/core.zh.json",
+      "change": "added",
+      "scope": "Shared Simplified Chinese core catalog; remains byte-identical to the main application catalog.",
+      "sha256": "a0765cf655779f0731b02c4a4d06e9d374b39eb7a2714d63b0291e77ac2efab6"
+    },
+    {
       "path": "webapp/lib/offline-shell-client.ts",
       "change": "android-adapted",
       "baseline_sha256": "cde436f790b425a3597308f18913d281cf5d1a7887d662a87f98d95003242905",
@@ -284,8 +314,8 @@
     },
     {
       "path": "webapp/native/dispatch.ts",
-      "change": "Android native API adapter; independent client identity 0.2.0 with business baseline 1.0.1 unchanged",
-      "sha256": "707e387ca6606b8de13b5b2a2ec471bca68b4e7906592118e0f5623382656c0f"
+      "change": "Android native API adapter; independent client identity 0.2.1 with business baseline 1.0.1 unchanged",
+      "sha256": "9eb500f132b3a28df210272edbdcc66c1133f1613c44236bedca4c4504652740"
     },
     {
       "path": "webapp/native/license-plugin.mjs",
@@ -373,10 +403,15 @@
       "sha256": "7f76f06af71a794229e8433725ebbba2f81bb58f0a08a2c22d5e94de712a9977"
     },
     {
+      "path": "webapp/tests/settings-language-ui.test.tsx",
+      "change": "added: bilingual General settings language placement and preservation tests",
+      "sha256": "8a4a6c887a982a78c3e386a3135ee90ca98988ac91935c20afe7ea2286bfa50d"
+    },
+    {
       "path": "webapp/tests/ui.test.tsx",
       "change": "android-adapted",
       "baseline_sha256": "e2cdfe1f8dee907f8f92765d905edaf130511a45b250b29dfa8a3889f1f6585b",
-      "sha256": "a6935651588c89e1acd9e1fdb9fba57f824d69b9d62b135df3d10424052b06eb"
+      "sha256": "ac4434467035724374ed2c2cc9820c1937cfdb6b040b0fa87dc0a13dc664f178"
     },
     {
       "path": "webapp/tsconfig.json",
@@ -441,7 +476,7 @@
     {
       "path": "android/app/build.gradle",
       "bytes": 3568,
-      "sha256": "c4c6f22973d05166e790244342abec29fac5eca904fdfd27f7e3ea9deb600817"
+      "sha256": "982b1e2a7a1d2a9fa6ca8389e84f05a5b624284d1278d6047baf7f50787961e0"
     },
     {
       "path": "android/app/src/androidTest/AndroidManifest.xml",
@@ -641,7 +676,7 @@
     {
       "path": "artifacts/BUNDLED-ASSETS.json",
       "bytes": 3100,
-      "sha256": "d85d712534d1b7eededb430aed1fdb5e071dd013baa643dc714d9249bf1e721c"
+      "sha256": "dd9a3e51171b9b0b4d1b06f1ccd2c1a2202998fc627aad9b5ed853a30d0f0b76"
     },
     {
       "path": "docs/RELEASE-SIGNING.md",
@@ -651,7 +686,7 @@
     {
       "path": "package.json",
       "bytes": 429,
-      "sha256": "28687815024d75905c5815d0895aa682a276a7b0754463ff6fa7a04f3ba5534e"
+      "sha256": "bd49c14810f0a4e51f8750577674b6890a5a8506bfce55b598d52d0835483ef2"
     },
     {
       "path": "scripts/build-native-api-tests.mjs",
@@ -676,7 +711,7 @@
     {
       "path": "scripts/verify-apk.py",
       "bytes": 12130,
-      "sha256": "1283dc9db93782f751758adcb72793df566c6d011545ee19198193bbad7596db"
+      "sha256": "8e6ec55426dcedd761f3120b79ed2f62e0f5826ecd76e4732f25285cfb6d8875"
     },
     {
       "path": "tests/android-adapter.test.mjs",
@@ -686,7 +721,7 @@
     {
       "path": "tests/local-dispatch.test.mjs",
       "bytes": 7789,
-      "sha256": "54c7b4624518e29a1a32cf94d1497617e145ea01971be4c12509e6f1072035f4"
+      "sha256": "02ec40b9948e1f1d7a90af060955f0064da008b431712a5dcee866f4faf42043"
     },
     {
       "path": "tests/native-language.test.mjs",
@@ -696,7 +731,7 @@
     {
       "path": "tests/test_apk_verification.py",
       "bytes": 13523,
-      "sha256": "06598a9b695949259e8bb7a164dac9846895c8688ac4af3dc3b60b6f09e16d7e"
+      "sha256": "d6f026a89e9d1791ce43f238826ac0c26a1a329083e2e2287001cb47a81cfa88"
     },
     {
       "path": "verification/APK-INDEPENDENT-VERIFICATION.json",
@@ -965,8 +1000,8 @@
     },
     {
       "path": "webapp/app/workspace-dialogs.tsx",
-      "bytes": 65678,
-      "sha256": "e4fa919076554ca20dc43a44321684f49d58d1150c4aa25b5530d8d74a9f51bb"
+      "bytes": 66089,
+      "sha256": "114e4fe6e747db8093e5bac2c6daf8cad0465887413d97d13244596bcb5ab309"
     },
     {
       "path": "webapp/app/workspace-views.tsx",
@@ -1167,6 +1202,16 @@
       "path": "webapp/lib/bootstrap-loader.ts",
       "bytes": 1248,
       "sha256": "2e6a613191873c856078881d5690abbabce978bbaa41df138b49c530467253e8"
+    },
+    {
+      "path": "webapp/lib/business-storage.test.ts",
+      "bytes": 1631,
+      "sha256": "a936522b4028d5fb9cb8a58523c6003673d3afd7de23362e916aacf54c839d67"
+    },
+    {
+      "path": "webapp/lib/business-storage.ts",
+      "bytes": 297,
+      "sha256": "b4338c6d8ce20d71c5e5251dd575c38903d85b816388be575c1c57358f47b0ee"
     },
     {
       "path": "webapp/lib/calendar-form.test.ts",
@@ -1410,8 +1455,8 @@
     },
     {
       "path": "webapp/lib/i18n.ts",
-      "bytes": 11424,
-      "sha256": "915f1a3809b9afb5063c3d312a96fab81d1c26e5ce768c654c3173a77243e193"
+      "bytes": 11474,
+      "sha256": "a9f9e9aef3336cd85d623ad748b9ca5e567ceb00759d59e07bde20c215408e78"
     },
     {
       "path": "webapp/lib/i18next.d.ts",
@@ -1460,13 +1505,13 @@
     },
     {
       "path": "webapp/lib/locales/core.en.json",
-      "bytes": 75360,
-      "sha256": "4ad7e5a400b13346bc5a8050959ef4f281af5f73b85760b26505237855a9ae9a"
+      "bytes": 76706,
+      "sha256": "1674cf4119353c27bb30a38bb92a35ce17585c6e7c19ecb505b8f9243a34d561"
     },
     {
       "path": "webapp/lib/locales/core.zh.json",
-      "bytes": 68167,
-      "sha256": "ef668f5273b4a6936062e6345a093ccbe9c1c167fceb2d587eaab8f3c60446f1"
+      "bytes": 69504,
+      "sha256": "a0765cf655779f0731b02c4a4d06e9d374b39eb7a2714d63b0291e77ac2efab6"
     },
     {
       "path": "webapp/lib/locales/domain.en.json",
@@ -1726,7 +1771,7 @@
     {
       "path": "webapp/native/dispatch.ts",
       "bytes": 1937,
-      "sha256": "707e387ca6606b8de13b5b2a2ec471bca68b4e7906592118e0f5623382656c0f"
+      "sha256": "9eb500f132b3a28df210272edbdcc66c1133f1613c44236bedca4c4504652740"
     },
     {
       "path": "webapp/native/license-plugin.mjs",
@@ -1879,14 +1924,19 @@
       "sha256": "7f76f06af71a794229e8433725ebbba2f81bb58f0a08a2c22d5e94de712a9977"
     },
     {
+      "path": "webapp/tests/settings-language-ui.test.tsx",
+      "bytes": 7420,
+      "sha256": "8a4a6c887a982a78c3e386a3135ee90ca98988ac91935c20afe7ea2286bfa50d"
+    },
+    {
       "path": "webapp/tests/standalone-evidence.json",
       "bytes": 20089,
       "sha256": "9f5af3c363a1d562f7f0be1160cca5a2f828474de0ae8bd702a74f4eabb580fa"
     },
     {
       "path": "webapp/tests/ui.test.tsx",
-      "bytes": 187306,
-      "sha256": "a6935651588c89e1acd9e1fdb9fba57f824d69b9d62b135df3d10424052b06eb"
+      "bytes": 187506,
+      "sha256": "ac4434467035724374ed2c2cc9820c1937cfdb6b040b0fa87dc0a13dc664f178"
     },
     {
       "path": "webapp/tsconfig.json",
@@ -1935,9 +1985,9 @@
     "this manifest from its own inventory"
   ],
   "baseline_manifest_note": "webapp/SOURCE-MANIFEST.json, webapp/tests/standalone-evidence.json and verification/SUMMARY.json retain historical baseline records. artifacts/BUNDLED-ASSETS.json describes the current locally rebuilt web assets. This current source inventory excludes ignored generated assets. Current release APK evidence is the matching .apk.verification.json; see VERIFICATION.md.",
-  "source_revision": "2026-10-18-v1.2.0",
-  "source_scope": "Android 0.2.0 source with Simplified Chinese and English interface localization, persistent device-local language preferences and shared semantic-key resources. Business-code baseline remains 1.0.1; current web assets and signed APK require the actual build and verification.",
+  "source_revision": "2026-10-18-v1.2.1",
+  "source_scope": "Android 0.2.1 source with Simplified Chinese and English interface; language settings under General. Business-code baseline remains 1.0.1. VersionCode 5 permits an upgrade using the existing release signing identity.",
   "inventory_sha256_method": "SHA256 of UTF-8 lines: <sha256><two spaces><relative path><LF>, ordered lexicographically by path; includes every non-ignored delivered source file except this manifest.",
-  "inventory_sha256": "05e93cd0675d6dedc3fa390c8860f48486a6e28d859adf2c0db8f777115794fb",
-  "version_code": 4
+  "inventory_sha256": "bd595d4d154ce8af5b3cb622bfe5bbe871872d9f0eb337d875de4b9203c693be",
+  "version_code": 5
 }

@@ -14,13 +14,14 @@ class VerifiedRecovery(unittest.TestCase):
         self.request = {'sourceCommit': source, 'runId': 42, 'attempt': 1}
         self.run = {'id': 42, 'head_sha': source, 'path': '.github/workflows/release.yml', 'status': 'completed'}
         names = ['发布版本与明确请求', '完整检查 / 源码与运行包检查',
-                 '完整检查 / 内置后端原生系统检查 (windows)', '完整检查 / 内置后端原生系统检查 (macos)',
-                 'Android 可安装发布 APK', 'Windows x64', 'macOS arm64',
+                 '完整检查 / 内置后端原生系统检查 (windows)',
+                 '完整检查 / 内置后端原生系统检查 (macos-arm64)', '完整检查 / 内置后端原生系统检查 (macos-x64)',
+                 'Android 可安装发布 APK', 'Windows x64', 'macOS arm64', 'macOS x64',
                  'Linux x64 客户端 AppImage', '独立服务端 Linux 与 macOS 运行时']
         self.jobs = [{'name': name, 'conclusion': 'success'} for name in names]
         self.jobs.append({'name': '汇总成品并发布（缺 APK 时仅草稿）', 'conclusion': 'failure'})
         self.artifacts = [{'name': name + '-' + source, 'expired': False, 'workflow_run': {'head_sha': source}}
-                          for name in ('android', 'windows', 'macos', 'linux', 'server')]
+                          for name in ('android', 'windows', 'macos-arm64', 'macos-x64', 'linux', 'server')]
         self.comparison = {'status': 'ahead', 'total_commits': 1, 'files': [{'filename': '.github/release/publish.py'}, {'filename': '.github/workflows/release-repair.yml'}]}
 
     def verify(self):
@@ -28,6 +29,23 @@ class VerifiedRecovery(unittest.TestCase):
 
     def test_exact_original_artifacts_allow_publication_only_repair(self):
         self.assertEqual(self.verify(), ('a' * 40, 42))
+
+    def test_both_mac_targets_and_native_gates_are_mandatory(self):
+        for name in ('macOS x64', 'macOS arm64',
+                     '完整检查 / 内置后端原生系统检查 (macos-x64)',
+                     '完整检查 / 内置后端原生系统检查 (macos-arm64)'):
+            with self.subTest(name=name):
+                jobs = [job for job in self.jobs if job['name'] != name]
+                with self.assertRaisesRegex(ValueError, 'All original'):
+                    repair.verify_request(self.request, self.run, jobs, self.artifacts, self.comparison)
+
+    def test_six_artifact_set_cannot_substitute_generic_or_cross_arch_mac(self):
+        self.assertEqual(len(self.artifacts), 6)
+        for name in ('macos', 'macos-arm64'):
+            artifacts = copy.deepcopy(self.artifacts)
+            next(a for a in artifacts if a['name'].startswith('macos-x64-'))['name'] = name + '-' + self.request['sourceCommit']
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'Exact six'):
+                repair.verify_request(self.request, self.run, self.jobs, artifacts, self.comparison)
 
     def test_invalid_source_or_request_rejected(self):
         for value in (None, 'main', 'b' * 39, 'x' * 40):
@@ -54,7 +72,7 @@ class VerifiedRecovery(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'All original'):
             self.verify()
         self.jobs[2]['conclusion'] = 'success'
-        del self.jobs[4]
+        self.jobs = [job for job in self.jobs if job['name'] != 'Android 可安装发布 APK']
         with self.assertRaisesRegex(ValueError, 'All original'):
             self.verify()
 
@@ -68,11 +86,11 @@ class VerifiedRecovery(unittest.TestCase):
 
     def test_missing_expired_duplicate_artifacts_rejected(self):
         self.artifacts[0]['expired'] = True
-        with self.assertRaisesRegex(ValueError, 'Exact five'):
+        with self.assertRaisesRegex(ValueError, 'Exact six'):
             self.verify()
         self.artifacts[0]['expired'] = False
         self.artifacts.append(copy.deepcopy(self.artifacts[0]))
-        with self.assertRaisesRegex(ValueError, 'Exact five'):
+        with self.assertRaisesRegex(ValueError, 'Exact six'):
             self.verify()
 
     def test_artifact_source_mismatch_rejected(self):

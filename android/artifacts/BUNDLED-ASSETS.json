@@ -48,14 +48,14 @@
       "sha256": "d8a6cc31abc16b6748c7a21f21611f5a1ec33f67d22ca23d7da1c19b95496bee"
     },
     {
-      "path": "web/assets/dispatch-CWKvIS3c.js",
+      "path": "web/assets/dispatch-B49ssDNU.js",
       "bytes": 88945,
-      "sha256": "ca7c6ac0108e27e2246d95913329b954cbaf9f1f12f9d97d060ecd30f07b94d8"
+      "sha256": "de0a2c8b4dd63f4b87715c258d7b49754095ecb64e0fb71ab95efb4ad1ded1f1"
     },
     {
-      "path": "web/assets/index-BUF7--We.js",
-      "bytes": 1682608,
-      "sha256": "904b3fc2e51db7649d40a87fadfd8925a052604b405830c5272652b9b1e41575"
+      "path": "web/assets/index-CJmkRQJ3.js",
+      "bytes": 1685675,
+      "sha256": "f377f98e4b74427ae14232b22504c5ed7be54d25931f70a5e32db153158c8ef2"
     },
     {
       "path": "web/assets/index-DtPSOyST.css",
@@ -80,7 +80,7 @@
     {
       "path": "web/index.html",
       "bytes": 405,
-      "sha256": "5a52e69dad09045610e6b9872e70e563fdab8e7e39118ab9042dd10cd405c0a2"
+      "sha256": "14d9a98fdbb0524e7aa821a594b321e681ddff61a679552efe772104af022494"
     },
     {
       "path": "web/manifest.en.webmanifest",

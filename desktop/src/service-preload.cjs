@@ -1,9 +1,13 @@
 'use strict';
 const { contextBridge, ipcRenderer } = require('electron');
+const localBusinessStorageRequired = typeof process !== 'undefined' && process.argv?.includes('--qingdan-owned-local') === true;
 // The service page can inspect its own connection and ask to open the bundled
 // settings window and update the validated interface-language preference. It
 // cannot select a server, access files, or mutate other settings.
 contextBridge.exposeInMainWorld('qingdanDesktop', Object.freeze({
+  localBusinessStorageRequired,
+  getLocalRecovery: () => ipcRenderer.invoke('qingdan-desktop:local-recovery'),
+  openLocalRecovery: () => ipcRenderer.invoke('qingdan-desktop:open-recovery'),
   getLanguage: () => ipcRenderer.invoke('qingdan-desktop:get-language'),
   setLanguagePreference: preference => {
     if (!['system', 'zh-CN', 'en'].includes(preference)) return Promise.reject(new TypeError('Invalid language preference'));
@@ -30,3 +34,36 @@ contextBridge.exposeInMainWorld('qingdanDesktop', Object.freeze({
     return () => ipcRenderer.removeListener('qingdan-desktop:runtime-event', receive);
   },
 }));
+
+// Explicit synchronous business storage, not an override of browser localStorage.
+// Main acknowledges only after atomic replacement and fsync; revisions prevent
+// an older window from silently overwriting another window's input.
+if (localBusinessStorageRequired) {
+  const revisions = new Map();
+  let initializationError;
+  function call(operation, payload = {}) {
+    const reply = ipcRenderer.sendSync('qingdan-local-business', { operation, ...payload });
+    if (!reply || reply.ok !== true) {
+      const error = new Error(reply?.error || 'Local input storage is unavailable. Keep this window open.');
+      error.code = reply?.code || 'LOCAL_STORAGE_UNAVAILABLE'; throw error;
+    }
+    return reply.result;
+  }
+  try {
+    const state = call('snapshot');
+    for (const [key, entry] of Object.entries(state.entries)) revisions.set(key,entry.revision);
+  } catch (error) { initializationError = error; }
+  function ready() { if (initializationError) throw initializationError; }
+  contextBridge.exposeInMainWorld('qingdanLocalStorage', Object.freeze({
+    getItem(key) { ready(); return call('get',{key}).value; },
+    keys() { ready(); return call('keys'); },
+    setItem(key,value) { ready(); const result = call('set',{key,value,expectedRevision:revisions.get(key)||0}); revisions.set(key,result.revision); },
+    removeItem(key) { ready(); const result = call('remove',{key,expectedRevision:revisions.get(key)||0}); revisions.set(key,result.revision); },
+  }));
+  ipcRenderer.on('qingdan-local-business:changed', (_event, change) => {
+    if (typeof window === 'undefined' || !change || typeof change.key !== 'string' || !(change.oldValue === null || typeof change.oldValue === 'string') || !(change.newValue === null || typeof change.newValue === 'string')) return;
+    // Do not advance write baselines on incidental reads or notifications.
+    // A stale editor must preserve/export input and reload before adoption.
+    window.dispatchEvent(new StorageEvent('storage', { key:change.key,oldValue:change.oldValue,newValue:change.newValue,url:window.location.href }));
+  });
+}

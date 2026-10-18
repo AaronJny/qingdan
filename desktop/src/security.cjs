@@ -6,7 +6,7 @@ function installPermissions(session) {
   session.setPermissionCheckHandler(() => false);
   if (session.setDevicePermissionHandler) session.setDevicePermissionHandler(() => false);
 }
-function installServiceSession(session, connection, canUseService = () => true) {
+function installServiceSession(session, connection, canUseService = () => true, canRescueLocalBlob = () => false) {
   installPermissions(session);
   session.webRequest.onBeforeRequest((details, callback) => {
     const url = parseUrl(details.url);
@@ -14,12 +14,18 @@ function installServiceSession(session, connection, canUseService = () => true) 
     if (url?.protocol === 'blob:') permitted = url.origin === connection.origin && !['mainFrame', 'subFrame'].includes(details.resourceType);
     if (url?.protocol === 'data:') permitted = ['image', 'font', 'media'].includes(details.resourceType);
     // Current server uses same-origin fetch polling, not WebSockets.
-    if (url && ['http:', 'https:', 'blob:'].includes(url.protocol) && !canUseService()) permitted = false;
+    if (url && ['http:', 'https:', 'blob:'].includes(url.protocol) && !canUseService()) {
+      // Rescue already-held input after an owned backend crash without making
+      // the old loopback port reachable or changing remote-session policy.
+      const rescue = connection.builtin && url.protocol === 'blob:' && url.origin === connection.origin && canRescueLocalBlob(details.webContentsId);
+      if (!rescue) permitted = false;
+    }
     callback({ cancel: !permitted });
   });
-  session.on('will-download', (event, item) => {
+  session.on('will-download', (event, item, contents) => {
     const chain = item.getURLChain();
-    const valid = canUseService() && item.getInitiatorOrigin() === connection.origin && chain.length && chain.every(value => {
+    const rescue = connection.builtin && canRescueLocalBlob(contents?.id) && chain.length && chain.every(value => {const url=parseUrl(value);return url?.protocol==='blob:'&&url.origin===connection.origin;});
+    const valid = (canUseService() || rescue) && item.getInitiatorOrigin() === connection.origin && chain.length && chain.every(value => {
       const url = parseUrl(value);
       return isServiceUrl(value, connection) || url?.protocol === 'blob:' && url.origin === connection.origin;
     });

@@ -104,20 +104,29 @@ jobs:
         include:
           - platform: windows
             os: windows-2022
-          - platform: macos
+            arch: x64
+          - platform: macos-arm64
             os: macos-15
+            arch: arm64
+          - platform: macos-x64
+            os: macos-15-intel
+            arch: x64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24.19.0'
+          architecture: ${{ matrix.arch }}
           cache: npm
           cache-dependency-path: application/package-lock.json
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: verified-application
           path: application
+      - name: 确认 macOS 原生架构
+        if: runner.os == 'macOS'
+        run: node desktop/scripts/assert-native-macos.cjs ${{ matrix.arch }}
       - name: 校验跨平台源码快照并启动当前后端
         shell: bash
         run: |

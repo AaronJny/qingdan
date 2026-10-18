@@ -1,5 +1,6 @@
 import type {AppRecord, Bootstrap, RecordData} from './types';
 import {planPendingWrite} from './pending-writes';
+import {storageKeys,type StorageLike} from './business-storage';
 
 export type TaskAction = 'create'|'edit'|'complete'|'undoComplete'|'trash';
 export type TaskOperation = {
@@ -8,7 +9,6 @@ export type TaskOperation = {
   affected:AppRecord[]; status:'pending'|'conflict'; reason?:string;
   request?:{path:string;body:Record<string,unknown>};
 };
-type StorageLike=Pick<Storage,'length'|'key'|'getItem'|'setItem'|'removeItem'>;
 const canonical=(value:any):any=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().filter(key=>value[key]!==undefined).map(key=>[key,canonical(value[key])])):value;
 const equal=(a:unknown,b:unknown):boolean=>JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
 const managedFields=['completedAt','completionMutation','completionParent','trashRoot','trashMutation','trashRevision','trashSize','generationMutation','generationSize','recurrenceSource','recurrenceCompleted','startInstant','endInstant'];
@@ -18,7 +18,7 @@ export function taskQueueScope(server:string,accountId:string){return 'qingdan:t
 export class TaskQueueStore {
   readonly prefix:string;
   constructor(readonly server:string,readonly accountId:string,private storage:StorageLike){this.prefix=taskQueueScope(server,accountId)}
-  list():TaskOperation[]{const entries:TaskOperation[]=[];for(let i=0;i<this.storage.length;i++){const key=this.storage.key(i);if(!key?.startsWith(this.prefix))continue;const item=JSON.parse(this.storage.getItem(key)||'null') as TaskOperation;if(item?.version===1&&item.accountId===this.accountId&&item.server===this.server&&item.base?.kind==='task'&&item.base.id===item.recordId)entries.push(item)}return entries.sort((a,b)=>a.sequence-b.sequence||a.id.localeCompare(b.id))}
+  list():TaskOperation[]{const entries:TaskOperation[]=[];for(const key of storageKeys(this.storage)){if(!key?.startsWith(this.prefix))continue;const item=JSON.parse(this.storage.getItem(key)||'null') as TaskOperation;if(item?.version===1&&item.accountId===this.accountId&&item.server===this.server&&item.base?.kind==='task'&&item.base.id===item.recordId)entries.push(item)}return entries.sort((a,b)=>a.sequence-b.sequence||a.id.localeCompare(b.id))}
   put(op:TaskOperation){if(op.accountId!==this.accountId||op.server!==this.server)throw new Error('队列身份不匹配，操作未保存。');this.storage.setItem(this.prefix+op.id,JSON.stringify(op))}
   remove(id:string){this.storage.removeItem(this.prefix+id)}
 }

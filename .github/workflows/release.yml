@@ -92,18 +92,29 @@ jobs:
             qingdan-server-v${{ steps.version.outputs.value }}.verification.json
 
   package-macos:
-    name: macOS arm64
+    name: macOS ${{ matrix.arch }}
     needs: [metadata, verify]
-    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            os: macos-15
+          - arch: x64
+            os: macos-15-intel
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
+          architecture: ${{ matrix.arch }}
           cache: npm
           cache-dependency-path: |
             application/package-lock.json
             desktop/package-lock.json
+      - name: 确认原生 macOS 与目标架构一致
+        run: node desktop/scripts/assert-native-macos.cjs ${{ matrix.arch }}
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: verified-application
@@ -112,7 +123,7 @@ jobs:
         run: |
           npm ci --prefix application
           node desktop/scripts/prepare-backend.cjs
-          node desktop/scripts/verify-backend.cjs desktop/backend backend-verification-macos.json --smoke
+          node desktop/scripts/verify-backend.cjs desktop/backend backend-verification-macos-${{ matrix.arch }}.json --smoke
       - name: 构建并校验 macOS 安装包
         working-directory: desktop
         env:
@@ -121,16 +132,21 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: |
           npm ci
-          node scripts/package.cjs mac --arm64 --dmg --zip
-          node scripts/verify-desktop-archives.cjs mac
+          # Synthetic stock-Electron renderer proof; no product GUI or Keychain instrumentation claim.
+          node scripts/smoke-local-session.cjs --report "${{ runner.temp }}/local-session-${{ matrix.arch }}.json"
+          node scripts/package.cjs mac --${{ matrix.arch }} --dmg --zip
+          node scripts/verify-desktop-archives.cjs mac --arch ${{ matrix.arch }}
+          # Load the final packaged native binding with stock Electron; never weaken product fuses.
+          node scripts/smoke-packaged-recovery.cjs --arch ${{ matrix.arch }} --report "${{ runner.temp }}/packaged-recovery-${{ matrix.arch }}.json"
+          python3 ../.github/release/attach-native-smoke.py --arch ${{ matrix.arch }} --package dist/verified-mac-${{ matrix.arch }}.json --local-session "${{ runner.temp }}/local-session-${{ matrix.arch }}.json" --native-binding "${{ runner.temp }}/packaged-recovery-${{ matrix.arch }}.json"
           mkdir -p release
           cp dist/*.dmg dist/*.zip release/
-          cp dist/verified-mac-arm64.json dist/verified-mac-arm64-archives.json ../backend-verification-macos.json docs/MAC-START-HERE.txt release/
-          (cd release && shasum -a 256 *.dmg *.zip > SHA256SUMS-macos.txt)
+          cp dist/verified-mac-${{ matrix.arch }}.json dist/verified-mac-${{ matrix.arch }}-archives.json ../backend-verification-macos-${{ matrix.arch }}.json docs/MAC-START-HERE.txt release/
+          (cd release && shasum -a 256 *.dmg *.zip > SHA256SUMS-macos-${{ matrix.arch }}.txt)
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           retention-days: 1
-          name: macos-${{ github.sha }}
+          name: macos-${{ matrix.arch }}-${{ github.sha }}
           if-no-files-found: error
           path: desktop/release/*
 
@@ -312,7 +328,7 @@ jobs:
           pattern: '*-${{ github.sha }}'
           path: release-assets
           merge-multiple: true
-      - name: 精确验收五类资源并创建正式或草稿 Release
+      - name: 精确验收六目标资源并创建正式或草稿 Release
         env:
           GH_TOKEN: ${{ github.token }}
           ANDROID_RESULT: ${{ needs.package-android.result }}

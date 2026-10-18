@@ -9,9 +9,19 @@ const { nativeAsarEntryPath } = require('./asar-entry-path.cjs');
 const { getCurrentFuseWire, FuseV1Options } = require('@electron/fuses');
 const root = path.resolve(__dirname, '..');
 require('./verify-backend.cjs').verifyBackend(path.join(root, 'backend'), JSON.parse(fs.readFileSync(path.join(root, 'package.json'))).version);
-const [executableArg, archiveArg, reportArg] = process.argv.slice(2);
-if (!executableArg || !archiveArg || !reportArg) throw Error('Usage: node scripts/verify-packaged.cjs executable app.asar report.json');
+const [executableArg, archiveArg, reportArg, ...flags] = process.argv.slice(2);
+assert(flags.length === 0 || flags.length === 2 && flags[0] === '--arch' && ['arm64', 'x64'].includes(flags[1]), 'Expected --arch arm64|x64');
+const arch = flags[1];
+if (!executableArg || !archiveArg || !reportArg) throw Error('Usage: node scripts/verify-packaged.cjs executable app.asar report.json [--arch arm64|x64]');
 const executable = path.resolve(executableArg), archive = path.resolve(archiveArg);
+const isMac = path.basename(path.dirname(executable)) === 'MacOS';
+assert.equal(Boolean(arch), isMac, 'An explicit architecture is required only for macOS packaged verification');
+const nativeHost = isMac ? require('./assert-native-macos.cjs').assertNativeMac(arch) : undefined;
+const macArchitecture = isMac ? require('./verify-mac-architecture.cjs').verifyMacArchitecture(path.resolve(executable, '../../..'), arch, archive) : undefined;
+// This verifier runs after electron-builder has finalized/sign-sealed the app,
+// and again against each extracted ZIP/read-only mounted DMG. Hash the actual
+// final unpacked native file; ASAR metadata may still contain its pre-sign hash.
+const finalRecoveryBinding = isMac ? require('./smoke-packaged-recovery.cjs').finalBindingEvidence(archive, 'darwin', arch) : undefined;
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const extract = name => asar.extractFile(archive, nativeAsarEntryPath(name));
 const same = name => assert(extract(name).equals(fs.readFileSync(path.join(root, name))), name + ' differs');
@@ -51,6 +61,6 @@ const expected = { RunAsNode:false, EnableCookieEncryption:true, EnableNodeOptio
 (async () => {
  const wire = await getCurrentFuseWire(executable);
  for (const [name, enabled] of Object.entries(expected)) assert.equal(wire[FuseV1Options[name]], enabled ? 49 : 48, name);
- const report = { version:JSON.parse(extract('package.json')).version, executableSha256:sha(fs.readFileSync(executable)), asarSha256:sha(fs.readFileSync(archive)), sourceFilesMatched:sourceFiles, backendVersion:manifest.version, backendSourceSnapshotSha256:manifest.source_snapshot_sha256, allBackendInputFilesMatched:inputs, embeddedBackendFilesMatched:embedded, buildMetadataExcluded:['package-lock.json'], dependencyPackages:deps.packages.map(p => ({name:p.name,version:p.version})), dependencyFilesMatched:dependencyFiles, dependencyMetadataStripped, omittedSourceMaps, omittedTypeDeclarations, fusesVerified:expected, nativeGuiTested:false };
+ const report = { ...(isMac ? { platform: 'mac', arch, nativeHost, macArchitecture, finalRecoveryBinding } : {}), version:JSON.parse(extract('package.json')).version, executableSha256:sha(fs.readFileSync(executable)), asarSha256:sha(fs.readFileSync(archive)), sourceFilesMatched:sourceFiles, backendVersion:manifest.version, backendSourceSnapshotSha256:manifest.source_snapshot_sha256, allBackendInputFilesMatched:inputs, embeddedBackendFilesMatched:embedded, buildMetadataExcluded:['package-lock.json'], dependencyPackages:deps.packages.map(p => ({name:p.name,version:p.version})), dependencyFilesMatched:dependencyFiles, dependencyMetadataStripped, omittedSourceMaps, omittedTypeDeclarations, fusesVerified:expected, nativeGuiTested:false };
  fs.writeFileSync(path.resolve(reportArg), JSON.stringify(report,null,2)+'\n'); console.log(JSON.stringify(report,null,2));
 })().catch(error => { console.error(error); process.exitCode=1; });

@@ -42,3 +42,17 @@ test('settings page cannot navigate or open new windows/webviews', () => {
   const contents = new EventEmitter(); contents.setWindowOpenHandler = fn => { contents.open = fn; }; installSettingsContents(contents);
   const e = event(); contents.emit('will-navigate', e); assert.equal(e.prevented, true); assert.deepEqual(contents.open({ url: connection.serverUrl }), { action: 'deny' });
 });
+
+test('owned local Blob rescue works after backend loss without permitting network or remote downloads',()=>{
+ const local=endpoint('http://127.0.0.1:4310/',true),value=session();
+ installServiceSession(value,local,()=>false,id=>id===7);
+ const request=(url,resourceType='other',webContentsId=7)=>{let result;value.request({url,resourceType,webContentsId},answer=>result=!answer.cancel);return result;};
+ const blob='blob:http://127.0.0.1:4310/input';
+ assert.equal(request(blob),true);
+ for(const url of[local.serverUrl,local.origin+'/api/backup','blob:http://127.0.0.1:4311/input'])assert.equal(request(url),false);
+ assert.equal(request(blob,'mainFrame'),false);assert.equal(request(blob,'other',8),false);
+ let options;const item={getInitiatorOrigin:()=>local.origin,getURLChain:()=>[blob],getFilename:()=>'/private/input.json',setSaveDialogOptions:value=>options=value};
+ let e=event();value.emit('will-download',e,item,{id:7});assert.equal(e.prevented,false);assert.equal(options.defaultPath,'_private_input.json');
+ for(const [override,contents] of [[{getURLChain:()=>[local.origin+'/api/backup',blob]},{id:7}],[{}, {id:8}],[{getInitiatorOrigin:()=> 'null'},{id:7}]]){e=event();value.emit('will-download',e,{...item,...override},contents);assert.equal(e.prevented,true);}
+ const remote=session();installServiceSession(remote,connection,()=>false,()=>true);e=event();remote.emit('will-download',e,item,{id:7});assert.equal(e.prevented,true);
+});

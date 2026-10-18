@@ -23,17 +23,18 @@ def verify_request(request, run, jobs, artifacts, comparison):
     require(run.get('id') == run_id and run.get('head_sha') == source and run.get('path') == '.github/workflows/release.yml' and run.get('status') == 'completed', 'Repair must reference the completed release build at the exact source')
     required_jobs = {
         '发布版本与明确请求', '完整检查 / 源码与运行包检查',
-        '完整检查 / 内置后端原生系统检查 (windows)', '完整检查 / 内置后端原生系统检查 (macos)',
-        'Android 可安装发布 APK', 'Windows x64', 'macOS arm64',
+        '完整检查 / 内置后端原生系统检查 (windows)',
+        '完整检查 / 内置后端原生系统检查 (macos-arm64)', '完整检查 / 内置后端原生系统检查 (macos-x64)',
+        'Android 可安装发布 APK', 'Windows x64', 'macOS arm64', 'macOS x64',
         'Linux x64 客户端 AppImage', '独立服务端 Linux 与 macOS 运行时',
     }
     by_name = {job['name']: job for job in jobs}
     require(len(by_name) == len(jobs), 'Unexpected duplicate build jobs')
     require(required_jobs.issubset(by_name) and all(by_name[name].get('conclusion') == 'success' for name in required_jobs), 'All original source/native/build/packaging gates must have succeeded')
     require(all(job.get('conclusion') == 'success' or job['name'] == '汇总成品并发布（缺 APK 时仅草稿）' for job in jobs), 'Only the original publication step may have failed')
-    expected = {f'{platform}-{source}' for platform in ('android', 'windows', 'macos', 'linux', 'server')}
+    expected = {f'{platform}-{source}' for platform in ('android', 'windows', 'macos-arm64', 'macos-x64', 'linux', 'server')}
     packaged = [artifact for artifact in artifacts if artifact.get('name', '').endswith('-' + source)]
-    require({artifact['name'] for artifact in packaged} == expected and len(packaged) == 5 and all(not artifact.get('expired') for artifact in packaged), 'Exact five original packaged artifacts must remain available')
+    require({artifact['name'] for artifact in packaged} == expected and len(packaged) == len(expected) and all(not artifact.get('expired') for artifact in packaged), 'Exact six original packaged artifacts must remain available')
     require(all(artifact.get('workflow_run', {}).get('head_sha', source) == source for artifact in packaged), 'Artifact source differs from original verified build')
     require(comparison.get('status') in ('ahead', 'identical') and comparison.get('total_commits', 0) <= 100, 'Repair code must descend from original build source')
     files = comparison.get('files', [])
@@ -56,7 +57,7 @@ def main():
     source, run_id = verify_request(request, run, jobs['jobs'], artifacts['artifacts'], comparison)
     with open(os.environ['GITHUB_OUTPUT'], 'a') as stream:
         stream.write(f'source-commit={source}\nsource-run-id={run_id}\n')
-    print('All five original artifacts and native/source gates passed; only publication tooling changed.')
+    print('All six original artifacts and native/source gates passed; only publication tooling changed.')
 
 
 if __name__ == '__main__':

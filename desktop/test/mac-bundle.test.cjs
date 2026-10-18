@@ -77,6 +77,7 @@ test('config retains application identity, Chinese Mac filename and safety fuses
   const config = require('../builder.config.cjs');
   assert.equal(config.appId, 'app.qingdan.desktop');
   assert.equal(config.mac.executableName, '青单');
+  assert.deepEqual(config.mac.target, [{ target: 'dir', arch: ['arm64', 'x64'] }]);
   assert.equal(config.mac.extendInfo.CFBundleName, '青单');
   assert.equal(config.mac.extendInfo.CFBundleDevelopmentRegion, 'en');
   assert.deepEqual(config.mac.extendInfo.CFBundleLocalizations, ['en','zh_CN','zh']);

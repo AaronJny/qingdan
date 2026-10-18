@@ -23,7 +23,7 @@ function validateDefaults(raw) {
 }
 function endpoint(value, builtin = false) {
   const serverUrl = validateServerUrl(value); const url = new URL(serverUrl);
-  return Object.freeze({ serverUrl, origin: url.origin, hostname: url.hostname, builtin, partition: `persist:qingdan-desktop-${builtin ? 'local' : 'server'}-${createHash('sha256').update(url.origin).digest('hex').slice(0, 20)}` });
+  return Object.freeze({ serverUrl, origin: url.origin, hostname: url.hostname, builtin, partition: `${builtin ? 'qingdan-desktop-memory-local' : 'persist:qingdan-desktop-server'}-${createHash('sha256').update(url.origin).digest('hex').slice(0, 20)}` });
 }
 function isServiceUrl(value, connection) {
   const url = parseUrl(value);
@@ -36,7 +36,7 @@ function isLocalUiUrl(value, page) {
   return !!url && url.protocol === `${SCHEME}:` && url.hostname === 'ui' && !url.port && !url.username && !url.password && !url.search && !url.hash && url.pathname === `/${page}`;
 }
 function isStatusUrl(value) { return ['status', 'ui.css', 'status.js', 'i18next.js', 'native-language.js'].some(page => isLocalUiUrl(value, page)); }
-function isSettingsResource(value) { return ['settings', 'ui.css', 'settings.js', 'i18next.js', 'native-language.js'].some(page => isLocalUiUrl(value, page)); }
+function isSettingsResource(value) { return ['settings', 'recovery', 'recovery.js', 'ui.css', 'settings.js', 'i18next.js', 'native-language.js'].some(page => isLocalUiUrl(value, page)); }
 function safeExternalUrl(value) {
   const url = parseUrl(value);
   if (!url || url.username || url.password || !url.hostname || url.port === '0') return null;

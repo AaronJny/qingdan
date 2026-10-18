@@ -1,7 +1,7 @@
 {
   "name": "qingdan-desktop-bundled",
   "productName": "Qingdan",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "main": "src/main.cjs",
   "author": "Independent Qingdan project",
@@ -20,13 +20,16 @@
     "package:mac:dir": "node scripts/package.cjs mac --dir --arm64",
     "prepare:backend": "node scripts/prepare-backend.cjs",
     "verify:backend": "node scripts/verify-backend.cjs --smoke",
-    "package:mac:archives": "node scripts/package.cjs mac --arm64 --dmg --zip"
+    "package:mac:archives": "node scripts/package.cjs mac --arm64 --dmg --zip",
+    "package:mac:x64:dir": "node scripts/package.cjs mac --dir --x64",
+    "package:mac:x64:archives": "node scripts/package.cjs mac --x64 --dmg --zip"
   },
   "devDependencies": {
     "electron": "44.6.0",
     "electron-builder": "26.15.3"
   },
   "dependencies": {
+    "classic-level": "3.0.0",
     "i18next": "26.5.2"
   }
 }

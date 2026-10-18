@@ -19,7 +19,7 @@
 
 ### 界面语言
 
-支持简体中文和英文，可在“设置 → 语言”中选择语言或跟随系统，切换后立即生效。跟随系统时，中文系统使用简体中文，其他语言使用英文。语言偏好仅保存在当前设备或浏览器，不随账号同步；你创建的任务、笔记、清单和标签不会被翻译。
+支持简体中文和英文，可在“设置 → 通用 → 语言”中选择语言或跟随系统，切换后立即生效。跟随系统时，中文系统使用简体中文，其他语言使用英文。语言偏好仅保存在当前设备或浏览器，不随账号同步；你创建的任务、笔记、清单和标签不会被翻译。
 
 ## 界面截图
 
@@ -54,17 +54,20 @@
 
 ## 下载与安装
 
-前往 [Releases](https://github.com/AaronJny/qingdan/releases/latest) 下载适合自己系统的版本。当前发行版为 [v1.2.0](https://github.com/AaronJny/qingdan/releases/tag/v1.2.0)，包含桌面端、服务端和 Android 客户端。
+前往 [Releases](https://github.com/AaronJny/qingdan/releases/latest) 下载适合自己系统的版本。当前发行版为 [v1.2.1](https://github.com/AaronJny/qingdan/releases/tag/v1.2.1)，包含桌面端、服务端和 Android 客户端。
 
 | 平台 | 下载 | 使用方式与要求 |
 | --- | --- | --- |
-| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/Qingdan-1.2.0-mac-arm64.dmg) | macOS 13 及以上；正常退出旧版后，将应用拖入 Applications。暂不支持 Intel Mac |
-| Windows · x64 | [便携 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/Qingdan-1.2.0-win-x64.zip) | 完整解压后运行 `Qingdan.exe`，不要只复制 EXE |
-| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/Qingdan-1.2.0-linux-x64.AppImage) | 需要图形桌面与正常可用的 Electron 沙箱；添加可执行权限后运行，FUSE 替代启动方式见[桌面说明](desktop/README.md) |
-| 自托管服务端 / 网页端 | [含运行时 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/qingdan-server-v1.2.0.zip) | 内置 Linux x64 / macOS arm64 运行时和启动脚本，无需另外安装 Node.js 或 npm |
-| Android | [0.2.0 APK](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/Qingdan-0.2.0-android.apk) | Android 8.0 及以上，并需保持系统 WebView 更新；安装与签名注意事项见[Android 说明](android/README.md) |
+| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-mac-arm64.dmg) | macOS 13 及以上；正常退出旧版后，将应用拖入 Applications |
+| macOS · Intel | [x64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-mac-x64.dmg) | macOS 13 及以上；适用于 Intel 处理器的 Mac，安装方式同上 |
+| Windows · x64 | [便携 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-win-x64.zip) | 完整解压后运行 `Qingdan.exe`，不要只复制 EXE |
+| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-linux-x64.AppImage) | 需要图形桌面与正常可用的 Electron 沙箱；添加可执行权限后运行，FUSE 替代启动方式见[桌面说明](desktop/README.md) |
+| 自托管服务端 / 网页端 | [含运行时 ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/qingdan-server-v1.2.1.zip) | 内置 Linux x64 / macOS arm64 运行时和启动脚本，无需另外安装 Node.js 或 npm |
+| Android | [0.2.1 APK](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-0.2.1-android.apk) | Android 8.0 及以上，并需保持系统 WebView 更新；安装与签名注意事项见[Android 说明](android/README.md) |
 
-下载后可使用发行版附带的 SHA256 校验文件检查文件完整性。
+本机桌面模式使用独立原生草稿存储，不需要钥匙串；私服登录仍保留独立加密会话。升级发现旧草稿时会提供核对与导出，未确认操作不会自动重放。详见[本机存储与旧输入核对](desktop/README.md#121-本机存储与旧输入核对)。
+
+在 Mac 的“关于本机”中，显示“芯片 Apple M…”请选择 arm64；显示“处理器 Intel…”请选择 x64。两种架构也各提供 ZIP 版，可在发行版资源中下载。
 
 ### 已知平台限制
 
@@ -131,7 +134,7 @@ npm run check --prefix application
 
 推送到 `main` 会运行[完整检查工作流](.github/workflows/check.yml)。发布请求通过 [.github/release/request.json](.github/release/request.json) 指定版本；修改发布请求、推送对应版本 tag 或手动触发“青单发布”工作流才会构建发行，普通提交只做检查。
 
-发行流水线要求 macOS、Windows、Linux、服务器和 Android 五类成品齐备，并附 SHA256 和独立检查报告。Android 签名未配置时，发行版会保留为草稿。签名密钥与密码应通过安全配置提供，不要写入源码、聊天或构建产物。
+发行流水线要求 macOS Apple Silicon / Intel、Windows、Linux、服务器和 Android 成品全部齐备，并核验每个架构的独立检查报告。Android 签名未配置时，发行版会保留为草稿。签名密钥与密码应通过安全配置提供，不要写入源码、聊天或构建产物。
 
 ## 许可证
 

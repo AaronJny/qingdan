@@ -29,8 +29,10 @@ async function flush() {
   for (let i = 0; i < 12; i++) await Promise.resolve();
 }
 
-async function harness({ platform = 'darwin', runtimePath = path, initialSelection, initialEnsure, hangPrivateLoad = false, systemLocale = 'zh-CN', languagePreference } = {}) {
+async function harness({ platform = 'darwin', runtimePath = path, initialSelection, initialEnsure, hangPrivateLoad = false, systemLocale = 'zh-CN', languagePreference, recoveryState, failLocalStore = false, principal = 'local:12345678-1234-4234-8234-123456789abc' } = {}) {
   const windows = [], handlers = new Map(), sessions = new Map();
+  const recovery = {status:'none',requiresReview:false,acknowledgedContinue:false,candidateCount:0,conflictCount:0,...recoveryState};
+  const localEntries = new Map();
   const externalOpens = [], fetches = [], dialogs = [], exits = [], loadTimers = new Set();
   const files = new Map(), moduleCache = new Map();
   const appData = runtimePath.join(runtimePath.sep, 'mock-app-data');
@@ -116,7 +118,7 @@ async function harness({ platform = 'darwin', runtimePath = path, initialSelecti
       selected.beforeRequest?.({ url, resourceType: 'xhr' }, result => { cancelled = result.cancel; });
       if (cancelled) throw new Error('Mock request blocked by production service policy');
       if (probeFailure) return new Response('{}', { status: 503, headers: { 'content-type': 'application/json' } });
-      return new Response(JSON.stringify({ app: 'qingdan', version: '1.0.0', mode: 'local' }), { headers: { 'content-type': 'application/json' } });
+      return new Response(JSON.stringify(url.endsWith('/api/auth/me')?{mode:'local',user:{userId:principal}}:{ app: 'qingdan', version: '1.0.0', mode: 'local' }), { headers: { 'content-type': 'application/json' } });
     };
     return selected;
   }
@@ -129,10 +131,10 @@ async function harness({ platform = 'darwin', runtimePath = path, initialSelecti
     constructor(options) {
       super(); this.options = options; this.destroyed = false; this.loads = [];
       this.lastUrl = ''; this.closeMode = 'normal';
-      this.webContents = new EventEmitter(); this.webContents.mainFrame = { url: '' };
+      this.webContents = new EventEmitter(); this.webContents.id = windows.length + 1; this.webContents.mainFrame = { url: '' };
       this.webContents.getURL = () => this.lastUrl;
       this.webContents.stop = () => { this.stopCalls = (this.stopCalls || 0) + 1; };
-      this.webContents.getLastWebPreferences = () => options.webPreferences;
+      this.webContents.session = session.fromPartition(options.webPreferences.partition); this.webContents.getLastWebPreferences = () => {const {partition,...actual}=options.webPreferences;return actual;}; this.webContents.send = () => {};
       this.webContents.setWindowOpenHandler = fn => { this.webContents.open = fn; };
       windows.push(this);
     }
@@ -177,7 +179,7 @@ async function harness({ platform = 'darwin', runtimePath = path, initialSelecti
     shell: { openExternal: async url => { externalOpens.push(url); } },
     screen: { getAllDisplays: () => [{ workArea: { x: 0, y: 0, width: 1440, height: 900 } }] },
     protocol: { registerSchemesAsPrivileged() {} },
-    ipcMain: { handle(name, fn) { handlers.set(name, fn); } },
+    ipcMain: { handle(name, fn) { handlers.set(name, fn); }, on(name,fn){handlers.set(name,fn);} },
   };
 
   function loadModule(file) {
@@ -189,6 +191,13 @@ async function harness({ platform = 'darwin', runtimePath = path, initialSelecti
       if (name === 'node:fs') return memoryFs;
       if (name === 'node:path') return runtimePath;
       if (['node:net', 'node:http', 'node:https', 'node:child_process'].includes(name)) throw new Error(`Real IO module forbidden: ${name}`);
+      if (name === './local-business-store.cjs') return {LocalBusinessStore:class {
+        constructor({principalId}){if(failLocalStore)throw Error('Mock local storage read failure');this.principalId=principalId;}
+        snapshot(){return {revision:0,entries:{}};} keys(){return [...localEntries.keys()];}
+        read(key){return {value:localEntries.get(key)||null,revision:0};}
+        write(key,value){localEntries.set(key,value);return {value,revision:1,changed:false};}
+      }};
+      if (name === './legacy-local-recovery.cjs') return {createLegacyRecovery:()=>({prepare:async()=>recovery,summary:()=>recovery,candidates:()=>[],candidatePage:()=>({items:[],total:0,nextOffset:null}),exportDocument:()=>recovery,acknowledgeContinue:async()=>{recovery.acknowledgedContinue=true;}})};
       if (name === './backend-manager.cjs') return { createBackendManager: () => backend };
       if (name === '../package.json') return { qingdanReleaseChannel: 'preview' };
       if (name.startsWith('./')) return loadModule(path.resolve(path.dirname(file), name));
@@ -210,7 +219,7 @@ async function harness({ platform = 'darwin', runtimePath = path, initialSelecti
   };
   const event = window => ({ sender: window.webContents, senderFrame: window.webContents.mainFrame });
   return {
-    app, backend, windows, sessions, externalOpens, fetches, dialogs, exits, files, connectionFile,
+    app, backend, windows, sessions, externalOpens, fetches, dialogs, exits, files, connectionFile, recovery, localEntries,
     event, menuItem, liveMain: () => windows.filter(window => !window.destroyed && window.options.webPreferences.preload && runtimePath.basename(window.options.webPreferences.preload) === 'service-preload.cjs'),
     openSettings() { menuItem('服务器连接').click(); return windows.at(-1); },
     get(window) { return handlers.get('qingdan-connection:get')(event(window)); },
@@ -235,7 +244,7 @@ test('default builtin selection ensures owned backend before loading UI and neve
   assert.ok(main); assert.equal(main.lastUrl, `${ownedOrigin}/`);
   assert.equal(main.options.webPreferences.preload, path.join(root, 'src/service-preload.cjs'));
   assert.equal(main.options.webPreferences.sandbox, true);
-  assert.ok(h.fetches.every(item => item.url === `${ownedOrigin}/api/app-info` && item.options.credentials === 'omit'));
+  assert.ok(h.fetches.every(item => [`${ownedOrigin}/api/app-info`,`${ownedOrigin}/api/auth/me`].includes(item.url) && item.options.credentials === 'omit'));
 });
 
 test('REGRESSION: Windows path separators preserve profile, stored selection and main-window discovery', async () => {
@@ -439,7 +448,7 @@ test('switching to a private server and back restores the local partition withou
   assert.notEqual(h.liveMain()[0].options.webPreferences.partition, localPartition);
   assert.equal((await h.save(settings, { mode: 'builtin' })).ok, true);
   assert.equal(h.liveMain()[0].options.webPreferences.partition, localPartition);
-  assert.ok(h.fetches.every(item => item.url.endsWith('/api/app-info') && item.options.credentials === 'omit'));
+  assert.ok(h.fetches.every(item => ['/api/app-info','/api/auth/me'].some(suffix=>item.url.endsWith(suffix)) && item.options.credentials === 'omit'));
   assert.ok([...h.files.keys()].every(name => name.endsWith('connection.json') || name.endsWith('window-state.json')));
 });
 
@@ -485,4 +494,28 @@ test('native language changes never reload the status page or interrupt connecti
  assert.equal(first.revision,1);assert.equal(main.loads.length,loads);
  const second=h.call('qingdan-desktop:set-language',h.event(main),'zh-CN');
  assert.equal(second.revision,2);assert.equal(h.call('qingdan-desktop:get-language',h.event(main)).revision,2);assert.equal(main.loads.length,loads);
+});
+
+test('local session and popups are in memory while private server cookies remain in encrypted persistent partition',async()=>{
+ const h=await harness(),main=h.liveMain()[0];assert.ok(!main.options.webPreferences.partition.startsWith('persist:'));assert.deepEqual(Array.from(main.options.webPreferences.additionalArguments),['--qingdan-owned-local']);
+ const popup=main.webContents.open({url:ownedOrigin+'/'});assert.equal(popup.action,'allow');assert.equal(popup.overrideBrowserWindowOptions.webPreferences.partition,main.options.webPreferences.partition);assert.deepEqual(Array.from(popup.overrideBrowserWindowOptions.webPreferences.additionalArguments),['--qingdan-owned-local']);
+ assert.ok([...h.sessions.keys()].every(name=>!name.startsWith('persist:')));
+ const settings=h.openSettings();assert.equal((await h.save(settings,{mode:'server',serverUrl:privateUrl})).ok,true);const remote=h.liveMain()[0];assert.match(remote.options.webPreferences.partition,/^persist:qingdan-desktop-server-/);assert.deepEqual(Array.from(remote.options.webPreferences.additionalArguments),[]);
+});
+test('legacy business recovery gates initial editable page, explicit continue retains pending and allows saved tasks',async()=>{
+ const h=await harness({recoveryState:{status:'pending',requiresReview:true,candidateCount:1}});assert.equal(h.liveMain()[0].lastUrl,statusUrl);const recovery=h.windows.find(w=>w.lastUrl==='qingdan-local://ui/recovery');assert.ok(recovery);
+ await h.call('qingdan-recovery:continue',h.event(recovery));await flush();assert.equal(h.recovery.status,'pending');assert.equal(h.recovery.acknowledgedContinue,true);assert.equal(h.liveMain()[0].lastUrl,ownedOrigin+'/');assert.equal(recovery.destroyed,true);
+});
+test('preference-only readable candidates are nonblocking and remain pending',async()=>{const h=await harness({recoveryState:{status:'pending',requiresReview:false,candidateCount:1}});assert.equal(h.liveMain()[0].lastUrl,ownedOrigin+'/');const summary=await h.call('qingdan-desktop:local-recovery',h.event(h.liveMain()[0]));assert.equal(summary.status,'pending');assert.equal(summary.acknowledgedContinue,false);});
+test('native store or principal failure never silently renders an ephemeral editable workspace',async()=>{for(const options of [{failLocalStore:true},{principal:'remote-user'}]){const h=await harness(options);assert.equal(h.liveMain()[0].lastUrl,statusUrl);assert.ok(!h.liveMain()[0].loads.includes(ownedOrigin+'/'));}});
+test('recovery candidates are available only in the dedicated bundled main frame',async()=>{const h=await harness({recoveryState:{status:'pending',requiresReview:true}});const main=h.liveMain()[0],recovery=h.windows.find(w=>w.lastUrl==='qingdan-local://ui/recovery');for(const event of [h.event(main),{...h.event(recovery),senderFrame:{url:'qingdan-local://ui/recovery'}}])await assert.rejects(h.call('qingdan-recovery:candidates',event),/Untrusted/);assert.deepEqual(await h.call('qingdan-recovery:candidates',h.event(recovery)),{items:[],total:0,nextOffset:null});await assert.rejects(h.call('qingdan-recovery:candidates',h.event(recovery),-1),/Invalid/);});
+
+
+test('local Blob rescue survives returning from a private server to the reused local partition',async()=>{
+ const h=await harness(),first=h.liveMain()[0],partition=first.options.webPreferences.partition,settings=h.openSettings();
+ assert.equal((await h.save(settings,{mode:'server',serverUrl:privateUrl})).ok,true);
+ assert.equal((await h.save(settings,{mode:'builtin'})).ok,true);
+ const main=h.liveMain()[0];assert.equal(main.options.webPreferences.partition,partition);h.backend.status='failed';h.backend.backendOrigin=null;
+ const selected=h.sessions.get(partition);const allowed=(url,id=main.webContents.id)=>{let result;selected.beforeRequest({url,resourceType:'other',webContentsId:id},answer=>result=!answer.cancel);return result;};
+ assert.equal(allowed('blob:'+ownedOrigin+'/saved-input'),true);assert.equal(allowed(ownedOrigin+'/api/backup'),false);assert.equal(allowed('blob:'+ownedOrigin+'/saved-input',first.webContents.id),false);
 });

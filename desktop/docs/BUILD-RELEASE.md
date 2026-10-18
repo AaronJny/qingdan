@@ -13,15 +13,16 @@ npm run verify:backend
 npm run check
 ```
 
-准备命令先调用 server-packaging/prepare-runtime.py，校验全部源文件与编译资源哈希；保留 dist/server、dist/client（包括独立离线壳）、全部 drizzle 迁移。随后通过 esbuild 的编译产物分析取得外部服务依赖，提取 application/package-lock.json 中的精确依赖闭包，用 npm ci --omit=dev --ignore-scripts 安装。当前必需包为 @js-temporal/polyfill、ical.js、jsbi。需要安装脚本、平台限制或未审查下载源的新依赖会阻止准备，不能静默引入。生成的运行与依赖清单记录当前版本、源码快照、官方 npm integrity 和文件 SHA256；不包含用户数据。
+准备命令先调用 server-packaging/prepare-runtime.py，校验全部源文件与编译资源哈希；保留 dist/server、dist/client（包括独立离线壳）、全部 drizzle 迁移。随后通过 esbuild 的编译产物分析取得外部服务依赖，提取 application/package-lock.json 中的精确依赖闭包，用 npm ci --omit=dev --ignore-scripts 安装。当前依赖闭包记录在生成的 dependency-manifest.json 中，包括日期、日历和国际化运行依赖。需要安装脚本、平台限制或未审查下载源的新依赖会阻止准备，不能静默引入。生成的运行与依赖清单记录当前版本、源码快照、官方 npm integrity 和文件 SHA256；不包含用户数据。
 
 backend/ 全部属于生成文件，不提交到 Git。源码构建者必须先准备后端；package.cjs 会拒绝缺失、陈旧、被修改或超出 1.x 兼容范围的输入。用户数据目录 QingdanDesktop、应用标识 app.qingdan.desktop 与现有登录/服务安全边界保持稳定。
 
-平台打包在对应操作系统运行：
+平台打包在对应操作系统与 CPU 架构运行：
 
 ```sh
 node scripts/package.cjs win --x64 --zip
 node scripts/package.cjs mac --arm64 --dmg --zip
+node scripts/package.cjs mac --x64 --dmg --zip
 node scripts/package.cjs linux --x64 --appimage
 node scripts/package.cjs linux --x64 --dir
 ```
@@ -29,6 +30,21 @@ node scripts/package.cjs linux --x64 --dir
 脚本运行桌面语法/单元检查、校验内置后端，然后调用 electron-builder（--publish never）。完成后独立读取成品 app.asar，检查当前源码、后台运行资源、依赖文件与全部既有 Electron fuses；结果写在 dist/verified-平台-架构.json。macOS 保留官方 Electron Helper 名称和中文应用名、许可证复制及既有打包钩子。本流程未配置正式签名或公证身份，成品仍需 macOS 实机启动验收。
 
 npm run verify:backend 使用普通 Node 在临时合成数据目录检查精确版本握手、前端、迁移、建任务、正常停止/重启持久性。该检查不代表 Electron utilityProcess 或原生 GUI 已通过。GitHub check.yml 在每次分支 push/PR 上运行完整检查及运行后端测试，不发布 Release。release.yml 复用这些已验证构建资源，分别在 macOS/Windows/Linux 打包并检查 ASAR；发布请求由 `.github/release/request.json` 指定；修改该文件、推送匹配版本的标签或手动运行“青单发布”工作流可触发构建。发布条件和平台成品要求见工作流配置。
+
+## macOS 双架构
+
+Apple Silicon 使用 GitHub 标准托管 `macos-15` runner，Intel 使用 `macos-15-intel` runner，各自原生构建 DMG 与 ZIP。构建前核验 Node/操作系统架构，阻止把另一架构的成品改名发布。两者分别保留归档与后端验收报告、校验文件，发布和清理闸门要求两种架构齐备。
+
+归档验收在对应架构的 macOS runner 上全新解压 ZIP、只读挂载 DMG，比较全部文件、权限与符号链接，并检查主程序、Electron frameworks/helpers 及内置原生模块的 Mach-O 架构。内置服务的 JavaScript 依赖随包提供，SQLite 使用相同架构的 Electron Node 运行时。该检查覆盖包结构、架构、完整性及普通 Node 后端烟雾测试；不等同于 Intel 或 Apple Silicon 实机 GUI 验收。
+
+发布工作流还在两种架构上分别执行两个原生运行门禁，任何一个失败都会阻止发布：
+
+- `smoke-local-session.cjs` 在 `npm ci` 后复制官方 Electron 44.6.0 到临时测试目录，仅在副本中启用 CookieEncryption，并重置副本的 ad-hoc 签名；核验其他 fuse 及源运行时的 fuse 未变。两个真实 Electron 进程使用合成数据，验证生产 preload、IPC、内存会话、同步保存与重启恢复，以及弹窗隔离和后端失效后的受信 Blob 导出。
+- `smoke-packaged-recovery.cjs` 在成品及归档校验后，用同架构官方 Electron 的 Node 模式加载成品 ASAR 中的 `classic-level` 和最终解包的原生绑定，完成合成数据库写入、读取与重新打开。它不启动产品应用，也不改动产品的 RunAsNode 等 fuse。运行过的绑定哈希必须与最终包、ZIP 解出内容及只读挂载 DMG 中的实际绑定字节一致；原生签名后可能变化的字节以最终磁盘文件为准，不使用 ASAR 的签名前哈希替代。
+
+通过的证据以 `localSessionSmoke` 和 `packagedRecoverySmoke` 嵌入已有 `verified-mac-架构.json`；最终绑定字节证据也记录在包和归档报告中。不会新增独立发布附件，完整 Release 仍为 32 个资源（含 `RELEASE-MANIFEST.json`）。这些检查只使用合成数据，不访问真实用户配置；它们没有直接监测钥匙串调用，也不代表最终 macOS 产品的 GUI 或实机钥匙串行为已验收。
+
+GitHub runner 标签来源：[GitHub-hosted runners reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)。
 
 ## Linux x64 AppImage
 

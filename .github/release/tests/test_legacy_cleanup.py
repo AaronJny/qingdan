@@ -23,7 +23,7 @@ class FakeAPI:
         self.release = {'id': legacy.RELEASE_ID, 'tag_name': 'v1.1.2', 'draft': False,
                         'target_commitish': legacy.COMMIT,
                         'html_url': request['receipt']['publisherResult']['url']}
-        records = legacy.cleanup.receipt_records(request['receipt'], legacy.REPOSITORY, legacy.RUN_ID, legacy.COMMIT)
+        records = legacy.receipt_records(request['receipt'])
         self.assets = [{'id': request['releaseAssetIds'][name], 'name': name, 'size': value['bytes'],
                         'digest': 'sha256:' + value['sha256'], 'state': 'uploaded'}
                        for name, value in records.items()]
@@ -94,6 +94,32 @@ class LegacyContract(unittest.TestCase):
         self.assertEqual(len(manifest), 5225)
         self.assertEqual(hashlib.sha256(manifest).hexdigest(),
                          '5dc4eee13df36498e93f4e96d6f24f425f258c531c3caf5bd3f83ea76ec479c4')
+
+    def test_historical_26_assets_and_nine_ids_remain_distinct_from_current_contract(self):
+        records = legacy.receipt_records(self.request['receipt'])
+        self.assertEqual(len(records), 26)
+        self.assertEqual(len(self.api.assets), 26)
+        self.assertEqual(len(json.loads(self.request['receipt']['manifestText'])['assets']), 25)
+        self.assertIn('backend-verification-macos.json', records)
+        self.assertIn('SHA256SUMS-macos.txt', records)
+        self.assertFalse(any('mac-x64' in name or 'macos-x64' in name for name in records))
+        self.assertIn('macos-' + legacy.COMMIT, legacy.LEGACY_POLICY.artifact_names(legacy.COMMIT))
+        self.assertNotIn('macos-' + legacy.COMMIT, legacy.cleanup.allowed_names(legacy.COMMIT))
+        self.assertEqual(len(self.execute()), 9)
+        self.assertEqual(len(self.api.assets), 26)
+
+    def test_legacy_policy_cannot_be_reused_for_another_source_or_manifest(self):
+        receipt = self.request['receipt']
+        for repository, run_id, commit in [('other/repo', legacy.RUN_ID, legacy.COMMIT),
+                                          (legacy.REPOSITORY, legacy.RUN_ID + 1, legacy.COMMIT),
+                                          (legacy.REPOSITORY, legacy.RUN_ID, 'a' * 40)]:
+            with self.subTest(repository=repository, run_id=run_id, commit=commit), self.assertRaises(ValueError):
+                legacy.LEGACY_POLICY.inventory(receipt, repository, run_id, commit)
+        altered = copy.deepcopy(receipt)
+        altered['manifestText'] += '\n'
+        with self.assertRaisesRegex(ValueError, 'exact immutable'):
+            legacy.receipt_records(altered)
+        self.assertEqual(self.api.calls, [])
 
     def test_any_request_change_requires_a_new_reviewed_code_hash(self):
         for mutate in [lambda r: r['receipt'].update(runId=999),

@@ -19,7 +19,7 @@ Collaboration requires a self-hosted server running in account mode. Local mode 
 
 ### Interface language
 
-The interface supports Simplified Chinese and English. Choose a language or “System default” under “Settings → Language”; changes take effect immediately. System default uses Simplified Chinese for Chinese system languages and English for all others. Your choice is saved only on the current device or browser and does not sync with your account. Tasks, notes, lists, and tags you create are not translated.
+The interface supports Simplified Chinese and English. Choose a language or “System default” under “Settings → General → Language”; changes take effect immediately. System default uses Simplified Chinese for Chinese system languages and English for all others. Your choice is saved only on the current device or browser and does not sync with your account. Tasks, notes, lists, and tags you create are not translated.
 
 ## Screenshots
 
@@ -54,17 +54,20 @@ View daily goals, this week's check-ins, streaks, and completion over the past 3
 
 ## Download and install
 
-Visit [Releases](https://github.com/AaronJny/qingdan/releases/latest) to download the version for your platform. The current release is [v1.2.0](https://github.com/AaronJny/qingdan/releases/tag/v1.2.0), with desktop, server, and Android builds.
+Visit [Releases](https://github.com/AaronJny/qingdan/releases/latest) to download the version for your platform. The current release is [v1.2.1](https://github.com/AaronJny/qingdan/releases/tag/v1.2.1), with desktop, server, and Android builds.
 
 | Platform | Download | Instructions and requirements |
 | --- | --- | --- |
-| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/Qingdan-1.2.0-mac-arm64.dmg) | macOS 13 or later. Quit the previous version normally, then drag the app into Applications. Intel Macs are not currently supported. |
-| Windows · x64 | [Portable ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/Qingdan-1.2.0-win-x64.zip) | Extract the entire archive and run `Qingdan.exe`. Do not copy just the EXE. |
-| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/Qingdan-1.2.0-linux-x64.AppImage) | Requires a graphical desktop and a working Electron sandbox. Make the file executable before running it. See the [desktop guide](desktop/README.md) for an alternative launch method if FUSE is unavailable. |
-| Self-hosted server / web app | [ZIP with bundled runtimes](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/qingdan-server-v1.2.0.zip) | Includes Linux x64 and macOS arm64 runtimes and launch scripts. No separate Node.js or npm installation is needed. |
-| Android | [0.2.0 APK](https://github.com/AaronJny/qingdan/releases/download/v1.2.0/Qingdan-0.2.0-android.apk) | Android 8.0 or later, with an up-to-date system WebView. See the [Android guide](android/README.md) for installation and signing details. |
+| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-mac-arm64.dmg) | macOS 13 or later. Quit the previous version normally, then drag the app into Applications. |
+| macOS · Intel | [x64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-mac-x64.dmg) | macOS 13 or later. For Macs with an Intel processor; install as above. |
+| Windows · x64 | [Portable ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-win-x64.zip) | Extract the entire archive and run `Qingdan.exe`. Do not copy just the EXE. |
+| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-1.2.1-linux-x64.AppImage) | Requires a graphical desktop and a working Electron sandbox. Make the file executable before running it. See the [desktop guide](desktop/README.md) for an alternative launch method if FUSE is unavailable. |
+| Self-hosted server / web app | [ZIP with bundled runtimes](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/qingdan-server-v1.2.1.zip) | Includes Linux x64 and macOS arm64 runtimes and launch scripts. No separate Node.js or npm installation is needed. |
+| Android | [0.2.1 APK](https://github.com/AaronJny/qingdan/releases/download/v1.2.1/Qingdan-0.2.1-android.apk) | Android 8.0 or later, with an up-to-date system WebView. See the [Android guide](android/README.md) for installation and signing details. |
 
-You can verify downloaded files using the SHA256 checksum file included with the release.
+Desktop local mode uses a dedicated native draft store without Keychain. Private-server sign-in retains its separate encrypted session. Upgrades preserve older local input for review/export and never automatically replay unconfirmed operations. See the [desktop storage and recovery guide](desktop/README.md#121-本机存储与旧输入核对).
+
+In “About This Mac,” choose arm64 if you see “Chip: Apple M…” and x64 if you see “Processor: Intel…”. ZIP downloads are also available for both architectures in the release assets.
 
 ### Known platform limitations
 
@@ -131,7 +134,7 @@ See [application/README.md](application/README.md) for self-hosting configuratio
 
 Pushing to `main` runs the [full checks workflow](.github/workflows/check.yml). Release versions are specified in [.github/release/request.json](.github/release/request.json). Release builds run only when the release request changes, a matching version tag is pushed, or the “青单发布” (Qingdan release) workflow is triggered manually. Ordinary commits run checks only.
 
-The release pipeline requires all five builds: macOS, Windows, Linux, server, and Android, along with SHA256 checksums and a separate verification report. If Android signing is not configured, the release remains a draft. Provide signing keys and passwords through secure configuration; never put them in source code, chat, or build artifacts.
+The release pipeline requires macOS Apple Silicon and Intel builds, plus Windows, Linux, server, and Android, with a separate verified report for each architecture. If Android signing is not configured, the release remains a draft. Provide signing keys and passwords through secure configuration; never put them in source code, chat, or build artifacts.
 
 ## License
 

@@ -6,8 +6,30 @@ import json
 import os
 import re
 import subprocess
+import unicodedata
 import zipfile
 from pathlib import Path
+
+
+MAC_ARCHES = ('arm64', 'x64')
+PLATFORMS = ['macos-arm64', 'macos-x64', 'windows', 'server', 'linux', 'android']
+FUSES = {'RunAsNode': False, 'EnableCookieEncryption': True,
+         'EnableNodeOptionsEnvironmentVariable': False, 'EnableNodeCliInspectArguments': False,
+         'EnableEmbeddedAsarIntegrityValidation': True, 'OnlyLoadAppFromAsar': True,
+         'GrantFileProtocolExtraPrivileges': False}
+ELECTRON_VERSION = json.loads((Path(__file__).resolve().parents[2] / 'desktop/package.json').read_text())['devDependencies']['electron']
+LOCAL_SESSION_ASSERTIONS = {
+    'production sandboxed/context-isolated preload hydrates before first page script; no Node in main world',
+    'same-origin but unowned window is rejected by production IPC',
+    'foreign-origin frame with a bridge cannot access the owned local store',
+    'non-local preload exposes no native business storage',
+    'real subframe has no bridge and is rejected by frame identity',
+    'loss of owned backend revokes storage access',
+    'all observed sessions are nonpersistent; legacy sentinel unchanged; no credential request headers',
+    'production window.open handler creates an owned sandboxed memory-session popup with synchronous native hydration',
+    'production popup policy denies a foreign origin and requests external confirmation without opening it',
+    'production Blob rescue durably exports owned input after backend loss; unowned Blob downloads and all tested HTTP requests stay blocked',
+}
 
 
 def require(value, message):
@@ -34,9 +56,7 @@ def gh(*args, optional=False):
 
 def candidate_names(version, android_version, android_ready):
     names = {
-        f'Qingdan-{version}-mac-arm64.dmg', f'Qingdan-{version}-mac-arm64.zip',
-        'verified-mac-arm64.json', 'verified-mac-arm64-archives.json',
-        'backend-verification-macos.json', 'MAC-START-HERE.txt', 'SHA256SUMS-macos.txt',
+        'MAC-START-HERE.txt',
         f'Qingdan-{version}-win-x64.zip', 'verified-win-x64.json',
         'verified-win-x64-archives.json', 'backend-verification-windows.json',
         'WINDOWS-START-HERE.txt', 'SHA256SUMS-windows.txt',
@@ -46,6 +66,10 @@ def candidate_names(version, android_version, android_ready):
         f'qingdan-server-v{version}.zip', f'qingdan-server-v{version}.sha256',
         f'qingdan-server-v{version}.verification.json',
     }
+    for arch in MAC_ARCHES:
+        names.update({f'Qingdan-{version}-mac-{arch}.dmg', f'Qingdan-{version}-mac-{arch}.zip',
+                      f'verified-mac-{arch}.json', f'verified-mac-{arch}-archives.json',
+                      f'backend-verification-macos-{arch}.json', f'SHA256SUMS-macos-{arch}.txt'})
     if android_ready:
         names.update({f'Qingdan-{android_version}-android.apk',
                       f'Qingdan-{android_version}-android.apk.verification.json',
@@ -54,10 +78,11 @@ def candidate_names(version, android_version, android_ready):
 
 
 def mac_aliases(version):
-    return {name: f'Qingdan-{version}-mac-arm64.{extension}'
+    return {name: f'Qingdan-{version}-mac-{arch}.{extension}'
+            for arch in MAC_ARCHES
             for extension in ('dmg', 'zip')
-            for name in (f'青单-{version}-mac-arm64.{extension}',
-                         f'-{version}-mac-arm64.{extension}')}
+            for name in (f'青单-{version}-mac-{arch}.{extension}',
+                         f'-{version}-mac-{arch}.{extension}')}
 
 
 def file_record(path):
@@ -67,6 +92,8 @@ def file_record(path):
 def normalize_macos(root, version):
     """Rename release-facing files/references only; never modify native app bytes."""
     aliases = mac_aliases(version)
+    canonical = [aliases.get(path.name, path.name) for path in root.iterdir()]
+    require(len(canonical) == len(set(canonical)), 'Duplicate local Mac candidate after normalization')
     for old, new in aliases.items():
         path = root / old
         if path.exists():
@@ -87,7 +114,8 @@ def normalize_macos(root, version):
         elif isinstance(value, dict):
             value = {key: replace(item) for key, item in value.items()}
         return value
-    for name in ('verified-mac-arm64-archives.json', 'SHA256SUMS-macos.txt', 'MAC-START-HERE.txt'):
+    for name in {'MAC-START-HERE.txt', *[name for arch in MAC_ARCHES for name in
+                (f'verified-mac-{arch}-archives.json', f'SHA256SUMS-macos-{arch}.txt')]}:
         path = root / name
         if not path.exists():
             continue
@@ -107,14 +135,7 @@ def collect(root, version, android_version, android_ready):
     files = sorted(root.iterdir())
     require(files and all(p.is_file() and not p.is_symlink() for p in files), 'Release assets must be flat regular files')
     require(all(not re.search(r'(?i)(keystore|\.p12$|\.jks$|password|\.keystore$)', p.name) for p in files), 'Private signing material in asset directory')
-    expected = {
-        'macos': f'Qingdan-{version}-mac-arm64.dmg',
-        'windows': f'Qingdan-{version}-win-x64.zip',
-        'server': f'qingdan-server-v{version}.zip',
-        'linux': f'Qingdan-{version}-linux-x64.AppImage',
-    }
-    if android_ready:
-        expected['android'] = f'Qingdan-{android_version}-android.apk'
+    expected = expected_deliverables(version, android_version, android_ready)
     require(not any(p.suffix == '.apk' for p in files) or android_ready, 'APK may only publish after signed Android verification succeeds')
     for platform, name in expected.items():
         path = root / name
@@ -132,7 +153,7 @@ def collect(root, version, android_version, android_ready):
             require(header[:4] == b'\x7fELF' and header[8:11] == b'AI\x02', 'Linux output is not type-2 AppImage')
     server_report = json.loads((root / f'qingdan-server-v{version}.verification.json').read_text())
     require(server_report.get('version') == version and server_report.get('status') == 'passed' and server_report.get('smoke', {}).get('status') == 'passed', 'Server clean-extracted runtime smoke not passed')
-    for platform, arch in (('mac','arm64'), ('win','x64'), ('linux','x64')):
+    for platform, arch in (('mac','arm64'), ('mac','x64'), ('win','x64'), ('linux','x64')):
         report = json.loads((root / f'verified-{platform}-{arch}.json').read_text())
         require(report.get('version') == version and report.get('backendVersion') == version and report.get('fusesVerified'), f'{platform} packaged snapshot/fuse evidence missing')
     if android_ready:
@@ -147,24 +168,217 @@ def collect(root, version, android_version, android_ready):
 
 
 
+def expected_deliverables(version, android_version, android_ready=True):
+    expected = {f'macos-{arch}': f'Qingdan-{version}-mac-{arch}.dmg' for arch in MAC_ARCHES}
+    expected.update({'windows': f'Qingdan-{version}-win-x64.zip',
+                     'server': f'qingdan-server-v{version}.zip',
+                     'linux': f'Qingdan-{version}-linux-x64.AppImage'})
+    if android_ready:
+        expected['android'] = f'Qingdan-{android_version}-android.apk'
+    return expected
+
+
+def valid_sha(value):
+    return isinstance(value, str) and re.fullmatch(r'[0-9a-f]{64}', value) is not None
+
+
+def safe_relative_path(value):
+    return (isinstance(value, str) and value and not value.startswith('/')
+            and not re.search(r'[\\\x00-\x1f]', value)
+            and all(part not in ('', '.', '..') for part in value.split('/')))
+
+
+def verify_mac_architecture(evidence, arch):
+    require(isinstance(evidence, dict) and evidence.get('targetArch') == arch
+            and evidence.get('allMachOMatchTarget') is True, 'Mac Mach-O target architecture differs')
+    entries, seen = evidence.get('machOFiles'), set()
+    require(isinstance(entries, list) and entries, 'Mac Mach-O architecture inventory missing')
+    for entry in entries:
+        require(isinstance(entry, dict) and safe_relative_path(entry.get('path'))
+                and entry.get('format') in ('mach-o64', 'fat32', 'fat64')
+                and entry.get('architectures') == [arch], 'Mac Mach-O file architecture differs')
+        key = unicodedata.normalize('NFC', entry['path']).casefold()
+        require(key not in seen, 'Duplicate Mac Mach-O path')
+        seen.add(key)
+    modules = evidence.get('nativeNodeModules')
+    require(isinstance(modules, list) and all(safe_relative_path(name) and name.lower().endswith('.node')
+            for name in modules) and len(set(modules)) == len(modules), 'Invalid Mac native Node inventory')
+    require(set(modules).issubset({entry['path'] for entry in entries}),
+            'Mac native Node module missing independent architecture evidence')
+
+
+def verify_mac_host(host, arch):
+    require(isinstance(host, dict) and host.get('platform') == 'darwin' and host.get('arch') == arch
+            and host.get('machine') == {'arm64': 'arm64', 'x64': 'x86_64'}[arch]
+            and host.get('runnerArch') == {'arm64': 'ARM64', 'x64': 'X64'}[arch]
+            and host.get('translated') is False, 'Mac verification did not run on matching native host')
+
+
+def verify_mac_package(report, version, arch):
+    require(isinstance(report, dict) and report.get('platform') == 'mac' and report.get('arch') == arch
+            and report.get('version') == version and report.get('backendVersion') == version,
+            'Mac packaged report target or version differs')
+    require(report.get('fusesVerified') == FUSES
+            and all(type(report['fusesVerified'].get(key)) is bool for key in FUSES),
+            'Mac packaged fuse evidence differs')
+    require(all(valid_sha(report.get(key)) for key in
+                ('executableSha256', 'asarSha256', 'backendSourceSnapshotSha256')),
+            'Mac packaged payload hash evidence missing')
+    verify_mac_architecture(report.get('macArchitecture'), arch)
+    verify_mac_host(report.get('nativeHost'), arch)
+    binding = report.get('finalRecoveryBinding')
+    require(isinstance(binding, dict)
+            and binding.get('entry') == f'node_modules/classic-level/prebuilds/darwin-{arch}/classic-level.node'
+            and valid_sha(binding.get('sha256')) and type(binding.get('bytes')) is int and binding['bytes'] > 0
+            and binding.get('unpacked') is True and binding.get('finalDiskBytes') is True,
+            'Mac final unpacked recovery binding hash evidence missing')
+
+
+def verify_local_session_smoke(report, arch):
+    """Synthetic stock-Electron evidence, never packaged GUI or Keychain proof."""
+    require(isinstance(report, dict) and report.get('schema') == 'qingdan-real-local-session-smoke-v1'
+            and report.get('passed') is True and report.get('platform') == 'darwin'
+            and report.get('arch') == arch and 'error' not in report,
+            'Mac local session smoke did not pass on the native target')
+    require(all(report.get(key) is False for key in
+                ('packagedAppTested', 'keychainAccessInstrumented', 'realUserProfileAccessed')),
+            'Mac local session smoke scope or safety evidence differs')
+    require(all(report.get(key) is True for key in ('actualProcessRestart', 'sameOriginAcrossRestart')),
+            'Mac local session smoke restart evidence missing')
+    runtime = report.get('runtime')
+    require(isinstance(runtime, dict) and all(runtime.get(key) is True for key in
+                ('testCookieEncryption', 'onlyCookieEncryptionFuseChanged',
+                 'sourceFuseWireUnchanged', 'macTestCopyAdHocReset'))
+            and type(runtime.get('sourceCookieEncryption')) is bool,
+            'Mac local session smoke runtime fuse evidence missing')
+    phases = report.get('phases')
+    require(isinstance(phases, list) and len(phases) == 2
+            and all(isinstance(phase, dict) for phase in phases)
+            and [phase.get('phase') for phase in phases] == ['write', 'read'],
+            'Mac local session smoke requires write and read processes')
+    for phase in phases:
+        require(phase.get('passed') is True and phase.get('arch') == arch
+                and phase.get('electron') == ELECTRON_VERSION and phase.get('stage') == 'complete'
+                and phase.get('keychainAccessInstrumented') is False and 'error' not in phase
+                and type(phase.get('pid')) is int and phase['pid'] > 0,
+                'Mac local session smoke phase runtime or result differs')
+        sessions = phase.get('sessions')
+        require(isinstance(sessions, list) and sessions and all(isinstance(item, dict)
+                and item.get('persistent') is False and item.get('storagePathNull') is True
+                for item in sessions), 'Mac local session smoke activated a persistent session')
+        assertions = phase.get('assertions')
+        required = LOCAL_SESSION_ASSERTIONS | ({
+            'synchronous bridge write is durable before returning to the renderer',
+            'renderer recreation hydrates the production durable store',
+        } if phase['phase'] == 'write' else {
+            'same-origin process restart retains native draft while Chromium localStorage is empty',
+        })
+        require(isinstance(assertions, list) and all(isinstance(item, str) for item in assertions)
+                and required.issubset(assertions), 'Mac local session smoke safety assertions missing')
+    first, second = phases
+    require(first['pid'] != second['pid'] and first.get('origin') == second.get('origin')
+            and isinstance(first.get('origin'), str)
+            and re.fullmatch(r'http://127\.0\.0\.1:[1-9][0-9]{0,4}', first['origin']) is not None
+            and 0 < int(first['origin'].rsplit(':', 1)[1]) < 65536
+            and first.get('partition') == second.get('partition')
+            and isinstance(first.get('partition'), str)
+            and re.fullmatch(r'qingdan-desktop-memory-local-[0-9a-f]{20}', first['partition']) is not None,
+            'Mac local session smoke did not restart the same memory-session origin')
+
+
+def verify_packaged_recovery_smoke(report, package, arch):
+    require(isinstance(report, dict) and report.get('schema') == 'qingdan-packaged-recovery-smoke-v1'
+            and report.get('passed') is True and report.get('platform') == 'darwin'
+            and report.get('arch') == arch and report.get('electron') == ELECTRON_VERSION
+            and report.get('classicLevel') == '3.0.0' and 'error' not in report,
+            'Mac packaged recovery binding runtime smoke did not pass')
+    require(all(report.get(key) is True for key in
+                ('stockElectronNodeMode', 'packagedAsarModuleLoaded', 'packagedUnpackedBindingLoaded',
+                 'syntheticWriteReadReopenPassed', 'stockRuntimeFuseWireUnchanged', 'packagedPayloadUnchanged'))
+            and all(report.get(key) is False for key in
+                ('productAppLaunched', 'nativeGuiTested', 'keychainAccessInstrumented', 'realUserProfileAccessed')),
+            'Mac packaged recovery smoke scope or runtime evidence differs')
+    require(report.get('asarSha256') == package['asarSha256']
+            and report.get('executableSha256') == package['executableSha256']
+            and valid_sha(report.get('bindingSha256'))
+            and report.get('bindingSha256') == package.get('finalRecoveryBinding', {}).get('sha256')
+            and report.get('bindingEntry') == f'node_modules/classic-level/prebuilds/darwin-{arch}/classic-level.node',
+            'Mac packaged recovery smoke does not match the packaged payload')
+    require('Contents/Resources/app.asar.unpacked/' + report['bindingEntry']
+            in package.get('macArchitecture', {}).get('nativeNodeModules', []),
+            'Mac packaged recovery binding is missing independent architecture evidence')
+
+
 def verify_macos_references(root, version):
-    report = json.loads((root / 'verified-mac-arm64-archives.json').read_text())
-    expected = {f'Qingdan-{version}-mac-arm64.{ext}' for ext in ('dmg', 'zip')}
-    records = report.get('artifacts', [])
-    require(len(records) == 2 and {a.get('filename') for a in records} == expected,
-            'Mac archive report names differ from release candidates')
-    for item in records:
-        path = root / item['filename']
-        require(item.get('bytes') == path.stat().st_size and item.get('sha256') == digest(path),
-                'Mac archive report differs from candidate bytes')
-    checksums = (root / 'SHA256SUMS-macos.txt').read_text().splitlines()
-    actual = {}
-    for line in checksums:
-        match = re.fullmatch(r'([0-9a-f]{64}) [ *](.+)', line)
-        require(match and match[2] not in actual, 'Invalid or duplicate Mac checksum entry')
-        actual[match[2]] = match[1]
-    require(set(actual) == expected, 'Mac checksum inventory differs')
-    require(all(actual[name] == digest(root / name) for name in expected), 'Mac checksum differs')
+    for arch in MAC_ARCHES:
+        package = json.loads((root / f'verified-mac-{arch}.json').read_text())
+        verify_mac_package(package, version, arch)
+        verify_local_session_smoke(package.get('localSessionSmoke'), arch)
+        verify_packaged_recovery_smoke(package.get('packagedRecoverySmoke'), package, arch)
+        backend = json.loads((root / f'backend-verification-macos-{arch}.json').read_text())
+        require(backend.get('version') == version and backend.get('runtimePlatform') == 'darwin'
+                and backend.get('runtimeArch') == arch
+                and backend.get('sourceSnapshotSha256') == package['backendSourceSnapshotSha256'],
+                'Mac backend target, version or source snapshot differs')
+        require(all(backend.get('smoke', {}).get(key) is True for key in
+                    ('loopbackStartup', 'currentVersionHandshake', 'frontend', 'offlineShellAssets',
+                     'migrations', 'calendarWorker', 'syntheticTask', 'gracefulRestartPersistence')),
+                'Mac native backend runtime smoke not passed')
+        modules = backend.get('nativeNodeModules')
+        require(isinstance(modules, list) and all(isinstance(item, dict)
+                and safe_relative_path(item.get('path')) and item['path'].lower().endswith('.node')
+                and item.get('format') in ('mach-o64', 'fat32', 'fat64')
+                and item.get('architectures') == [arch] for item in modules)
+                and len({item['path'] for item in modules}) == len(modules),
+                'Mac backend native Node architecture differs')
+        report = json.loads((root / f'verified-mac-{arch}-archives.json').read_text())
+        require(report.get('platform') == 'mac' and report.get('arch') == arch
+                and report.get('version') == version and report.get('nativeArchiveToolsUsed') is True
+                and report.get('originalPayloadUnchanged') is True, 'Mac archive target or native verification differs')
+        verify_mac_host(report.get('nativeHost'), arch)
+        baseline = report.get('unpackedPayloadMetadata', {})
+        verify_mac_architecture(baseline.get('macArchitecture'), arch)
+        expected = {f'Qingdan-{version}-mac-{arch}.{ext}' for ext in ('dmg', 'zip')}
+        records = report.get('artifacts', [])
+        require(isinstance(records, list) and len(records) == 2
+                and all(isinstance(item, dict) for item in records)
+                and {item.get('filename') for item in records} == expected,
+                'Mac archive report names differ from release candidates')
+        for item in records:
+            path = root / item['filename']
+            require(type(item.get('bytes')) is int and item['bytes'] == path.stat().st_size
+                    and valid_sha(item.get('sha256')) and item['sha256'] == digest(path),
+                    'Mac archive report differs from candidate bytes')
+            require(item.get('platform') == 'mac' and item.get('arch') == arch
+                    and item.get('format') == path.suffix[1:],
+                    'Mac archive artifact target or format differs')
+            require(path.stat().st_size > 1024, 'Mac archive candidate is incomplete')
+            if path.suffix == '.zip':
+                with zipfile.ZipFile(path) as archive:
+                    require(archive.testzip() is None, 'Mac ZIP integrity failed')
+            proof = 'freshNativeExtractionVerified' if path.suffix == '.zip' else 'nativeReadOnlyMountVerified'
+            require(item.get(proof) is True and (path.suffix != '.dmg' or item.get('applicationsLinkVerified') is True),
+                    'Mac archive native extraction or mount not verified')
+            matched = item.get('payloadMatched', {})
+            require(all(matched.get(key) is True for key in
+                        ('allFileBytesMatched', 'allPathsMatched', 'unixModesMatched'))
+                    and valid_sha(matched.get('inventorySha256')), 'Mac archive payload equality not verified')
+            metadata = item.get('metadata', {})
+            verify_mac_architecture(metadata.get('macArchitecture'), arch)
+            require(metadata == baseline, 'Mac archive metadata differs from verified unpacked payload')
+            embedded = item.get('packagedVerification', {})
+            verify_mac_package(embedded, version, arch)
+            require(all(embedded.get(key) == package[key] for key in
+                        ('executableSha256', 'asarSha256', 'backendSourceSnapshotSha256', 'macArchitecture', 'finalRecoveryBinding')),
+                    'Mac archive packaged payload differs from per-architecture verification')
+        checksums = (root / f'SHA256SUMS-macos-{arch}.txt').read_text().splitlines()
+        actual = {}
+        for line in checksums:
+            match = re.fullmatch(r'([0-9a-f]{64}) [ *](.+)', line)
+            require(match and match[2] not in actual, 'Invalid or duplicate Mac checksum entry')
+            actual[match[2]] = match[1]
+        require(set(actual) == expected, 'Mac checksum inventory differs')
+        require(all(actual[name] == digest(root / name) for name in expected), 'Mac checksum differs')
 
 
 LIMITATIONS = ['macOS has no Developer ID signature or Apple notarization.', 'Windows executable is unsigned.',
@@ -174,7 +388,7 @@ LIMITATIONS = ['macOS has no Developer ID signature or Apple notarization.', 'Wi
 
 def manifest_value(version, commit, complete, expected, records):
     return {'schema': 'qingdan-release-assets-v1', 'version': version, 'sourceCommit': commit, 'complete': complete,
-            'requiredPlatforms': ['macos', 'windows', 'server', 'linux', 'android'], 'deliverables': expected,
+            'requiredPlatforms': list(PLATFORMS), 'deliverables': expected,
             'missingPlatforms': [] if complete else ['android'], 'assets': records, 'limitations': LIMITATIONS}
 
 
@@ -224,8 +438,9 @@ def draft_plan(release, files, legacy, version):
             renames.append((asset['id'], canonical))
         elif not same_bytes(asset, expected):
             # Only transformed known text evidence/manifest may be replaced. Payloads never are.
-            require(canonical in {'verified-mac-arm64-archives.json', 'SHA256SUMS-macos.txt',
-                                   'MAC-START-HERE.txt', 'RELEASE-MANIFEST.json'},
+            require(canonical in {'MAC-START-HERE.txt', 'RELEASE-MANIFEST.json',
+                                   *[name for arch in MAC_ARCHES for name in
+                                     (f'verified-mac-{arch}-archives.json', f'SHA256SUMS-macos-{arch}.txt')]},
                     f'Unexpected changed release asset: {name}')
             replacements.append(canonical)
     missing = sorted(set(candidates) - set(existing))
@@ -277,10 +492,10 @@ def main(argv=None):
     # original evidence hashes so a previously interrupted draft can be reconciled safely.
     original_records = [file_record(p) for p in original if p.name != 'RELEASE-MANIFEST.json']
     legacy = {p['name']: p for p in original_records}
-    old_expected = {'macos': f'青单-{version}-mac-arm64.dmg', 'windows': f'Qingdan-{version}-win-x64.zip',
-                    'server': f'qingdan-server-v{version}.zip', 'linux': f'Qingdan-{version}-linux-x64.AppImage'}
-    if complete:
-        old_expected['android'] = f'Qingdan-{android_version}-android.apk'
+    old_expected = expected_deliverables(version, android_version, complete)
+    for alias, canonical in mac_aliases(version).items():
+        if alias in legacy:
+            old_expected.update({target: alias for target, name in old_expected.items() if name == canonical})
     old_manifest = encoded_json(manifest_value(version, commit, complete, old_expected, original_records))
     legacy['RELEASE-MANIFEST.json'] = byte_record('RELEASE-MANIFEST.json', old_manifest)
     # Support an idempotent retry whose local directory already contains our manifest.
@@ -299,24 +514,28 @@ def main(argv=None):
                      'publishingRunUrl': publish_url})
     manifest_path.write_bytes(encoded_json(manifest))
     files.append(manifest_path)
-    require(len(files) == (26 if complete else 23), 'Unexpected release candidate count')
-    status = '五类安装与部署包已就绪。 / All five platform packages are ready.' if complete else '草稿：Android 签名安装包尚未就绪。 / Draft: the signed Android package is not ready.'
+    require(len(files) == len(candidate_names(version, android_version, complete)) + 1
+            and {path.name for path in files} == candidate_names(version, android_version, complete) | {'RELEASE-MANIFEST.json'},
+            'Unexpected release candidate inventory')
+    status = '六项安装与部署包已就绪。 / All six release targets are ready.' if complete else '草稿：Android 签名安装包尚未就绪。 / Draft: the signed Android package is not ready.'
+    download = f'https://github.com/{repository}/releases/download/{tag}'
     notes = '\n'.join([f'# 青单 / Qingdan {tag}', '', status, '',
                        '## 更新 / What’s new',
-                       '- 网页、桌面端和 Android 支持简体中文与 English，首次跟随系统，也可在设置中即时切换。',
-                       '- 日期、星期、时间、数量和提醒随界面语言显示；任务、笔记和自定义名称保持原样。',
-                       '- Simplified Chinese and English across web, desktop and Android. Follow your system language or switch instantly in Settings.',
-                       '- Localized dates, weekdays, times, counts and notifications. Your tasks, notes and custom names stay as you wrote them.',
+                       '- 新增原生 Intel Mac x64 安装包，继续支持 Apple Silicon。 / Native Intel Mac x64 packages now join Apple Silicon support.',
+                       '- 网页、桌面端和 Android 支持简体中文与 English，跟随系统或在设置中切换。 / Simplified Chinese and English across web, desktop and Android, following your system or your choice in Settings.',
+                       '- 设置默认打开常规页，语言设置归入常规。 / Settings opens General by default, with language controls in General.',
+                       '- 本机桌面会话改为内存会话，草稿通过独立原生存储持久保存，无需钥匙串；私服会话仍保持加密。 / Desktop local mode uses an in-memory browser session and durable native draft storage without Keychain; private-server sessions remain encrypted.',
+                       '- 升级保留旧本机输入供核对与导出，不自动重放未确认操作；编辑保存失败时可导出未保存输入。 / Older local input is preserved for review/export, never automatically replayed; failed input saves offer an unsaved-input export.',
                        '', '## 下载 / Downloads',
-                       '- macOS：Apple Silicon arm64 DMG；尚无 Developer ID 签名或 Apple 公证，系统可能拦截。请勿关闭 Gatekeeper 或移除隔离属性。',
-                       '- macOS: Apple Silicon arm64 DMG. No Developer ID signature or Apple notarization; macOS may block it. Do not disable Gatekeeper or remove quarantine attributes.',
-                       '- Windows：x64 ZIP，解压后运行 Qingdan.exe，无需另装 Node。程序未签名。 / x64 portable ZIP; extract and run Qingdan.exe. Node is included. The executable is unsigned.',
-                       '- Linux：x64 AppImage，需要系统正常支持 Chromium sandbox。 / x64 AppImage; requires working Chromium sandbox support.',
-                       '- 服务端 / Server：ZIP 内含运行环境与一键启动、停止及初始化管理员脚本。 / ZIP with bundled runtimes and one-click start, stop and administrator setup scripts.',
-                       f'- Android：{android_version}，保留独立业务基准 1.0.1。' + ('已使用现有发布身份签名；覆盖升级须签名一致，升级前请导出完整备份。 / Signed with the existing release identity. Updates require the same signing identity; export a full backup before upgrading.' if complete else '等待发布签名。 / Awaiting release signing.'),
-                       '', f'[中文说明](https://github.com/{repository}/blob/{commit}/README.md) · [English guide](https://github.com/{repository}/blob/{commit}/README.en.md)',
-                       '', '各包附检查报告与 SHA-256。打包和后端检查不代表全部设备上的 GUI 或真机验收。 / Verification reports and SHA-256 checksums are included. Package and backend checks do not establish GUI or physical-device acceptance on every device.',
-                       '', f'[构建与发布检查 / Build and release checks]({publish_url})', ''])
+                       f'- macOS Apple Silicon：[DMG]({download}/Qingdan-{version}-mac-arm64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-arm64.zip)',
+                       f'- macOS Intel：[DMG]({download}/Qingdan-{version}-mac-x64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-x64.zip)',
+                       '- Mac 安装包尚无 Developer ID 签名或 Apple 公证，系统可能拦截。请勿关闭 Gatekeeper 或移除隔离属性。 / Mac packages lack Developer ID signing and Apple notarization; macOS may block them. Do not disable Gatekeeper or remove quarantine attributes.',
+                       f'- Windows x64：[ZIP]({download}/Qingdan-{version}-win-x64.zip)，解压后运行 Qingdan.exe。程序未签名。 / Extract and run Qingdan.exe. The executable is unsigned.',
+                       f'- Linux x64：[AppImage]({download}/Qingdan-{version}-linux-x64.AppImage)',
+                       f'- 服务端 / Server：[ZIP]({download}/qingdan-server-v{version}.zip)，含运行环境与启动脚本。 / Bundled runtimes and start scripts.',
+                       (f'- Android {android_version}：[APK]({download}/Qingdan-{android_version}-android.apk)。更新前请导出完整备份，覆盖升级须签名一致。 / Export a full backup before updating; upgrades require the same signing identity.'
+                        if complete else f'- Android {android_version}：等待发布签名。 / Awaiting release signing.'),
+                       '', f'[中文说明](https://github.com/{repository}/blob/{commit}/README.md) · [English guide](https://github.com/{repository}/blob/{commit}/README.en.md)', ''])
     notes_path = root.parent / 'release-notes.md'
     notes_path.write_text(notes)
     old = remote_release(repository, tag, optional=True)

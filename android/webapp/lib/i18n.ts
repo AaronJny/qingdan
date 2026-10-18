@@ -1,6 +1,7 @@
 /** Device-local interface language. Record data and wire/storage formats never pass through this module. */
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { businessStorage } from './business-storage';
 import domainEn from './locales/domain.en.json';
 import domainZh from './locales/domain.zh.json';
 import coreEn from './locales/core.en.json';
@@ -39,7 +40,7 @@ export function resolveLocale(languages: readonly string[]): Locale {
 export function getLanguagePreference(): LanguagePreference {
   if (preference) return preference;
   try {
-    const saved = typeof window === 'undefined' ? null : window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    const saved = typeof window === 'undefined' ? null : businessStorage().getItem(LANGUAGE_STORAGE_KEY);
     preference = isLanguagePreference(saved) ? saved : 'system';
   } catch { preference = 'system'; storageAvailable = false; }
   return preference;
@@ -74,7 +75,7 @@ export function setLanguagePreference(value: LanguagePreference, source: 'web' |
   preference = value;
   if (source === 'web') nativeSaveFailed = false;
   if (source !== 'storage' && typeof window !== 'undefined') {
-    try { window.localStorage.setItem(LANGUAGE_STORAGE_KEY, value); storageAvailable = true; }
+    try { businessStorage().setItem(LANGUAGE_STORAGE_KEY, value); storageAvailable = true; }
     catch { storageAvailable = false; }
   }
   publish(source);

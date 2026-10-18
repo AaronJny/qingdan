@@ -9,6 +9,8 @@ const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const plist = require('plist');
 const { nativeAsarEntryPath } = require('./asar-entry-path.cjs');
+const { verifyMacArchitecture } = require('./verify-mac-architecture.cjs');
+const { assertNativeMac } = require('./assert-native-macos.cjs');
 const root = path.resolve(__dirname, '..');
 const APP = '青单.app';
 const HELPERS = ['', ' (GPU)', ' (Plugin)', ' (Renderer)'];
@@ -91,7 +93,7 @@ function verifyLocalizedNames(contents, englishDisplay, chineseDisplay, stableNa
     assert(strings.includes(`"CFBundleName" = ${JSON.stringify(stableName || display)};`), `Missing ${locale} bundle name`);
   }
 }
-function verifyMacBundle(bundle, version) {
+function verifyMacBundle(bundle, version, arch) {
   realDirectory(bundle); realDirectory(path.join(bundle, 'Contents'));
   const contents = path.join(bundle, 'Contents'), metadata = path.join(contents, 'Info.plist'); realFile(metadata);
   const info = plist.parse(fs.readFileSync(metadata, 'utf8'));
@@ -123,7 +125,7 @@ function verifyMacBundle(bundle, version) {
     verifyLocalizedNames(path.join(helper, 'Contents'), 'Qingdan Helper' + suffix, '青单辅助程序' + chineseSuffix, name);
     realFile(path.join(helper, 'Contents', 'MacOS', name), true);
   }
-  return { executable, archive: path.join(resources, 'app.asar'), metadata: { bundleIdentifier: info.CFBundleIdentifier,
+  return { executable, archive: path.join(resources, 'app.asar'), arch, metadata: { macArchitecture: verifyMacArchitecture(bundle, arch), bundleIdentifier: info.CFBundleIdentifier,
     executableName: info.CFBundleExecutable, version: info.CFBundleShortVersionString,
     minimumSystemVersion: info.LSMinimumSystemVersion, iconSha256: shaFile(icon), helperNamesVerified: HELPERS.map(suffix => 'Electron Helper' + suffix), runtimeNoticesPresent: NOTICES } };
 }
@@ -182,7 +184,7 @@ function nativeCommands(platform, command = run) {
     },
     detachDmg: directory => command('/usr/bin/hdiutil', ['detach', directory]),
     verifyPackaged: (payload, report) => {
-      command(process.execPath, [path.join(__dirname, 'verify-packaged.cjs'), payload.executable, payload.archive, report]);
+      command(process.execPath, [path.join(__dirname, 'verify-packaged.cjs'), payload.executable, payload.archive, report, ...(platform === 'mac' ? ['--arch', payload.arch] : [])]);
       const packaged = JSON.parse(fs.readFileSync(report, 'utf8'));
       const asar = require('@electron/asar');
       assert(asar.extractFile(payload.archive, nativeAsarEntryPath('build/icon.png')).equals(fs.readFileSync(path.join(root, 'build/icon.png'))), 'Packaged application icon differs from source');
@@ -199,21 +201,29 @@ function assertReportLocation(report, inputs) {
   }
   try { assert(!fs.lstatSync(report).isSymbolicLink(), 'Refusing a symlink report'); } catch (error) { if (error.code !== 'ENOENT') throw error; }
 }
-function verifyArchives(options, commands = nativeCommands(options.platform), nativePlatform = process.platform) {
+function verifyArchives(options, commands = nativeCommands(options.platform), nativePlatform = process.platform, hostEvidence) {
   const { platform, version, arch, unpacked, zip, dmg, report } = options;
   assert(['mac', 'win'].includes(platform), 'Unsupported desktop platform');
   assert.equal(nativePlatform, platform === 'mac' ? 'darwin' : 'win32', 'Archive verification must run on the matching native OS');
+  assert(platform === 'mac' ? ['arm64', 'x64'].includes(arch) : arch === 'x64', 'Unsupported desktop architecture');
+  const nativeHost = platform === 'mac' ? (hostEvidence || assertNativeMac(arch)) : undefined;
+  if (nativeHost) {
+    assert.equal(nativeHost.platform, 'darwin', 'Native host platform');
+    assert.equal(nativeHost.arch, arch, 'Native host architecture must match the target');
+    assert.equal(nativeHost.machine, arch === 'x64' ? 'x86_64' : 'arm64', 'Native host machine');
+    assert.equal(nativeHost.translated, false, 'Native host must not use Rosetta');
+  }
   realFile(zip); if (platform === 'mac') realFile(dmg);
   assertReportLocation(report, [unpacked, zip, ...(dmg ? [dmg] : [])]);
   const original = snapshot(unpacked, platform === 'mac');
-  const baseline = platform === 'mac' ? verifyMacBundle(unpacked, version) : verifyWindowsPayload(unpacked);
+  const baseline = platform === 'mac' ? verifyMacBundle(unpacked, version, arch) : verifyWindowsPayload(unpacked);
   if (platform === 'mac') baseline.metadata.nativeSignature = commands.verifyMacSignature(unpacked);
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'qingdan-archive-verify-'));
   let mounted = false;
   const mountpoint = path.join(temporary, 'mounted-dmg');
-  const result = { schemaVersion: 1, platform, arch, version, nativeArchiveToolsUsed: true,
+  const result = { schemaVersion: 1, platform, arch, version, ...(nativeHost ? { nativeHost } : {}), nativeArchiveToolsUsed: true,
     nativeGuiTested: false, electronUtilityProcessTested: false, backendApiSmokeTested: false,
-    verificationScope: 'Native ZIP extraction and read-only DMG mount; byte-identical payload, metadata, bundled backend snapshot, and Electron fuses. No application launch or backend/API smoke is performed by this verifier.',
+    verificationScope: 'Native ZIP extraction and read-only DMG mount; byte-identical payload, metadata, per-binary Mach-O architecture, bundled backend snapshot, and Electron fuses. No application launch or backend/API smoke is performed by this verifier.',
     signing: { developerIdConfigured: false, notarizationConfigured: false, note: 'No publisher signing identity is configured. Any ad-hoc integrity seal is not Developer ID signing or Apple notarization.' },
     unpackedPayloadMetadata: baseline.metadata, artifacts: [] };
   try {
@@ -226,13 +236,13 @@ function verifyArchives(options, commands = nativeCommands(options.platform), na
       payloadPath = path.join(extracted, APP);
     }
     const matched = comparePayload(unpacked, payloadPath, platform === 'mac');
-    const payload = platform === 'mac' ? verifyMacBundle(payloadPath, version) : verifyWindowsPayload(payloadPath);
+    const payload = platform === 'mac' ? verifyMacBundle(payloadPath, version, arch) : verifyWindowsPayload(payloadPath);
     if (platform === 'mac') payload.metadata.nativeSignature = commands.verifyMacSignature(payloadPath);
     const packaged = commands.verifyPackaged(payload, path.join(temporary, 'zip-packaged.json'));
     assert.equal(packaged.version, version, 'Extracted ZIP ASAR version');
     assert.equal(packaged.executableSha256, shaFile(baseline.executable), 'Extracted ZIP executable');
     assert.equal(packaged.asarSha256, shaFile(baseline.archive), 'Extracted ZIP ASAR');
-    result.artifacts.push({ format: 'zip', filename: path.basename(zip), bytes: fs.statSync(zip).size, sha256: shaFile(zip),
+    result.artifacts.push({ format: 'zip', ...(platform === 'mac' ? { platform, arch } : {}), filename: path.basename(zip), bytes: fs.statSync(zip).size, sha256: shaFile(zip),
       freshNativeExtractionVerified: true, preflight, payloadMatched: matched, metadata: payload.metadata, packagedVerification: packaged });
     if (platform === 'mac') {
       fs.mkdirSync(mountpoint);
@@ -244,13 +254,13 @@ function verifyArchives(options, commands = nativeCommands(options.platform), na
       assert(fs.lstatSync(applications).isSymbolicLink(), 'DMG must contain the Applications installation link');
       assert.equal(fs.readlinkSync(applications), '/Applications', 'DMG Applications link target');
       const mountedBundle = path.join(mountpoint, APP);
-      const matched = comparePayload(unpacked, mountedBundle, true), payload = verifyMacBundle(mountedBundle, version);
+      const matched = comparePayload(unpacked, mountedBundle, true), payload = verifyMacBundle(mountedBundle, version, arch);
       payload.metadata.nativeSignature = commands.verifyMacSignature(mountedBundle);
       const packaged = commands.verifyPackaged(payload, path.join(temporary, 'dmg-packaged.json'));
       assert.equal(packaged.version, version, 'Mounted DMG ASAR version');
       assert.equal(packaged.executableSha256, shaFile(baseline.executable), 'Mounted DMG executable');
       assert.equal(packaged.asarSha256, shaFile(baseline.archive), 'Mounted DMG ASAR');
-      result.artifacts.push({ format: 'dmg', filename: path.basename(dmg), bytes: fs.statSync(dmg).size, sha256: shaFile(dmg),
+      result.artifacts.push({ format: 'dmg', platform, arch, filename: path.basename(dmg), bytes: fs.statSync(dmg).size, sha256: shaFile(dmg),
         nativeReadOnlyMountVerified: true, applicationsLinkVerified: true, payloadMatched: matched,
         metadata: payload.metadata, packagedVerification: packaged });
       commands.detachDmg(mountpoint); mounted = false;

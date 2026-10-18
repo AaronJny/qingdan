@@ -10,7 +10,7 @@ test('service preload exposes only fixed narrow actions and settings never forwa
   const electron = { contextBridge: { exposeInMainWorld(key, value) { name = key; bridge = value; } }, ipcRenderer: { invoke(...args) { calls.push(args); return Promise.resolve({ ok: true }); } } };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/service-preload.cjs'), 'utf8'), { require(id) { assert.equal(id, 'electron'); return electron; } });
   assert.equal(name, 'qingdanDesktop');
-  assert.deepEqual(Object.keys(bridge).sort(), ['forgetReminders', 'getConnection', 'getLanguage', 'onLanguageChanged', 'onRuntimeEvent', 'openConnectionSettings', 'runtimeReady', 'setLanguagePreference']);
+  assert.deepEqual(Object.keys(bridge).sort(), ['forgetReminders', 'getConnection', 'getLanguage', 'getLocalRecovery', 'localBusinessStorageRequired', 'onLanguageChanged', 'onRuntimeEvent', 'openConnectionSettings', 'openLocalRecovery', 'runtimeReady', 'setLanguagePreference']);
   assert.equal(Object.isFrozen(bridge), true);
   await bridge.getConnection({ arbitraryPath: '/private' }); await bridge.openConnectionSettings({ mode: 'server', serverUrl: 'https://attacker.example/' });
   assert.deepEqual(calls, [['qingdan-desktop:connection'], ['qingdan-desktop:open-settings']]);
