@@ -5,6 +5,7 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const plist = require('plist');
+const { MAC_LOCALIZATIONS, localizedBundleNames } = require('./bundle-locales.cjs');
 const SUFFIXES = ['', ' (GPU)', ' (Plugin)', ' (Renderer)'];
 const DISPLAY_NAMES = ['', '（图形）', '（插件）', '（渲染器）'];
 async function realFile(file, executable = false) {
@@ -18,7 +19,7 @@ async function realDirectory(directory) {
 async function writeLocalizedNames(contents, englishDisplay, chineseDisplay, stableName) {
   const resources = path.join(contents, 'Resources');
   await fs.mkdir(resources, { recursive: true }); await realDirectory(resources);
-  for (const [locale, display] of [['en', englishDisplay], ['zh_CN', chineseDisplay], ['zh', chineseDisplay]]) {
+  for (const [locale, display] of localizedBundleNames(englishDisplay, chineseDisplay)) {
     const directory = path.join(resources, locale + '.lproj');
     await fs.mkdir(directory, { recursive: true }); await realDirectory(directory);
     const file = path.join(directory, 'InfoPlist.strings');
@@ -58,14 +59,14 @@ async function finalizeBundle(bundle, helperPrefix) {
   // https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html English
   // fallback comes from the development locale, not a bundle/executable rename.
   await writeLocalizedNames(contents, 'Qingdan', '青单');
-  info.CFBundleDevelopmentRegion = 'en'; info.CFBundleLocalizations = ['en', 'zh_CN', 'zh'];
+  info.CFBundleDevelopmentRegion = 'en'; info.CFBundleLocalizations = [...MAC_LOCALIZATIONS];
   await fs.writeFile(infoPath, plist.build(info) + '\n');
   for (const helper of helpers) {
     const { source, target, sourceName, targetName, metadataPath, metadata, index } = helper;
     metadata.CFBundleName = targetName;
     metadata.CFBundleExecutable = targetName;
     metadata.CFBundleDisplayName = targetName;
-    metadata.CFBundleDevelopmentRegion = 'en'; metadata.CFBundleLocalizations = ['en', 'zh_CN', 'zh'];
+    metadata.CFBundleDevelopmentRegion = 'en'; metadata.CFBundleLocalizations = [...MAC_LOCALIZATIONS];
     await writeLocalizedNames(path.join(source, 'Contents'), `Qingdan Helper${SUFFIXES[index]}`, `青单辅助程序${DISPLAY_NAMES[index]}`, targetName);
     await fs.writeFile(metadataPath, plist.build(metadata) + '\n');
     if (source !== target) {

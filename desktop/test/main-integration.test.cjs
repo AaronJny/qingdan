@@ -186,6 +186,7 @@ async function harness({ platform = 'darwin', runtimePath = path, initialSelecti
     if (moduleCache.has(file)) return moduleCache.get(file).exports;
     const module = { exports: {} }; moduleCache.set(file, module);
     const code = fs.readFileSync(file, 'utf8');
+    if (file.endsWith('.json')) { module.exports = JSON.parse(code); return module.exports; }
     const localRequire = name => {
       if (name === 'electron') return electron;
       if (name === 'node:fs') return memoryFs;
@@ -472,13 +473,13 @@ test('system language selects native menus on first launch and a manual preferen
   const manual = await harness({systemLocale:'en-US',languagePreference:'zh-CN'});
   assert.ok(manual.menuItem('服务器连接'));
   assert.equal(manual.call('qingdan-desktop:get-language',manual.event(manual.liveMain()[0])).preference,'zh-CN');
-  const fallback = await harness({systemLocale:'fr-FR',languagePreference:'malformed'});
+  const fallback = await harness({systemLocale:'it-IT',languagePreference:'malformed'});
   assert.ok(fallback.menuItem('Connection Settings'));
 });
 test('language writes require the current trusted main frame and a closed enum', async () => {
   const h = await harness(); const main = h.liveMain()[0]; const settings=h.openSettings();
   const valid=h.event(main), savedBefore=new Map(h.files);
-  for(const choice of ['fr',null,{},['en'],'en;process.exit()']) assert.throws(()=>h.call('qingdan-desktop:set-language',valid,choice),/Invalid language/);
+  for(const choice of ['it',null,{},['en'],'en;process.exit()']) assert.throws(()=>h.call('qingdan-desktop:set-language',valid,choice),/Invalid language/);
   assert.deepEqual(h.files,savedBefore);
   assert.throws(()=>h.call('qingdan-desktop:set-language',{...valid,senderFrame:{url:main.lastUrl}},'en'),/Untrusted/);
   assert.throws(()=>h.call('qingdan-desktop:set-language',{...valid,sender:{}},'en'),/Untrusted/);
@@ -518,4 +519,25 @@ test('local Blob rescue survives returning from a private server to the reused l
  const main=h.liveMain()[0];assert.equal(main.options.webPreferences.partition,partition);h.backend.status='failed';h.backend.backendOrigin=null;
  const selected=h.sessions.get(partition);const allowed=(url,id=main.webContents.id)=>{let result;selected.beforeRequest({url,resourceType:'other',webContentsId:id},answer=>result=!answer.cancel);return result;};
  assert.equal(allowed('blob:'+ownedOrigin+'/saved-input'),true);assert.equal(allowed(ownedOrigin+'/api/backup'),false);assert.equal(allowed('blob:'+ownedOrigin+'/saved-input',first.webContents.id),false);
+});
+
+test('all nine language preferences retain trusted frame binding and remote/local session isolation', async () => {
+ const {locales}=require('../src/language-policy.cjs');const h=await harness();const main=h.liveMain()[0];const settings=h.openSettings();const valid=h.event(main);
+ const session=main.webContents.session,loadCount=main.loads.length;
+ for(const locale of locales){
+  const snapshot=h.call('qingdan-desktop:set-language',h.event(settings),locale);
+  assert.equal(snapshot.preference,locale);assert.equal(snapshot.locale,locale);
+  assert.equal(h.call('qingdan-desktop:get-language',valid).locale,locale);
+  assert.equal(main.webContents.session,session);assert.equal(main.loads.length,loadCount);
+  assert.throws(()=>h.call('qingdan-desktop:set-language',{...valid,senderFrame:{url:main.lastUrl}},locale),/Untrusted/);
+  assert.throws(()=>h.call('qingdan-desktop:set-language',{...valid,sender:settings.webContents},locale),/Untrusted/);
+ }
+ assert.ok(!main.options.webPreferences.partition.startsWith('persist:'));
+});
+
+test('language broadcasts reach recovery without giving it service or settings write authority',async()=>{
+ const h=await harness({recoveryState:{status:'pending',requiresReview:true}});const recovery=h.windows.find(w=>w.lastUrl==='qingdan-local://ui/recovery');const main=h.liveMain()[0];
+ assert.throws(()=>h.call('qingdan-desktop:set-language',h.event(recovery),'ja'),/Untrusted/);
+ const result=h.call('qingdan-desktop:set-language',h.event(main),'ja');assert.equal(result.locale,'ja');
+ assert.equal(recovery.destroyed,false);assert.equal(h.recovery.status,'pending');assert.equal(h.recovery.acknowledgedContinue,false);
 });

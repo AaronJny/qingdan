@@ -35,8 +35,33 @@ test('language preload rejects invalid choices before IPC and strips event objec
   let bridge,receive,removed;const calls=[],values=[];
   const ipcRenderer={invoke(...args){calls.push(args);return Promise.resolve({preference:'en',locale:'en',revision:1});},on(channel,fn){assert.equal(channel,'qingdan-desktop:language-changed');receive=fn;},removeListener(channel,fn){removed=fn;}};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/service-preload.cjs'),'utf8'),{require:()=>({ipcRenderer,contextBridge:{exposeInMainWorld(_name,value){bridge=value;}}})});
-  for(const value of ['fr',null,{},['en']])await assert.rejects(bridge.setLanguagePreference(value),/Invalid language/);
+  for(const value of ['it',null,{},['en']])await assert.rejects(bridge.setLanguagePreference(value),/Invalid language/);
   assert.equal(calls.length,0);await bridge.setLanguagePreference('en');assert.deepEqual(calls,[['qingdan-desktop:set-language','en']]);
-  const unsubscribe=bridge.onLanguageChanged(value=>values.push(value));receive({secret:true},{preference:'invalid',locale:'en'});receive({secret:true},{preference:'en',locale:'fr'});assert.equal(values.length,0);
+  const unsubscribe=bridge.onLanguageChanged(value=>values.push(value));receive({secret:true},{preference:'invalid',locale:'en'});receive({secret:true},{preference:'en',locale:'it'});assert.equal(values.length,0);
   receive({secret:true},{preference:'en',locale:'en',revision:1,secret:true});assert.equal(JSON.stringify(values),JSON.stringify([{preference:'en',locale:'en',revision:1}]));unsubscribe();assert.equal(removed,receive);
+});
+
+test('service and settings preloads accept exactly the nine canonical locale choices',async()=>{
+ const {locales}=require('../src/language-policy.cjs');
+ for(const name of ['service-preload.cjs','settings-preload.cjs']){
+  let bridge,receive;const calls=[],values=[];const ipcRenderer={invoke(...args){calls.push(args);return Promise.resolve();},on(_channel,callback){receive=callback;},removeListener(){}};
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/'+name),'utf8'),{require:()=>({ipcRenderer,contextBridge:{exposeInMainWorld(_name,value){bridge=value;}}})});
+  for(const locale of ['system',...locales])await bridge.setLanguagePreference(locale);
+  assert.equal(calls.length,10);bridge.onLanguageChanged(value=>values.push(value));
+  for(const locale of locales)receive({secret:true},{preference:locale,locale,revision:1,secret:'hidden'});
+  assert.equal(values.length,9);for(const value of values)assert.deepEqual(Object.keys(value).sort(),['locale','preference','revision']);
+  for(const invalid of ['zh-Hant','zh-HK','en-US','pt','it',null,{},['ja']])await assert.rejects(bridge.setLanguagePreference(invalid),/Invalid language/);
+  for(const locale of ['it','pt','zh-Hant'])receive({secret:true},{preference:'en',locale,revision:2});assert.equal(values.length,9);
+ }
+});
+
+test('recovery language subscription strips IPC details and exposes no preference mutation API',()=>{
+ let bridge,receive,removed;const values=[];
+ const ipcRenderer={invoke(){throw Error('No invocation should be needed for language updates')},on(channel,fn){assert.equal(channel,'qingdan-desktop:language-changed');receive=fn},removeListener(_channel,fn){removed=fn}};
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/local-recovery-preload.cjs'),'utf8'),{require:()=>({ipcRenderer,contextBridge:{exposeInMainWorld(_name,value){bridge=value;}}})});
+ assert.equal(bridge.setLanguagePreference,undefined);assert.equal(bridge.getLanguage,undefined);
+ const stop=bridge.onLanguageChanged(value=>values.push(value));
+ receive({sender:'hidden'},{preference:'ja',locale:'ja',revision:1,secret:'hidden'});
+ for(const value of [{preference:'it',locale:'en',revision:2},{preference:'ja',locale:'it',revision:2},{preference:'ja',locale:'ja',revision:-1}])receive({},value);
+ assert.equal(JSON.stringify(values),JSON.stringify([{preference:'ja',locale:'ja',revision:1}]));stop();assert.equal(removed,receive);
 });

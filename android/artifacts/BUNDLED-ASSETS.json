@@ -48,19 +48,19 @@
       "sha256": "d8a6cc31abc16b6748c7a21f21611f5a1ec33f67d22ca23d7da1c19b95496bee"
     },
     {
-      "path": "web/assets/dispatch-B49ssDNU.js",
+      "path": "web/assets/dispatch-BOXIFSKD.js",
       "bytes": 88945,
-      "sha256": "de0a2c8b4dd63f4b87715c258d7b49754095ecb64e0fb71ab95efb4ad1ded1f1"
+      "sha256": "a94505ace54a10cbbbed4d0964231630493cc93d0e065f80ae57accb9ad29781"
     },
     {
-      "path": "web/assets/index-CJmkRQJ3.js",
-      "bytes": 1685675,
-      "sha256": "f377f98e4b74427ae14232b22504c5ed7be54d25931f70a5e32db153158c8ef2"
+      "path": "web/assets/index-D7-xLmDL.css",
+      "bytes": 77042,
+      "sha256": "9afa689de472b919e8fd5d47eba54a28aee5e2223d08021bf3e00ca5fabdb67c"
     },
     {
-      "path": "web/assets/index-DtPSOyST.css",
-      "bytes": 75595,
-      "sha256": "0e8e43652f0dea3d781738dccf69da67ba9d158e0c03cc2c273475e98e40edb4"
+      "path": "web/assets/index-DpwzIIBv.js",
+      "bytes": 3230405,
+      "sha256": "23dabf7008dc627e534ac275d5d1f712d6defaeb559ee5d7cd265eb8c9eb0914"
     },
     {
       "path": "web/assets/licenses/WEB-DEPENDENCY-LICENSES.txt",
@@ -80,7 +80,12 @@
     {
       "path": "web/index.html",
       "bytes": 405,
-      "sha256": "14d9a98fdbb0524e7aa821a594b321e681ddff61a679552efe772104af022494"
+      "sha256": "f537922d03ea6b1523e52ad827b1009b5005e2b25dd3f3f2c9a3b3d680746499"
+    },
+    {
+      "path": "web/manifest.de.webmanifest",
+      "bytes": 310,
+      "sha256": "eddbe4a7ed66106f03da938f4511442700e6a747999989005f8717da4e503068"
     },
     {
       "path": "web/manifest.en.webmanifest",
@@ -88,9 +93,39 @@
       "sha256": "76678c2777562d8fd60c9aaf3f7e1d16c99375d3bf7b1b0fcb9c670cdab5369f"
     },
     {
+      "path": "web/manifest.es.webmanifest",
+      "bytes": 310,
+      "sha256": "fd3170ad9a70e9b6eed949dfe7df33059560a5b49724c6054f0d1e4d8aa116c7"
+    },
+    {
+      "path": "web/manifest.fr.webmanifest",
+      "bytes": 310,
+      "sha256": "09292634fbb2a6f13311ecc4ed73aaf57f2f75d9a08a464b7b4e636821ee8b9e"
+    },
+    {
+      "path": "web/manifest.ja.webmanifest",
+      "bytes": 310,
+      "sha256": "c04ef4701670f881d33aeba33568e1c4777a27ca65b39972dc2d5c30d3b1dd9d"
+    },
+    {
+      "path": "web/manifest.ko.webmanifest",
+      "bytes": 310,
+      "sha256": "48d2f490b5f69f43e96a589cd592e98cd155da560c9aa8e5c31590d30da7630f"
+    },
+    {
+      "path": "web/manifest.pt-BR.webmanifest",
+      "bytes": 313,
+      "sha256": "fbe8cfd802d4ef5f333f62e708163521d791c96601112dc84b223a42ad62cf80"
+    },
+    {
       "path": "web/manifest.webmanifest",
       "bytes": 233,
       "sha256": "1293292f418061571123216715b33ed6e57ee5295c7cfdef4488a46dfe4d7b4a"
+    },
+    {
+      "path": "web/manifest.zh-TW.webmanifest",
+      "bytes": 311,
+      "sha256": "2855241ab95b8978caec11aa68bbc688f1aff7ae3aeb4cc901dda06616879a27"
     }
   ]
 }

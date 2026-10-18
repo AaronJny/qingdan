@@ -11,8 +11,38 @@ import primaryZh from './locales/ui-primary.zh.json';
 import secondaryEn from './locales/ui-secondary.en.json';
 import secondaryZh from './locales/ui-secondary.zh.json';
 
-export type Locale = 'zh-CN' | 'en';
-export type LanguagePreference = 'system' | Locale;
+import coreTw from './locales/core.zh-TW.json';
+import domainTw from './locales/domain.zh-TW.json';
+import primaryTw from './locales/ui-primary.zh-TW.json';
+import secondaryTw from './locales/ui-secondary.zh-TW.json';
+import coreJa from './locales/core.ja.json';
+import domainJa from './locales/domain.ja.json';
+import primaryJa from './locales/ui-primary.ja.json';
+import secondaryJa from './locales/ui-secondary.ja.json';
+import coreKo from './locales/core.ko.json';
+import domainKo from './locales/domain.ko.json';
+import primaryKo from './locales/ui-primary.ko.json';
+import secondaryKo from './locales/ui-secondary.ko.json';
+import coreEs from './locales/core.es.json';
+import domainEs from './locales/domain.es.json';
+import primaryEs from './locales/ui-primary.es.json';
+import secondaryEs from './locales/ui-secondary.es.json';
+import coreFr from './locales/core.fr.json';
+import domainFr from './locales/domain.fr.json';
+import primaryFr from './locales/ui-primary.fr.json';
+import secondaryFr from './locales/ui-secondary.fr.json';
+import coreDe from './locales/core.de.json';
+import domainDe from './locales/domain.de.json';
+import primaryDe from './locales/ui-primary.de.json';
+import secondaryDe from './locales/ui-secondary.de.json';
+import corePt from './locales/core.pt-BR.json';
+import domainPt from './locales/domain.pt-BR.json';
+import primaryPt from './locales/ui-primary.pt-BR.json';
+import secondaryPt from './locales/ui-secondary.pt-BR.json';
+import { LOCALES, isLocale, isLanguagePreference, resolveLocale, type Locale, type LanguagePreference } from './language-policy';
+import { unitMessages, type CountedUnit } from './i18n-units';
+export { LOCALES, LANGUAGE_NAMES, isLocale, isLanguagePreference, resolveLocale, type Locale, type LanguagePreference } from './language-policy';
+export type { CountedUnit } from './i18n-units';
 export type MessageParameters = Record<string, string | number>;
 export const LANGUAGE_STORAGE_KEY = 'qingdan-language';
 export const LANGUAGE_EVENT = 'qingdan-language-changed';
@@ -20,7 +50,20 @@ export type MessageKey = keyof typeof coreZh | keyof typeof primaryZh | keyof ty
 export const messages: Record<Locale, Record<string, string>> = {
   en: { ...coreEn, ...primaryEn, ...secondaryEn, ...domainEn },
   'zh-CN': { ...coreZh, ...primaryZh, ...secondaryZh, ...domainZh },
+  'zh-TW': { ...coreTw, ...primaryTw, ...secondaryTw, ...domainTw },
+  'ja': { ...coreJa, ...primaryJa, ...secondaryJa, ...domainJa },
+  'ko': { ...coreKo, ...primaryKo, ...secondaryKo, ...domainKo },
+  'es': { ...coreEs, ...primaryEs, ...secondaryEs, ...domainEs },
+  'fr': { ...coreFr, ...primaryFr, ...secondaryFr, ...domainFr },
+  'de': { ...coreDe, ...primaryDe, ...secondaryDe, ...domainDe },
+  'pt-BR': { ...corePt, ...primaryPt, ...secondaryPt, ...domainPt },
 };
+for (const locale of LOCALES) {
+  Object.assign(messages[locale], unitMessages[locale]);
+  // CLDR uses 'many' for large French/Spanish/Portuguese counts. Their noun
+  // forms match 'other'; explicitly provide these to avoid English fallbacks.
+  for (const [key, value] of Object.entries(messages[locale])) if (key.endsWith('_other') && !Object.hasOwn(messages[locale], key.replace(/_other$/, '_many'))) messages[locale][key.replace(/_other$/, '_many')] = value;
+}
 export const translation = i18next.createInstance();
 translation.use(initReactI18next);
 const listeners = new Set<() => void>();
@@ -29,14 +72,6 @@ let nativeSystemLocale: Locale | undefined;
 let storageAvailable = true;
 let nativeSaveFailed = false;
 let version = 0;
-export function isLanguagePreference(value: unknown): value is LanguagePreference {
-  return value === 'system' || value === 'zh-CN' || value === 'en';
-}
-export function resolveLocale(languages: readonly string[]): Locale {
-  // Match the first language the user actually prefers; unsupported languages use English.
-  const first = languages.find(value => typeof value === 'string' && value.trim()) || 'en';
-  return /^zh(?:-|_|$)/i.test(first) ? 'zh-CN' : 'en';
-}
 export function getLanguagePreference(): LanguagePreference {
   if (preference) return preference;
   try {
@@ -65,7 +100,7 @@ function publish(source: 'web' | 'native' | 'system' | 'storage') {
     document.documentElement.lang = getLocale();
     document.title = t('app.documentTitle');
     const manifest = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
-    if (manifest) manifest.href = getLocale() === 'en' ? '/manifest.en.webmanifest' : '/manifest.webmanifest';
+    if (manifest) manifest.href = getLocale() === 'zh-CN' ? '/manifest.webmanifest' : `/manifest.${getLocale()}.webmanifest`;
   }
   for (const listener of listeners) listener();
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(LANGUAGE_EVENT, { detail: { preference: getLanguagePreference(), locale: getLocale(), source } }));
@@ -81,8 +116,8 @@ export function setLanguagePreference(value: LanguagePreference, source: 'web' |
   publish(source);
 }
 export function setNativeLanguage(value: LanguagePreference, locale?: Locale) {
-  if (!isLanguagePreference(value)) return;
-  if (locale === 'zh-CN' || locale === 'en') nativeSystemLocale = locale;
+  if (!isLanguagePreference(value) || (locale !== undefined && !isLocale(locale))) return;
+  if (isLocale(locale)) nativeSystemLocale = locale;
   setLanguagePreference(value, 'native');
 }
 export function initializeLanguage() {
@@ -96,23 +131,6 @@ export function initializeLanguage() {
   window.addEventListener('languagechange', system);
   publish('system');
   return () => { window.removeEventListener('storage', storage); window.removeEventListener('languagechange', system); };
-}
-// Only canonical application error/toast strings use this compatibility index.
-// No DOM text or user record content is scanned or rewritten.
-const sourceKeys = new Map<string, string>();
-const patterns: { key: string; names: string[]; pattern: RegExp }[] = [];
-for (const dictionary of [messages['zh-CN'], messages.en]) for (const [key, value] of Object.entries(dictionary)) {
-  if (!sourceKeys.has(value)) sourceKeys.set(value, key);
-  const names: string[] = [];
-  const parts = value.split(/(\{[a-zA-Z0-9_]+\})/g);
-  if (parts.length > 1) {
-    const expression = parts.map(part => {
-      if (/^\{[a-zA-Z0-9_]+\}$/.test(part)) { names.push(part.slice(1, -1)); return '([\\s\\S]*?)'; }
-      return part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }).join('');
-    // A literal anchor prevents matching arbitrary content against a lone parameter.
-    if (parts.some(part => !/^\{/.test(part) && part.trim().length > 1)) patterns.push({ key, names, pattern: new RegExp(`^${expression}$`) });
-  }
 }
 // Count fields for app-owned materialized status messages. i18next still selects all
 // plural forms; this only restores their original numeric option after a locale switch.
@@ -139,22 +157,73 @@ const statusCountFields = {
   'ui.secondary.listTransfer.completedTransferSummary': 'v1',
   'ui.secondary.taskAttachments.unconfirmedTheOriginalFileIsRetainedOnly': 'v1',
 } satisfies Partial<Record<MessageKey, string>>;
+// Only canonical application error/toast strings use this compatibility index.
+// No DOM text or user record content is scanned or rewritten.
+const sourceKeys = new Map<string, string>();
+// Dynamic compatibility is deliberately opt-in. Generic UI ranges, count/unit
+// formats and user-data templates must never reinterpret an arbitrary error.
+const compatibleDynamicKeys = new Set<string>([
+  ...Object.keys(statusCountFields),
+  'core.theHolidaySourceReturnedHttpValueTheMost',
+  'core.chineseStatutoryHolidayDataDoesNotCoverValue',
+  'core.chineseStatutoryHolidayDataDoesNotCoverValueVerified',
+  'core.lunarDateDoesNotExistYearValueValue',
+  'core.invalidDateValue',
+  'core.invalidTimeValue',
+  'ui.secondary.calendarBatch.confirmedThisTimeRemainingContinueWithThe',
+  'ui.secondary.calendarBatch.confirmedRemainingSelectionsAndOriginalSchedulesAre',
+  'ui.secondary.habitGroupManager.confirmedRemainingItemsAndTheTargetAre',
+  'ui.secondary.recordForm.originalInputIsRetainedForExportBefore',
+  'ui.secondary.reminderActions.theOriginalOperationIsRetainedVerifyAnd',
+  'ui.secondary.workspaceSync.reviewPendingChangesInViewAndRecover',
+]);
+const patterns: { key: string; locale: Locale; names: string[]; pattern: RegExp; specificity: number }[] = [];
+for (const locale of LOCALES) for (const [key, value] of Object.entries(messages[locale])) {
+  if (!sourceKeys.has(value)) sourceKeys.set(value, key);
+  const names: string[] = [];
+  const parts = value.split(/(\{[a-zA-Z0-9_]+\})/g);
+  if (parts.length > 1 && (key.startsWith('errors.') || compatibleDynamicKeys.has(key.replace(/_(zero|one|two|few|many|other)$/, '')))) {
+    const expression = parts.map(part => {
+      if (/^\{[a-zA-Z0-9_]+\}$/.test(part)) { names.push(part.slice(1, -1)); return '([\\s\\S]*?)'; }
+      return part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }).join('');
+    // A literal anchor prevents matching arbitrary content against a lone parameter.
+    if (parts.some(part => !/^\{/.test(part) && part.trim().length > 1)) patterns.push({ key, locale, names, pattern: new RegExp(`^${expression}$`), specificity: parts.filter(part => !/^\{/.test(part)).join('').length });
+  }
+}
+// Prefer the most specific owned message when canonical error templates overlap.
+patterns.sort((a, b) => b.specificity - a.specificity);
+/** Parse only app-formatted count fields, using the source message's locale. */
+function parseFormattedNumber(value: string, locale: Locale): number | undefined {
+  const parts = new Intl.NumberFormat(locale).formatToParts(12345.6);
+  let normalized = value.trim();
+  const group = parts.find(part => part.type === 'group')?.value;
+  const decimal = parts.find(part => part.type === 'decimal')?.value;
+  if (group) normalized = normalized.split(group).join('');
+  if (decimal) normalized = normalized.replace(decimal, '.');
+  return /^-?\d+(?:\.\d+)?$/.test(normalized) ? Number(normalized) : undefined;
+}
 /** Re-localize known, app-owned error and status strings received over existing APIs. */
 function translateKnownMessage(keyOrMessage: string, params: MessageParameters = {}): string {
   const locale = getLocale();
+  let sourceLocale = locale;
   let key = Object.hasOwn(messages[locale], keyOrMessage) || Object.hasOwn(messages['zh-CN'], keyOrMessage) ? keyOrMessage : sourceKeys.get(keyOrMessage);
   if (!key) for (const item of patterns) {
     const match = item.pattern.exec(keyOrMessage);
-    if (match) { key = item.key; params = { ...Object.fromEntries(item.names.map((name, i) => [name, match[i + 1]])), ...params }; break; }
+    if (match) { key = item.key; sourceLocale = item.locale; params = { ...Object.fromEntries(item.names.map((name, i) => [name, match[i + 1]])), ...params }; break; }
   }
   if (!key) return keyOrMessage;
-  const baseKey = key.replace(/_(one|other)$/, '');
+  const baseKey = key.replace(/_(zero|one|two|few|many|other)$/, '');
   const countField = statusCountFields[baseKey as keyof typeof statusCountFields];
   if (countField) {
     key = baseKey;
     const rawCount = params.count ?? params[countField];
     if (typeof rawCount === 'number') params = { ...params, count: rawCount };
-    else if (typeof rawCount === 'string' && /^\d+(?:,\d{3})*(?:\.\d+)?$/.test(rawCount)) params = { ...params, count: Number(rawCount.replaceAll(',', '')) };
+    else if (typeof rawCount === 'string') {
+      const number = parseFormattedNumber(rawCount, sourceLocale);
+      if (number !== undefined) params = { ...params, count: number };
+    }
+    if (typeof params.count === 'number') params = { ...params, [countField]: formatNumber(params.count) };
   }
   return String(translation.t(key as MessageKey, { lng: locale, ...params }));
 }
@@ -175,8 +244,18 @@ export function formatTime(value: Date | string | number, options: Intl.DateTime
   return formatDate(value, { hour: 'numeric', minute: '2-digit', ...options });
 }
 export function formatNumber(value: number, options: Intl.NumberFormatOptions = {}) { return new Intl.NumberFormat(getLocale(), options).format(value); }
-export function plural(count: number, singularEnglish: string, pluralEnglish: string, chineseUnit: string) {
-  return String(translation.t('common.countedUnit', { lng: getLocale(), count, amount: formatNumber(count), one: getLocale() === 'zh-CN' ? chineseUnit : singularEnglish, other: getLocale() === 'zh-CN' ? chineseUnit : pluralEnglish }));
+export function plural(count: number, unit: CountedUnit) {
+  return String(translation.t(`units.${unit}` as MessageKey, { lng: getLocale(), count, amount: formatNumber(count) }));
+}
+/** Preserve locale word order when a numeric amount needs separate visual styling. */
+export function countedUnitParts(count: number, unit: CountedUnit) {
+  const marker = '\uFFF0';
+  const label = String(translation.t(`units.${unit}` as MessageKey, { lng: getLocale(), count, amount: marker }));
+  const [before, after = ''] = label.split(marker);
+  return { before, amount: formatNumber(count), after };
+}
+export function formatList(values: readonly string[], options: Intl.ListFormatOptions = { type: 'conjunction', style: 'long' }) {
+  return new Intl.ListFormat(getLocale(), options).format(values);
 }
 export function weekdayNames(width: 'long' | 'short' | 'narrow' = 'short', weekStart = 0) {
   return Array.from({ length: 7 }, (_, index) => formatDate(new Date(2024, 0, 7 + (index + weekStart) % 7, 12), { weekday: width }));
@@ -184,8 +263,8 @@ export function weekdayNames(width: 'long' | 'short' | 'narrow' = 'short', weekS
 
 // Resources are bundled; initialization is synchronous and never performs network requests.
 void translation.init({
-  lng: getLocale(), fallbackLng: 'en', supportedLngs: ['zh-CN', 'en'], load: 'currentOnly',
-  resources: { en: { translation: messages.en }, 'zh-CN': { translation: messages['zh-CN'] } },
+  lng: getLocale(), fallbackLng: 'en', supportedLngs: [...LOCALES], load: 'currentOnly',
+  resources: Object.fromEntries(LOCALES.map(locale => [locale, { translation: messages[locale] }])),
   keySeparator: false, nsSeparator: false, initAsync: false,
   interpolation: { escapeValue: false, prefix: '{', suffix: '}' },
   returnNull: false, returnEmptyString: false, react: { useSuspense: false },

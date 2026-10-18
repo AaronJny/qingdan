@@ -3,16 +3,15 @@ const fs = require('node:fs');
 const path = require('node:path');
 const translations = require('./translations.cjs');
 const i18next = require('i18next').createInstance();
-const resources = Object.fromEntries(['zh-CN', 'en'].map(locale => [locale, { translation: Object.fromEntries(Object.entries(translations).map(([key, value]) => [key, value[locale]])) }]));
-i18next.init({ lng: 'zh-CN', fallbackLng: 'en', supportedLngs: ['zh-CN', 'en'], resources, initAsync: false, keySeparator: false, interpolation: { escapeValue: false } });
-const choices = Object.freeze(['system', 'zh-CN', 'en']);
+const { locales, choices, names, validLocale, validPreference, systemLocale: detectLocale } = require('./language-policy.cjs');
+const resources = Object.fromEntries(locales.map(locale => [locale, { translation: ['zh-CN', 'en'].includes(locale) ? Object.fromEntries(Object.entries(translations).map(([key, value]) => [key, value[locale]])) : require(`./locales/${locale}.json`) }]));
+i18next.init({ lng: 'zh-CN', fallbackLng: 'en', supportedLngs: locales, load: 'currentOnly', resources, initAsync: false, keySeparator: false, returnEmptyString: false, interpolation: { escapeValue: false } });
 let preference = 'system';
 let revision = 0;
 let systemLocale = 'zh-CN';
-function validPreference(value) { return typeof value === 'string' && choices.includes(value); }
 function resolveLocale(value, system = systemLocale) {
-  if (value === 'zh-CN' || value === 'en') return value;
-  return /^zh(?:[-_]|$)/i.test(typeof system === 'string' ? system : '') ? 'zh-CN' : 'en';
+  if (validLocale(value)) return value;
+  return detectLocale(system);
 }
 function getLocale() { return resolveLocale(preference); }
 function snapshot() { return { preference, locale: getLocale(), revision }; }
@@ -30,5 +29,5 @@ function savePreference(file, value) {
   return snapshot();
 }
 function t(key, locale = getLocale()) { return i18next.t(key, { lng: locale }); }
-function translateNativeError(value) { const key = Object.keys(translations).find(key => key === value || translations[key]['zh-CN'] === value || translations[key].en === value); return key ? t(key) : value; }
-module.exports = { resources, translateNativeError, choices, validPreference, resolveLocale, getLocale, snapshot, readPreference, initialize, savePreference, t };
+function translateNativeError(value) { const key = Object.keys(translations).find(key => key === value || locales.some(locale => resources[locale].translation[key] === value)); return key ? t(key) : value; }
+module.exports = { locales, names, resources, translateNativeError, choices, validPreference, resolveLocale, getLocale, snapshot, readPreference, initialize, savePreference, t };

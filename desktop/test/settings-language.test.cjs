@@ -59,3 +59,18 @@ test('a newer native commit from another window survives a delayed local save ac
  assert.equal(h.language.value,'zh-CN');assert.equal(h.document.documentElement.lang,'zh-CN');
  h.notify({preference:'en',locale:'en',revision:1});assert.equal(h.language.value,'zh-CN');
 });
+
+test('malformed language acknowledgement keeps confirmed choice and displays failure',async()=>{
+ const h=await harness({saveLanguage:async()=>({preference:'ja',locale:'it',revision:1})});
+ h.language.value='ja';await h.language.dispatch('change');
+ assert.equal(h.language.value,'system');assert.equal(h.document.documentElement.lang,'zh-CN');
+ assert.ok(h.message.textContent);
+});
+
+test('unsuperseded stale acknowledgement restores the accepted revision and reports failure',async()=>{
+ for(const reply of [{preference:'en',locale:'en',revision:2},{preference:'system',locale:'zh-CN',revision:0}]){
+ const initial=deferred();const h=await harness({initialLanguage:initial,saveLanguage:async()=>reply});
+ initial.resolve({preference:'en',locale:'en',revision:3});await flush();h.input.value='https://preserved.example/';h.input.dispatch('input');
+ h.language.value='ja';await h.language.dispatch('change');assert.equal(h.language.value,'en');assert.equal(h.document.documentElement.lang,'en');assert.equal(h.input.value,'https://preserved.example/');assert.equal(h.message.textContent,'Could not save the language preference.');
+ }
+});

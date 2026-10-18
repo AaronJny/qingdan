@@ -1,11 +1,11 @@
 {
   "schema": "qingdan-android-source-v1",
   "product": "qingdan",
-  "android_client_version": "0.2.1",
+  "android_client_version": "0.3.0",
   "application_baseline_version": "1.0.1",
   "application_baseline_commit": "c3194463a8cf748242955c61da72969c652ea062",
   "application_baseline_source_zip_sha256": "3cf3e87df0fcbceda9a1053524ad0c1fdc2a595b36712a8d583a58fc5359372d",
-  "unchanged_baseline_webapp_files": 151,
+  "unchanged_baseline_webapp_files": 150,
   "android_adaptations": [
     {
       "path": "webapp/AUTH.md",
@@ -30,6 +30,11 @@
       "change": "android-adapted",
       "baseline_sha256": "57c75438cfa5bad28a1f53d79461007741bffac613e2b4f10e7797a5f06786e7",
       "sha256": "7b7dda5fe8945fbb16781284f0f7cdda7f2f8372e4883f370f1fb2ff7e768227"
+    },
+    {
+      "path": "webapp/SOURCE-MANIFEST.json",
+      "change": "added",
+      "sha256": "d4d05f41d83a3c81125845e88f97ac296eaca9d604e5fc1ab0d83f70e987857c"
     },
     {
       "path": "webapp/app/activity-view.tsx",
@@ -83,13 +88,13 @@
       "path": "webapp/app/full-backup-panel.tsx",
       "change": "android-adapted",
       "baseline_sha256": "ea868d4189628d6c173cd92c42e8fb87a47bae523586fae49605fc6eb31b9dec",
-      "sha256": "b179e7b1bb3ac3e57fcc040830fd8c138707b11c3d12349035b2834b4a0a2c8a"
+      "sha256": "f3dd42a1d55bc327d18ef43d4587e1e5a4b545dd39b6b841a1bc7865246e0a51"
     },
     {
       "path": "webapp/app/globals.css",
       "change": "shared Qingdan clipboard branding",
       "baseline_sha256": "a90bc78b5fbe7db562b44f1f7d25a4dccb65c789c9d9261a9f0a088a6d9e7380",
-      "sha256": "e7a0ce4c1c968a728898cbf63ca43b033eaf10621ee00eed72cb57198d3051b8"
+      "sha256": "2060047dcbf0d04f77670a093d2032f0b783bcf76e7fe78a78223d254c3f435a"
     },
     {
       "path": "webapp/app/habit-editor.tsx",
@@ -131,7 +136,7 @@
       "path": "webapp/app/merge-dialog.tsx",
       "change": "android-adapted",
       "baseline_sha256": "501e06b5e9f85ee1861747a743444ca1ad6d19443d2ec632f478e14d3b0b0f36",
-      "sha256": "dafd8238b7b7fac0d4ab7ba67839d1f896c6edf4c701184cac9dde07e60a05ca"
+      "sha256": "e5b718ff8921508ce45b91f11217df5537003463abf8a86ddb18b85ebd34f3a4"
     },
     {
       "path": "webapp/app/offline-shell-settings.tsx",
@@ -191,25 +196,30 @@
       "path": "webapp/app/workspace-dialogs.tsx",
       "change": "copy-only cleanup",
       "baseline_sha256": "fcde7e275447288faee720abd3c4d8f998a9303d4724ab5ae73ff0a014ccec81",
-      "sha256": "114e4fe6e747db8093e5bac2c6daf8cad0465887413d97d13244596bcb5ab309"
+      "sha256": "81da6048c90cec6c767be8ae11e07150337e7d92876cc2d92c2d14ed0ae2229d"
     },
     {
       "path": "webapp/app/workspace-views.tsx",
       "change": "android-adapted",
       "baseline_sha256": "8e1ce9a2bcc64677b89f732d3fd0dd26fa2388bc7919aeaf24330c059f61ccf2",
-      "sha256": "34ea3a935e57f347129849cc900575257ae90f110bd262c4a955c565e2327c33"
+      "sha256": "e5b01de477fb21013e3cc9b91c6bd77f0e1ee9307c32530bf8e857e60a346f5a"
     },
     {
       "path": "webapp/app/workspace.tsx",
       "change": "android-adapted",
       "baseline_sha256": "a733f26f899acf3982098758e7157626bf4b68bdca27db69b78db3da0215f012",
-      "sha256": "b1e9822f827b9b2647ccd7c3fb50f010f14ba56c8c0e552472a6f599773e0e8c"
+      "sha256": "76a3a495ea64382d5acca4c6921bb6d276e42fd49bbe4b8d31d4bf689c7e35ec"
     },
     {
       "path": "webapp/assets/IMPORT_INTEGRATIONS_README.md",
       "change": "android-adapted",
       "baseline_sha256": "ce7f9966927e855944903df258bded74e41cd994db91234872630173e266c307",
       "sha256": "ddfcc47ea8fb3f3bcc40513ae45bfc714d8f4eac08374f625f1920f0d96b2d5e"
+    },
+    {
+      "path": "webapp/assets/recurrence-english.test.ts",
+      "change": "added",
+      "sha256": "364654a8ddd2a1babf94bcfcb4e31dda822f7016c95990709c980f9706d861c9"
     },
     {
       "path": "webapp/assets/recurrence.ts",
@@ -272,34 +282,264 @@
       "sha256": "15aac67d1096be1e097cf0a23e7093596b3fba9bd796ad72ac79d6bc526d5053"
     },
     {
+      "path": "webapp/lib/domain-presentation.i18n.test.ts",
+      "change": "added",
+      "sha256": "58af212636c3f5aeaf2ddb2e8ffcc16cf51647c35d9c7a199b496aed2b192969"
+    },
+    {
+      "path": "webapp/lib/full-backup-status.test.ts",
+      "change": "added",
+      "sha256": "5dc28eb93cbc2d01eb72a81fac0af0c2d72a82e32947f70e70aeff72ed903d45"
+    },
+    {
+      "path": "webapp/lib/full-backup-status.ts",
+      "change": "added",
+      "sha256": "5b19eb5523a43fb931db3aa3505ed6af118d8612a43c559f228e3386ed983d91"
+    },
+    {
       "path": "webapp/lib/habit-metrics.ts",
       "change": "android-adapted",
       "baseline_sha256": "7deeef39bdb8aa8f15082a07fd5226feda6f5d6c16fb05e5e364fbd5cc357b55",
       "sha256": "5f95b812b74e8656d0ae9a16ec9115226208d8f989e860ba82ea3a1d51982eac"
     },
     {
+      "path": "webapp/lib/i18n-react.tsx",
+      "change": "added",
+      "sha256": "89634dff6a1401089165640ec5a8f5b03c1dcec6fb014e0615bd5c3156e84222"
+    },
+    {
+      "path": "webapp/lib/i18n-records.ts",
+      "change": "added",
+      "sha256": "47c37ef69886002c5efb095e280e755bfb9e68e8b0d1073043916edbb7f0f27e"
+    },
+    {
+      "path": "webapp/lib/i18n-units.test.ts",
+      "change": "added",
+      "sha256": "60f415022e134aba83595bc29df901d2e10a1fae4092a5f9e15c2432dc2fde5f"
+    },
+    {
+      "path": "webapp/lib/i18n-units.ts",
+      "change": "added",
+      "sha256": "9f4496910d2a80aff479da591c65be44320d1a9a3786606efab8dbeb231fcacc"
+    },
+    {
+      "path": "webapp/lib/i18n.test.ts",
+      "change": "added",
+      "sha256": "c2f75541de6bd84af83b6213a42d4b137bd13ab9d4571f1ea27860b1c52420f5"
+    },
+    {
       "path": "webapp/lib/i18n.ts",
       "change": "added",
       "scope": "Shared bilingual language runtime with a platform-specific storage dependency; remains byte-identical to the main application runtime.",
-      "sha256": "a9f9e9aef3336cd85d623ad748b9ca5e567ceb00759d59e07bde20c215408e78"
+      "sha256": "8ef1f23078a4be6c056b723099c75022bf416194f38d3e3e94d3961e6a5222bd"
+    },
+    {
+      "path": "webapp/lib/i18next.d.ts",
+      "change": "added",
+      "sha256": "7ad16e0ec5c14d47976182e756e683edd6910218b7d6c892666fa7d6d54afafb"
+    },
+    {
+      "path": "webapp/lib/language-policy.test.ts",
+      "change": "added",
+      "sha256": "9d7a4b8af622e5200692d4ab17d486ee7e9f1816698cc59a701a609488dc930a"
+    },
+    {
+      "path": "webapp/lib/language-policy.ts",
+      "change": "added",
+      "sha256": "bc8ad136dbd93b37aacada4ab308224c9db1cb2ee8b3d3fe97816dba5798b12c"
+    },
+    {
+      "path": "webapp/lib/locales/core.de.json",
+      "change": "added",
+      "sha256": "e3d4364ce6530e63dce1677e9571e76f4ae38287f60569bedecdcc432e2f40c6"
     },
     {
       "path": "webapp/lib/locales/core.en.json",
       "change": "added",
       "scope": "Shared English core catalog; remains byte-identical to the main application catalog.",
-      "sha256": "1674cf4119353c27bb30a38bb92a35ce17585c6e7c19ecb505b8f9243a34d561"
+      "sha256": "2e4a285bc17e192c3120c77d908dd377374e8253244a1f4a851a08ed5eb2ac49"
+    },
+    {
+      "path": "webapp/lib/locales/core.es.json",
+      "change": "added",
+      "sha256": "94c542813028849b690ffb483680ad9be6fc14ae7937a75f35b1094c0d187605"
+    },
+    {
+      "path": "webapp/lib/locales/core.fr.json",
+      "change": "added",
+      "sha256": "fec8d46bff0f6b6659ca59d8324558dd096f6d9cecb5799de649f3798b6bf339"
+    },
+    {
+      "path": "webapp/lib/locales/core.ja.json",
+      "change": "added",
+      "sha256": "b63d67a863631210b680e00f569e8b9f84935569aa202449eb58a8d430b632d5"
+    },
+    {
+      "path": "webapp/lib/locales/core.ko.json",
+      "change": "added",
+      "sha256": "7f0c827b4b5fd2e610e31cf5aabe36ffd82d8376b5128bfe127e8d4d221359ca"
+    },
+    {
+      "path": "webapp/lib/locales/core.pt-BR.json",
+      "change": "added",
+      "sha256": "6997f753e3bb9dc0f3d3eeddded3b9e8bc3ab6b8a4d07d6e74ddf00716acab5e"
+    },
+    {
+      "path": "webapp/lib/locales/core.zh-TW.json",
+      "change": "added",
+      "sha256": "dfdcc126b22deafe64c775c2d853dc146c4675783a21e6b1af0118217b41af79"
     },
     {
       "path": "webapp/lib/locales/core.zh.json",
       "change": "added",
       "scope": "Shared Simplified Chinese core catalog; remains byte-identical to the main application catalog.",
-      "sha256": "a0765cf655779f0731b02c4a4d06e9d374b39eb7a2714d63b0291e77ac2efab6"
+      "sha256": "363d67c02f9ee7e170b5a9f4033bc0485dc240f0565b6379f5798fcd721d76b8"
+    },
+    {
+      "path": "webapp/lib/locales/domain.de.json",
+      "change": "added",
+      "sha256": "bb62eaff919e479d51104d57ecddff9543328514a8edc5daa749e7120751c755"
+    },
+    {
+      "path": "webapp/lib/locales/domain.en.json",
+      "change": "added",
+      "sha256": "dfdf9ac7e53c4054a304f07316aa74c9806aab265e04a7d138b2970f16eeb432"
+    },
+    {
+      "path": "webapp/lib/locales/domain.es.json",
+      "change": "added",
+      "sha256": "53536a07a3f69b19c3943c1ae93a73862583ff229e1d64742df13f61e271eb96"
+    },
+    {
+      "path": "webapp/lib/locales/domain.fr.json",
+      "change": "added",
+      "sha256": "8c77eae07112e4030647e4064438051c2121e6a9784e182b89d51eeefda8b19c"
+    },
+    {
+      "path": "webapp/lib/locales/domain.ja.json",
+      "change": "added",
+      "sha256": "db804739049a24ec409b835c192dbc6ccc5eea5330793d864c20fa86dc63b431"
+    },
+    {
+      "path": "webapp/lib/locales/domain.ko.json",
+      "change": "added",
+      "sha256": "ac14d64483f7357aeb7bd5bf276ab244cb8605ec5783a98ffe913bf85447b54b"
+    },
+    {
+      "path": "webapp/lib/locales/domain.pt-BR.json",
+      "change": "added",
+      "sha256": "7801fa15e0011344c74376783458af99ed7452e52ddb75c36f91b78d90d80635"
+    },
+    {
+      "path": "webapp/lib/locales/domain.zh-TW.json",
+      "change": "added",
+      "sha256": "2c49568a8b77430d939f849b21b641cc5928d74fce4a47ee6c273e46e6532695"
+    },
+    {
+      "path": "webapp/lib/locales/domain.zh.json",
+      "change": "added",
+      "sha256": "a77152bad5e8cdadb081a668f5b27a0b01d3c7e3a298bd23c6ba1d7fa108fbae"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.de.json",
+      "change": "added",
+      "sha256": "4abd217a61da2944cf7d060efe880a2d98202ca8d8565add8aeb7032a178aaf4"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.en.json",
+      "change": "added",
+      "sha256": "93b7d44656d2171e670697a4b5655c57f676f796996e7d0f0b7c2b922fb86639"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.es.json",
+      "change": "added",
+      "sha256": "0c6cff7e4d32bb50d0781069e57da692caecf6c57ab2226a27dd85c2ec0af8d8"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.fr.json",
+      "change": "added",
+      "sha256": "44926693af41910b0bf12332476c02f1fbd2b04ec573225da81e52c8bf28ba3c"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.ja.json",
+      "change": "added",
+      "sha256": "2ec08222ede2e89a7eb418044a82280ab6bc4fd6a6804fa94f2e756ee1444cd4"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.ko.json",
+      "change": "added",
+      "sha256": "354f7033e6dea457ee401e221f1d30ceea01dc85c7e0f56a87534bdc1d320be8"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.pt-BR.json",
+      "change": "added",
+      "sha256": "87d3e329b6fef8a4c46bd69343dc1ce07e220fdfa9e294e90a45843e3274e2a4"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.zh-TW.json",
+      "change": "added",
+      "sha256": "56f31c3d62ece524c9c4d053130673e72d1afe3fafd7bf3e1754dac78c057462"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.zh.json",
+      "change": "added",
+      "sha256": "ea72251085158c867fdaa94d0d1c58f2408112625dc380c63bcd5acae7e3985f"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.de.json",
+      "change": "added",
+      "sha256": "ad6a5dfdf54988bded1ca12bc0abce407941cb01d18cd11c9cc8beb08e1f5b97"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.en.json",
+      "change": "added",
+      "sha256": "b43e841a05db1f3a2ee22618d26998f4f2aa867a63b636ae839b6377364ce71d"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.es.json",
+      "change": "added",
+      "sha256": "054ae72b5fb7fcb3863db9e96c658538ce57b4e8e4388ef0e5a486ce30c9db39"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.fr.json",
+      "change": "added",
+      "sha256": "f0baeab2237ba045dee7137d1878b7f81f8daf4f2bef345908093f6da5489096"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.ja.json",
+      "change": "added",
+      "sha256": "978100f40d90ea5b8f206b690f61f7401eff800f2cb53ffd212eebb664887c09"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.ko.json",
+      "change": "added",
+      "sha256": "4874e69846868b1411e403fa5d795b1f00c431863bd3d431020c8afa5a1b4767"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.pt-BR.json",
+      "change": "added",
+      "sha256": "0ffef7ac6c07b0ba9ad3cc254cd190105f509122458c55a8343c7ea79f95f353"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.zh-TW.json",
+      "change": "added",
+      "sha256": "7242b627ce28dcee0c50e0a9afb0fb00d8c7be9d7b735ad9d0954272b4347d88"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.zh.json",
+      "change": "added",
+      "sha256": "2a9d7d10af5959c68418d788adf0cb528fc73223b71a3cb1b3f4396791fd41d4"
     },
     {
       "path": "webapp/lib/offline-shell-client.ts",
       "change": "android-adapted",
       "baseline_sha256": "cde436f790b425a3597308f18913d281cf5d1a7887d662a87f98d95003242905",
       "sha256": "9a41c41972395ea815f794fb1f1b790057c3105e1dfc05aba476c6f2ac86ed35"
+    },
+    {
+      "path": "webapp/lib/responsive-header.test.ts",
+      "change": "added",
+      "sha256": "513c59d9cf709328353b70984a5dafbdee299df0d20b08451cafbabe963c16d7"
     },
     {
       "path": "webapp/lib/types.ts",
@@ -314,7 +554,7 @@
     },
     {
       "path": "webapp/native/dispatch.ts",
-      "change": "Android native API adapter; independent client identity 0.2.1 with business baseline 1.0.1 unchanged",
+      "change": "Android native API adapter; independent client identity 0.3.0 with business baseline 1.0.1 unchanged",
       "sha256": "9eb500f132b3a28df210272edbdcc66c1133f1613c44236bedca4c4504652740"
     },
     {
@@ -362,10 +602,50 @@
       "baseline_sha256": "d051a8c47936990a9085693d307bb7cea1bc1b6d7ed956bcbaacf674f4ec96b9"
     },
     {
+      "path": "webapp/public/manifest.de.webmanifest",
+      "change": "added",
+      "sha256": "eddbe4a7ed66106f03da938f4511442700e6a747999989005f8717da4e503068"
+    },
+    {
+      "path": "webapp/public/manifest.en.webmanifest",
+      "change": "added",
+      "sha256": "76678c2777562d8fd60c9aaf3f7e1d16c99375d3bf7b1b0fcb9c670cdab5369f"
+    },
+    {
+      "path": "webapp/public/manifest.es.webmanifest",
+      "change": "added",
+      "sha256": "fd3170ad9a70e9b6eed949dfe7df33059560a5b49724c6054f0d1e4d8aa116c7"
+    },
+    {
+      "path": "webapp/public/manifest.fr.webmanifest",
+      "change": "added",
+      "sha256": "09292634fbb2a6f13311ecc4ed73aaf57f2f75d9a08a464b7b4e636821ee8b9e"
+    },
+    {
+      "path": "webapp/public/manifest.ja.webmanifest",
+      "change": "added",
+      "sha256": "c04ef4701670f881d33aeba33568e1c4777a27ca65b39972dc2d5c30d3b1dd9d"
+    },
+    {
+      "path": "webapp/public/manifest.ko.webmanifest",
+      "change": "added",
+      "sha256": "48d2f490b5f69f43e96a589cd592e98cd155da560c9aa8e5c31590d30da7630f"
+    },
+    {
+      "path": "webapp/public/manifest.pt-BR.webmanifest",
+      "change": "added",
+      "sha256": "fbe8cfd802d4ef5f333f62e708163521d791c96601112dc84b223a42ad62cf80"
+    },
+    {
       "path": "webapp/public/manifest.webmanifest",
       "change": "shared Qingdan clipboard branding",
       "baseline_sha256": "84998a85319da6edcf8184aea35f74a27b1ff43591a1aa6278f9b6fd737e0806",
       "sha256": "1293292f418061571123216715b33ed6e57ee5295c7cfdef4488a46dfe4d7b4a"
+    },
+    {
+      "path": "webapp/public/manifest.zh-TW.webmanifest",
+      "change": "added",
+      "sha256": "2855241ab95b8978caec11aa68bbc688f1aff7ae3aeb4cc901dda06616879a27"
     },
     {
       "path": "webapp/public/window.svg",
@@ -377,6 +657,11 @@
       "change": "android-adapted",
       "sha256": "222efb358690710dcd33ec28242e52b469234942ac7343d9193942b195cbe9af",
       "baseline_sha256": "9a4449ce7020f0cd757edf25a0bd00a8b4e785e8372684504f2ffad3cccd54fb"
+    },
+    {
+      "path": "webapp/scripts/check-i18n.mjs",
+      "change": "added",
+      "sha256": "a295d0335e5540988e214b4b96b095a62a20d7fd9703b3bd8addf24612adf028"
     },
     {
       "path": "webapp/scripts/check-release.mjs",
@@ -397,6 +682,26 @@
       "sha256": "96516520458744790f7c180cebc07d1f21cdcbc914a44c0f0a7df1ddbbdc91d2"
     },
     {
+      "path": "webapp/tests/full-backup-language-ui.test.tsx",
+      "change": "added",
+      "sha256": "36ac402873d149913c3be80828fba1d5e996fa9119b38b8b92df46eb3cd28617"
+    },
+    {
+      "path": "webapp/tests/localization-primary-ui.test.tsx",
+      "change": "added",
+      "sha256": "c6a1ced23a60a75b2bf2ca6dc3e8fbfca8d0138605417f25ef3b784f1772128a"
+    },
+    {
+      "path": "webapp/tests/localization-runtime-ui.test.tsx",
+      "change": "added",
+      "sha256": "60f62ffbd58ae4804ff641b0928b3a98ca91a0f74cb811f3ec289387b6229942"
+    },
+    {
+      "path": "webapp/tests/secondary-i18n-ui.test.tsx",
+      "change": "added",
+      "sha256": "e6a1ef584616cbef5c51ea66a42c0becef7991a93e4c3adecfee8576f9b1e0a0"
+    },
+    {
       "path": "webapp/tests/session-ui.test.tsx",
       "change": "android-adapted",
       "baseline_sha256": "976daf26399cd38295599c5251f718bef4fdecc30ddb45ae3dcb3dbda019c480",
@@ -405,7 +710,13 @@
     {
       "path": "webapp/tests/settings-language-ui.test.tsx",
       "change": "added: bilingual General settings language placement and preservation tests",
-      "sha256": "8a4a6c887a982a78c3e386a3135ee90ca98988ac91935c20afe7ea2286bfa50d"
+      "sha256": "d527fb0278ed66c8110a4d476fb4a7bb79ff9776ac4465a4700139b068c99406"
+    },
+    {
+      "path": "webapp/tests/standalone-evidence.json",
+      "change": "android-adapted",
+      "baseline_sha256": "9f5af3c363a1d562f7f0be1160cca5a2f828474de0ae8bd702a74f4eabb580fa",
+      "sha256": "3b058244af487ed2011ba57f0da876558618bece85b0c50f4c5f0ab20f9cdddb"
     },
     {
       "path": "webapp/tests/ui.test.tsx",
@@ -476,7 +787,7 @@
     {
       "path": "android/app/build.gradle",
       "bytes": 3568,
-      "sha256": "982b1e2a7a1d2a9fa6ca8389e84f05a5b624284d1278d6047baf7f50787961e0"
+      "sha256": "9ff19effe7adcbde8090e7d61db683ec761dcfdee4bc527197af9ca690ce8cc6"
     },
     {
       "path": "android/app/src/androidTest/AndroidManifest.xml",
@@ -555,8 +866,8 @@
     },
     {
       "path": "android/app/src/main/java/cn/qingdan/android/MainActivity.java",
-      "bytes": 51608,
-      "sha256": "2e385fb98648f286b2eea565d906ed5e2588d81d5044c3672d95016aa76896b7"
+      "bytes": 51529,
+      "sha256": "8e454db42c95fc9962ab8d233e509b696a8869777ff87b113e30abf037a98312"
     },
     {
       "path": "android/app/src/main/java/cn/qingdan/android/NativeErrors.java",
@@ -565,8 +876,8 @@
     },
     {
       "path": "android/app/src/main/java/cn/qingdan/android/NativeLanguage.java",
-      "bytes": 2469,
-      "sha256": "8f223ef624908e65cc05f64e7d90262d47d05d16383029e4d7bf18063dedd316"
+      "bytes": 3159,
+      "sha256": "c2a2324d6999e51dec78745b065eaa5f6e181f849bae8a95ffc2ad77b84b2a75"
     },
     {
       "path": "android/app/src/main/java/cn/qingdan/android/OriginPolicy.java",
@@ -577,6 +888,41 @@
       "path": "android/app/src/main/res/drawable/ic_qingdan.xml",
       "bytes": 1574,
       "sha256": "bde746b37d5b1e524b169f8313b93972497e84cd068967ebc346b1e99854aa6b"
+    },
+    {
+      "path": "android/app/src/main/res/values-b+zh+Hant/strings.xml",
+      "bytes": 12090,
+      "sha256": "0894a27531b609b8bf42b813e0bfd0f6d4cf186a90eb819fe5161db377361dc4"
+    },
+    {
+      "path": "android/app/src/main/res/values-de/strings.xml",
+      "bytes": 13491,
+      "sha256": "c6b9763670dd1971a3c3330a05db7f1dccbd720265b54c8ea8c25be194505583"
+    },
+    {
+      "path": "android/app/src/main/res/values-es/strings.xml",
+      "bytes": 13666,
+      "sha256": "df31d649bc504759a3d0177b89b2994650b9ef3e70c620e98ef66c67b1467616"
+    },
+    {
+      "path": "android/app/src/main/res/values-fr/strings.xml",
+      "bytes": 13925,
+      "sha256": "cf3ae114e3582bd971befb80a44589619e2f6647fac110272aa3dd46671f7e7d"
+    },
+    {
+      "path": "android/app/src/main/res/values-ja/strings.xml",
+      "bytes": 15415,
+      "sha256": "6658a826775dbedb59dc116cdf50bf3798529daf0227ecd1af871665d818a41b"
+    },
+    {
+      "path": "android/app/src/main/res/values-ko/strings.xml",
+      "bytes": 14178,
+      "sha256": "1986f8385024a736449f39f60c511839f69797175defbc4275f1e9048715bbc8"
+    },
+    {
+      "path": "android/app/src/main/res/values-pt-rBR/strings.xml",
+      "bytes": 13289,
+      "sha256": "3697ede423f1ae85f7439a524cffd67164fdc5d765d60eafb656f825bc8a16ad"
     },
     {
       "path": "android/app/src/main/res/values-zh-rCN/strings.xml",
@@ -610,8 +956,8 @@
     },
     {
       "path": "android/app/src/test/java/cn/qingdan/android/LanguagePolicyTest.java",
-      "bytes": 2555,
-      "sha256": "845711960f0187791cb0ba55a3e6c8bdb16c13a3afd19f4a9163755b6344a8d2"
+      "bytes": 3050,
+      "sha256": "138c1a8191165eb9dde60d6f0d48cc9c226cfafecce66aad5d7fb79c45bfef34"
     },
     {
       "path": "android/app/src/test/java/cn/qingdan/android/LocalStorePolicyTest.java",
@@ -675,8 +1021,8 @@
     },
     {
       "path": "artifacts/BUNDLED-ASSETS.json",
-      "bytes": 3100,
-      "sha256": "dd9a3e51171b9b0b4d1b06f1ccd2c1a2202998fc627aad9b5ed853a30d0f0b76"
+      "bytes": 4233,
+      "sha256": "7c4bcfe5b38a185bd35ccff60c28bf44ed9c515fd819d243434576f351b088d9"
     },
     {
       "path": "docs/RELEASE-SIGNING.md",
@@ -686,7 +1032,7 @@
     {
       "path": "package.json",
       "bytes": 429,
-      "sha256": "bd49c14810f0a4e51f8750577674b6890a5a8506bfce55b598d52d0835483ef2"
+      "sha256": "76498e1628b6d85a3592bfb12264b4f7234f28ca00b5ef31e7e0ce00652bbe51"
     },
     {
       "path": "scripts/build-native-api-tests.mjs",
@@ -711,7 +1057,7 @@
     {
       "path": "scripts/verify-apk.py",
       "bytes": 12130,
-      "sha256": "8e6ec55426dcedd761f3120b79ed2f62e0f5826ecd76e4732f25285cfb6d8875"
+      "sha256": "ca41bf900273b50e80edd15155ba2b160f8f4bc35bebb361747dc619153228e4"
     },
     {
       "path": "tests/android-adapter.test.mjs",
@@ -725,8 +1071,8 @@
     },
     {
       "path": "tests/native-language.test.mjs",
-      "bytes": 2019,
-      "sha256": "fb280c5f116209de2a4690a05b117867621f1d74784768f0acec8ba1aed9e1da"
+      "bytes": 3055,
+      "sha256": "540560daf47022abf5dc6bf045e7e6b228db9b20079803c24d8152ba53f26d67"
     },
     {
       "path": "tests/test_apk_verification.py",
@@ -910,13 +1256,13 @@
     },
     {
       "path": "webapp/app/full-backup-panel.tsx",
-      "bytes": 4943,
-      "sha256": "b179e7b1bb3ac3e57fcc040830fd8c138707b11c3d12349035b2834b4a0a2c8a"
+      "bytes": 4637,
+      "sha256": "f3dd42a1d55bc327d18ef43d4587e1e5a4b545dd39b6b841a1bc7865246e0a51"
     },
     {
       "path": "webapp/app/globals.css",
-      "bytes": 67742,
-      "sha256": "e7a0ce4c1c968a728898cbf63ca43b033eaf10621ee00eed72cb57198d3051b8"
+      "bytes": 69380,
+      "sha256": "2060047dcbf0d04f77670a093d2032f0b783bcf76e7fe78a78223d254c3f435a"
     },
     {
       "path": "webapp/app/habit-editor.tsx",
@@ -950,8 +1296,8 @@
     },
     {
       "path": "webapp/app/merge-dialog.tsx",
-      "bytes": 3509,
-      "sha256": "dafd8238b7b7fac0d4ab7ba67839d1f896c6edf4c701184cac9dde07e60a05ca"
+      "bytes": 3474,
+      "sha256": "e5b718ff8921508ce45b91f11217df5537003463abf8a86ddb18b85ebd34f3a4"
     },
     {
       "path": "webapp/app/offline-shell-settings.tsx",
@@ -1000,18 +1346,18 @@
     },
     {
       "path": "webapp/app/workspace-dialogs.tsx",
-      "bytes": 66089,
-      "sha256": "114e4fe6e747db8093e5bac2c6daf8cad0465887413d97d13244596bcb5ab309"
+      "bytes": 66070,
+      "sha256": "81da6048c90cec6c767be8ae11e07150337e7d92876cc2d92c2d14ed0ae2229d"
     },
     {
       "path": "webapp/app/workspace-views.tsx",
-      "bytes": 59596,
-      "sha256": "34ea3a935e57f347129849cc900575257ae90f110bd262c4a955c565e2327c33"
+      "bytes": 59294,
+      "sha256": "e5b01de477fb21013e3cc9b91c6bd77f0e1ee9307c32530bf8e857e60a346f5a"
     },
     {
       "path": "webapp/app/workspace.tsx",
-      "bytes": 71886,
-      "sha256": "b1e9822f827b9b2647ccd7c3fb50f010f14ba56c8c0e552472a6f599773e0e8c"
+      "bytes": 71960,
+      "sha256": "76a3a495ea64382d5acca4c6921bb6d276e42fd49bbe4b8d31d4bf689c7e35ec"
     },
     {
       "path": "webapp/assets/IMPORT_INTEGRATIONS_README.md",
@@ -1384,6 +1730,16 @@
       "sha256": "21bda636cec490724be69d7b7c4f4baebf5de3b00159a478069c12a081ed6896"
     },
     {
+      "path": "webapp/lib/full-backup-status.test.ts",
+      "bytes": 2753,
+      "sha256": "5dc28eb93cbc2d01eb72a81fac0af0c2d72a82e32947f70e70aeff72ed903d45"
+    },
+    {
+      "path": "webapp/lib/full-backup-status.ts",
+      "bytes": 1731,
+      "sha256": "5b19eb5523a43fb931db3aa3505ed6af118d8612a43c559f228e3386ed983d91"
+    },
+    {
       "path": "webapp/lib/full-backup.test.ts",
       "bytes": 7413,
       "sha256": "34ef47a65bfba8699d09a947917f9434ff98a03ad7b2815df9319d4f55724ab8"
@@ -1440,8 +1796,8 @@
     },
     {
       "path": "webapp/lib/i18n-react.tsx",
-      "bytes": 4599,
-      "sha256": "ded7392a2ea30d506fecbbbe5aff14f9aa4827189489fca499f23a1cf2fd0bd3"
+      "bytes": 5875,
+      "sha256": "89634dff6a1401089165640ec5a8f5b03c1dcec6fb014e0615bd5c3156e84222"
     },
     {
       "path": "webapp/lib/i18n-records.ts",
@@ -1449,14 +1805,24 @@
       "sha256": "47c37ef69886002c5efb095e280e755bfb9e68e8b0d1073043916edbb7f0f27e"
     },
     {
+      "path": "webapp/lib/i18n-units.test.ts",
+      "bytes": 1708,
+      "sha256": "60f415022e134aba83595bc29df901d2e10a1fae4092a5f9e15c2432dc2fde5f"
+    },
+    {
+      "path": "webapp/lib/i18n-units.ts",
+      "bytes": 21249,
+      "sha256": "9f4496910d2a80aff479da591c65be44320d1a9a3786606efab8dbeb231fcacc"
+    },
+    {
       "path": "webapp/lib/i18n.test.ts",
-      "bytes": 6590,
-      "sha256": "622a1e91753c40bc6d2a9351f2564aa2113aa46a1140ae8c77c8260de9d00fe8"
+      "bytes": 12330,
+      "sha256": "c2f75541de6bd84af83b6213a42d4b137bd13ab9d4571f1ea27860b1c52420f5"
     },
     {
       "path": "webapp/lib/i18n.ts",
-      "bytes": 11474,
-      "sha256": "a9f9e9aef3336cd85d623ad748b9ca5e567ceb00759d59e07bde20c215408e78"
+      "bytes": 16315,
+      "sha256": "8ef1f23078a4be6c056b723099c75022bf416194f38d3e3e94d3961e6a5222bd"
     },
     {
       "path": "webapp/lib/i18next.d.ts",
@@ -1472,6 +1838,16 @@
       "path": "webapp/lib/instant-local-date.ts",
       "bytes": 294,
       "sha256": "e86c7c38bd0bc3916b043e89473c546c0d5ee2617cb388989448cbbf4d1f3902"
+    },
+    {
+      "path": "webapp/lib/language-policy.test.ts",
+      "bytes": 1609,
+      "sha256": "9d7a4b8af622e5200692d4ab17d486ee7e9f1816698cc59a701a609488dc930a"
+    },
+    {
+      "path": "webapp/lib/language-policy.ts",
+      "bytes": 1546,
+      "sha256": "bc8ad136dbd93b37aacada4ab308224c9db1cb2ee8b3d3fe97816dba5798b12c"
     },
     {
       "path": "webapp/lib/list-transfer-plan.test.ts",
@@ -1504,14 +1880,54 @@
       "sha256": "173a96a6d04e5a4a38daf9107e146a4fea9d3e3f6e5f95b74b817c5fa154c56e"
     },
     {
+      "path": "webapp/lib/locales/core.de.json",
+      "bytes": 89930,
+      "sha256": "e3d4364ce6530e63dce1677e9571e76f4ae38287f60569bedecdcc432e2f40c6"
+    },
+    {
       "path": "webapp/lib/locales/core.en.json",
-      "bytes": 76706,
-      "sha256": "1674cf4119353c27bb30a38bb92a35ce17585c6e7c19ecb505b8f9243a34d561"
+      "bytes": 76865,
+      "sha256": "2e4a285bc17e192c3120c77d908dd377374e8253244a1f4a851a08ed5eb2ac49"
+    },
+    {
+      "path": "webapp/lib/locales/core.es.json",
+      "bytes": 89534,
+      "sha256": "94c542813028849b690ffb483680ad9be6fc14ae7937a75f35b1094c0d187605"
+    },
+    {
+      "path": "webapp/lib/locales/core.fr.json",
+      "bytes": 91715,
+      "sha256": "fec8d46bff0f6b6659ca59d8324558dd096f6d9cecb5799de649f3798b6bf339"
+    },
+    {
+      "path": "webapp/lib/locales/core.ja.json",
+      "bytes": 99676,
+      "sha256": "b63d67a863631210b680e00f569e8b9f84935569aa202449eb58a8d430b632d5"
+    },
+    {
+      "path": "webapp/lib/locales/core.ko.json",
+      "bytes": 92904,
+      "sha256": "7f0c827b4b5fd2e610e31cf5aabe36ffd82d8376b5128bfe127e8d4d221359ca"
+    },
+    {
+      "path": "webapp/lib/locales/core.pt-BR.json",
+      "bytes": 85878,
+      "sha256": "6997f753e3bb9dc0f3d3eeddded3b9e8bc3ab6b8a4d07d6e74ddf00716acab5e"
+    },
+    {
+      "path": "webapp/lib/locales/core.zh-TW.json",
+      "bytes": 71254,
+      "sha256": "dfdcc126b22deafe64c775c2d853dc146c4675783a21e6b1af0118217b41af79"
     },
     {
       "path": "webapp/lib/locales/core.zh.json",
-      "bytes": 69504,
-      "sha256": "a0765cf655779f0731b02c4a4d06e9d374b39eb7a2714d63b0291e77ac2efab6"
+      "bytes": 69666,
+      "sha256": "363d67c02f9ee7e170b5a9f4033bc0485dc240f0565b6379f5798fcd721d76b8"
+    },
+    {
+      "path": "webapp/lib/locales/domain.de.json",
+      "bytes": 2393,
+      "sha256": "bb62eaff919e479d51104d57ecddff9543328514a8edc5daa749e7120751c755"
     },
     {
       "path": "webapp/lib/locales/domain.en.json",
@@ -1519,9 +1935,44 @@
       "sha256": "dfdf9ac7e53c4054a304f07316aa74c9806aab265e04a7d138b2970f16eeb432"
     },
     {
+      "path": "webapp/lib/locales/domain.es.json",
+      "bytes": 2573,
+      "sha256": "53536a07a3f69b19c3943c1ae93a73862583ff229e1d64742df13f61e271eb96"
+    },
+    {
+      "path": "webapp/lib/locales/domain.fr.json",
+      "bytes": 2405,
+      "sha256": "8c77eae07112e4030647e4064438051c2121e6a9784e182b89d51eeefda8b19c"
+    },
+    {
+      "path": "webapp/lib/locales/domain.ja.json",
+      "bytes": 2319,
+      "sha256": "db804739049a24ec409b835c192dbc6ccc5eea5330793d864c20fa86dc63b431"
+    },
+    {
+      "path": "webapp/lib/locales/domain.ko.json",
+      "bytes": 2234,
+      "sha256": "ac14d64483f7357aeb7bd5bf276ab244cb8605ec5783a98ffe913bf85447b54b"
+    },
+    {
+      "path": "webapp/lib/locales/domain.pt-BR.json",
+      "bytes": 2328,
+      "sha256": "7801fa15e0011344c74376783458af99ed7452e52ddb75c36f91b78d90d80635"
+    },
+    {
+      "path": "webapp/lib/locales/domain.zh-TW.json",
+      "bytes": 1984,
+      "sha256": "2c49568a8b77430d939f849b21b641cc5928d74fce4a47ee6c273e46e6532695"
+    },
+    {
       "path": "webapp/lib/locales/domain.zh.json",
       "bytes": 1982,
       "sha256": "a77152bad5e8cdadb081a668f5b27a0b01d3c7e3a298bd23c6ba1d7fa108fbae"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.de.json",
+      "bytes": 57283,
+      "sha256": "4abd217a61da2944cf7d060efe880a2d98202ca8d8565add8aeb7032a178aaf4"
     },
     {
       "path": "webapp/lib/locales/ui-primary.en.json",
@@ -1529,14 +1980,79 @@
       "sha256": "93b7d44656d2171e670697a4b5655c57f676f796996e7d0f0b7c2b922fb86639"
     },
     {
+      "path": "webapp/lib/locales/ui-primary.es.json",
+      "bytes": 58521,
+      "sha256": "0c6cff7e4d32bb50d0781069e57da692caecf6c57ab2226a27dd85c2ec0af8d8"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.fr.json",
+      "bytes": 59092,
+      "sha256": "44926693af41910b0bf12332476c02f1fbd2b04ec573225da81e52c8bf28ba3c"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.ja.json",
+      "bytes": 60987,
+      "sha256": "2ec08222ede2e89a7eb418044a82280ab6bc4fd6a6804fa94f2e756ee1444cd4"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.ko.json",
+      "bytes": 57479,
+      "sha256": "354f7033e6dea457ee401e221f1d30ceea01dc85c7e0f56a87534bdc1d320be8"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.pt-BR.json",
+      "bytes": 56168,
+      "sha256": "87d3e329b6fef8a4c46bd69343dc1ce07e220fdfa9e294e90a45843e3274e2a4"
+    },
+    {
+      "path": "webapp/lib/locales/ui-primary.zh-TW.json",
+      "bytes": 48583,
+      "sha256": "56f31c3d62ece524c9c4d053130673e72d1afe3fafd7bf3e1754dac78c057462"
+    },
+    {
       "path": "webapp/lib/locales/ui-primary.zh.json",
       "bytes": 47850,
       "sha256": "ea72251085158c867fdaa94d0d1c58f2408112625dc380c63bcd5acae7e3985f"
     },
     {
+      "path": "webapp/lib/locales/ui-secondary.de.json",
+      "bytes": 79680,
+      "sha256": "ad6a5dfdf54988bded1ca12bc0abce407941cb01d18cd11c9cc8beb08e1f5b97"
+    },
+    {
       "path": "webapp/lib/locales/ui-secondary.en.json",
       "bytes": 71371,
       "sha256": "b43e841a05db1f3a2ee22618d26998f4f2aa867a63b636ae839b6377364ce71d"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.es.json",
+      "bytes": 81000,
+      "sha256": "054ae72b5fb7fcb3863db9e96c658538ce57b4e8e4388ef0e5a486ce30c9db39"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.fr.json",
+      "bytes": 82347,
+      "sha256": "f0baeab2237ba045dee7137d1878b7f81f8daf4f2bef345908093f6da5489096"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.ja.json",
+      "bytes": 84908,
+      "sha256": "978100f40d90ea5b8f206b690f61f7401eff800f2cb53ffd212eebb664887c09"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.ko.json",
+      "bytes": 78588,
+      "sha256": "4874e69846868b1411e403fa5d795b1f00c431863bd3d431020c8afa5a1b4767"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.pt-BR.json",
+      "bytes": 77872,
+      "sha256": "0ffef7ac6c07b0ba9ad3cc254cd190105f509122458c55a8343c7ea79f95f353"
+    },
+    {
+      "path": "webapp/lib/locales/ui-secondary.zh-TW.json",
+      "bytes": 67964,
+      "sha256": "7242b627ce28dcee0c50e0a9afb0fb00d8c7be9d7b735ad9d0954272b4347d88"
     },
     {
       "path": "webapp/lib/locales/ui-secondary.zh.json",
@@ -1642,6 +2158,11 @@
       "path": "webapp/lib/reminder-schedule.ts",
       "bytes": 3480,
       "sha256": "b392b8e38e9a44ca89c82811dfb1d8719e188b27e12795ebf501fe8968353091"
+    },
+    {
+      "path": "webapp/lib/responsive-header.test.ts",
+      "bytes": 2291,
+      "sha256": "513c59d9cf709328353b70984a5dafbdee299df0d20b08451cafbabe963c16d7"
     },
     {
       "path": "webapp/lib/rich-format.test.ts",
@@ -1824,14 +2345,49 @@
       "sha256": "8042594ee7d7361ad22984c9e26d88f66cf4863d4da81651b9e68199e57ea86d"
     },
     {
+      "path": "webapp/public/manifest.de.webmanifest",
+      "bytes": 310,
+      "sha256": "eddbe4a7ed66106f03da938f4511442700e6a747999989005f8717da4e503068"
+    },
+    {
       "path": "webapp/public/manifest.en.webmanifest",
       "bytes": 310,
       "sha256": "76678c2777562d8fd60c9aaf3f7e1d16c99375d3bf7b1b0fcb9c670cdab5369f"
     },
     {
+      "path": "webapp/public/manifest.es.webmanifest",
+      "bytes": 310,
+      "sha256": "fd3170ad9a70e9b6eed949dfe7df33059560a5b49724c6054f0d1e4d8aa116c7"
+    },
+    {
+      "path": "webapp/public/manifest.fr.webmanifest",
+      "bytes": 310,
+      "sha256": "09292634fbb2a6f13311ecc4ed73aaf57f2f75d9a08a464b7b4e636821ee8b9e"
+    },
+    {
+      "path": "webapp/public/manifest.ja.webmanifest",
+      "bytes": 310,
+      "sha256": "c04ef4701670f881d33aeba33568e1c4777a27ca65b39972dc2d5c30d3b1dd9d"
+    },
+    {
+      "path": "webapp/public/manifest.ko.webmanifest",
+      "bytes": 310,
+      "sha256": "48d2f490b5f69f43e96a589cd592e98cd155da560c9aa8e5c31590d30da7630f"
+    },
+    {
+      "path": "webapp/public/manifest.pt-BR.webmanifest",
+      "bytes": 313,
+      "sha256": "fbe8cfd802d4ef5f333f62e708163521d791c96601112dc84b223a42ad62cf80"
+    },
+    {
       "path": "webapp/public/manifest.webmanifest",
       "bytes": 233,
       "sha256": "1293292f418061571123216715b33ed6e57ee5295c7cfdef4488a46dfe4d7b4a"
+    },
+    {
+      "path": "webapp/public/manifest.zh-TW.webmanifest",
+      "bytes": 311,
+      "sha256": "2855241ab95b8978caec11aa68bbc688f1aff7ae3aeb4cc901dda06616879a27"
     },
     {
       "path": "webapp/scripts/build-offline.mjs",
@@ -1904,19 +2460,24 @@
       "sha256": "96516520458744790f7c180cebc07d1f21cdcbc914a44c0f0a7df1ddbbdc91d2"
     },
     {
+      "path": "webapp/tests/full-backup-language-ui.test.tsx",
+      "bytes": 2783,
+      "sha256": "36ac402873d149913c3be80828fba1d5e996fa9119b38b8b92df46eb3cd28617"
+    },
+    {
       "path": "webapp/tests/localization-primary-ui.test.tsx",
       "bytes": 12631,
       "sha256": "c6a1ced23a60a75b2bf2ca6dc3e8fbfca8d0138605417f25ef3b784f1772128a"
     },
     {
       "path": "webapp/tests/localization-runtime-ui.test.tsx",
-      "bytes": 4936,
-      "sha256": "c733f8c4a3cc20e917ab47284ce92202a81e1d1c73ec30f8092d11389517b68c"
+      "bytes": 9959,
+      "sha256": "60f62ffbd58ae4804ff641b0928b3a98ca91a0f74cb811f3ec289387b6229942"
     },
     {
       "path": "webapp/tests/secondary-i18n-ui.test.tsx",
-      "bytes": 8624,
-      "sha256": "f235744bb09c68089b8418305f44e71844951b57a24d314a59291f06ab728e21"
+      "bytes": 8550,
+      "sha256": "e6a1ef584616cbef5c51ea66a42c0becef7991a93e4c3adecfee8576f9b1e0a0"
     },
     {
       "path": "webapp/tests/session-ui.test.tsx",
@@ -1925,13 +2486,13 @@
     },
     {
       "path": "webapp/tests/settings-language-ui.test.tsx",
-      "bytes": 7420,
-      "sha256": "8a4a6c887a982a78c3e386a3135ee90ca98988ac91935c20afe7ea2286bfa50d"
+      "bytes": 7933,
+      "sha256": "d527fb0278ed66c8110a4d476fb4a7bb79ff9776ac4465a4700139b068c99406"
     },
     {
       "path": "webapp/tests/standalone-evidence.json",
-      "bytes": 20089,
-      "sha256": "9f5af3c363a1d562f7f0be1160cca5a2f828474de0ae8bd702a74f4eabb580fa"
+      "bytes": 26888,
+      "sha256": "3b058244af487ed2011ba57f0da876558618bece85b0c50f4c5f0ab20f9cdddb"
     },
     {
       "path": "webapp/tests/ui.test.tsx",
@@ -1985,9 +2546,9 @@
     "this manifest from its own inventory"
   ],
   "baseline_manifest_note": "webapp/SOURCE-MANIFEST.json, webapp/tests/standalone-evidence.json and verification/SUMMARY.json retain historical baseline records. artifacts/BUNDLED-ASSETS.json describes the current locally rebuilt web assets. This current source inventory excludes ignored generated assets. Current release APK evidence is the matching .apk.verification.json; see VERIFICATION.md.",
-  "source_revision": "2026-10-18-v1.2.1",
-  "source_scope": "Android 0.2.1 source with Simplified Chinese and English interface; language settings under General. Business-code baseline remains 1.0.1. VersionCode 5 permits an upgrade using the existing release signing identity.",
+  "source_revision": "2026-10-18-v1.3.0",
+  "source_scope": "Android 0.3.0 source with nine interface languages, locale-aware dates and numbers, and native language selection. Business-code baseline remains 1.0.1. VersionCode 6 permits an upgrade using the existing release signing identity.",
   "inventory_sha256_method": "SHA256 of UTF-8 lines: <sha256><two spaces><relative path><LF>, ordered lexicographically by path; includes every non-ignored delivered source file except this manifest.",
-  "inventory_sha256": "bd595d4d154ce8af5b3cb622bfe5bbe871872d9f0eb337d875de4b9203c693be",
-  "version_code": 5
+  "inventory_sha256": "ad8bfa321efc35392eedafb577c3547a1e8dbbc1e0cc8dea21e5528c8f7b4fd3",
+  "version_code": 6
 }

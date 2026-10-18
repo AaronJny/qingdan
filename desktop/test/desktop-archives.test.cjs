@@ -6,6 +6,7 @@ const path = require('node:path');
 const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 const plist = require('plist');
+const { MAC_LOCALIZATIONS, localizedBundleNames } = require('../scripts/bundle-locales.cjs');
 const verifier = require('../scripts/verify-desktop-archives.cjs');
 const { thin } = require('./fixtures/macho.cjs');
 const host = (arch = 'arm64') => ({ platform: 'darwin', arch, machine: arch === 'x64' ? 'x86_64' : 'arm64', translated: false, runnerArch: arch === 'x64' ? 'X64' : 'ARM64' });
@@ -33,20 +34,20 @@ function put(directory, name, data = 'fixture', mode = 0o644) {
 function macFixture(directory, arch = 'arm64') {
   const app = path.join(directory, '青单.app'), version = '1.2.3';
   put(app, 'Contents/Info.plist', plist.build({ CFBundleName: '青单', CFBundleDisplayName: '青单',
-    CFBundleDevelopmentRegion: 'en', CFBundleExecutable: '青单', CFBundleIdentifier: 'app.qingdan.desktop', CFBundleVersion: version,
+    CFBundleDevelopmentRegion: 'en', CFBundleLocalizations: [...MAC_LOCALIZATIONS], CFBundleExecutable: '青单', CFBundleIdentifier: 'app.qingdan.desktop', CFBundleVersion: version,
     CFBundleShortVersionString: version, LSMinimumSystemVersion: '13.0', CFBundleIconFile: 'icon.icns' }));
   put(app, 'Contents/MacOS/青单', thin(arch), 0o755);
   put(app, 'Contents/Resources/app.asar');
-  for (const [locale,display] of [['en','Qingdan'],['zh_CN','青单'],['zh','青单']]) put(app, `Contents/Resources/${locale}.lproj/InfoPlist.strings`, `"CFBundleDisplayName" = "${display}";\n"CFBundleName" = "${display}";\n`);
+  for (const [locale,display] of localizedBundleNames('Qingdan', '青单')) put(app, `Contents/Resources/${locale}.lproj/InfoPlist.strings`, `"CFBundleDisplayName" = "${display}";\n"CFBundleName" = "${display}";\n`);
   put(app, 'Contents/Resources/icon.icns', fs.readFileSync(path.join(root, 'build/icon.icns')));
   for (const notice of ['LICENSE.electron.txt', 'LICENSES.chromium.html']) put(app, 'Contents/Resources/' + notice);
   for (const suffix of helpers) {
     const name = 'Electron Helper' + suffix, base = 'Contents/Frameworks/' + name + '.app/Contents/';
-    put(app, base + 'Info.plist', plist.build({ CFBundleName: name, CFBundleDisplayName: name, CFBundleDevelopmentRegion: 'en',
+    put(app, base + 'Info.plist', plist.build({ CFBundleName: name, CFBundleDisplayName: name, CFBundleDevelopmentRegion: 'en', CFBundleLocalizations: [...MAC_LOCALIZATIONS],
       CFBundleExecutable: name, CFBundleIdentifier: 'app.qingdan.desktop.helper' + (suffix ? '.' + suffix.trim().replace(/[()]/g, '') : '') }));
     put(app, base + 'MacOS/' + name, thin(arch), 0o755);
     const chineseSuffix = {'':'',' (GPU)':'（图形）',' (Plugin)':'（插件）',' (Renderer)':'（渲染器）'}[suffix];
-    for (const [locale,display] of [['en','Qingdan Helper'+suffix],['zh_CN','青单辅助程序'+chineseSuffix],['zh','青单辅助程序'+chineseSuffix]]) put(app, base + `Resources/${locale}.lproj/InfoPlist.strings`, `"CFBundleDisplayName" = "${display}";\n"CFBundleName" = "${name}";\n`);
+    for (const [locale,display] of localizedBundleNames('Qingdan Helper'+suffix, '青单辅助程序'+chineseSuffix)) put(app, base + `Resources/${locale}.lproj/InfoPlist.strings`, `"CFBundleDisplayName" = "${display}";\n"CFBundleName" = "${name}";\n`);
   }
   put(app, 'Contents/Frameworks/Runtime.framework/Versions/A/Runtime', thin(arch));
   put(app, 'Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework', thin(arch));
@@ -269,4 +270,14 @@ test('macOS archive paths, filenames and reports select the explicit architectur
     assert.equal(path.basename(result.report), `verified-mac-${arch}-archives.json`);
     assert.equal(path.basename(path.dirname(result.unpacked)), arch === 'x64' ? 'mac' : 'mac-arm64');
   }
+});
+
+test('macOS archive verification rejects missing new-language metadata and resources',t=>{
+ const app=macFixture(fixture(t));const infoPath=path.join(app,'Contents/Info.plist');const info=plist.parse(fs.readFileSync(infoPath,'utf8'));
+ info.CFBundleLocalizations=info.CFBundleLocalizations.filter(locale=>locale!=='ja');fs.writeFileSync(infoPath,plist.build(info));
+ assert.throws(()=>verifier.verifyMacBundle(app,'1.2.3','arm64'),/supported languages/);
+ info.CFBundleLocalizations=[...MAC_LOCALIZATIONS];fs.writeFileSync(infoPath,plist.build(info));
+ const file=path.join(app,'Contents/Resources/zh-Hant.lproj/InfoPlist.strings');fs.writeFileSync(file,'"CFBundleDisplayName" = "青单";');
+ assert.throws(()=>verifier.verifyMacBundle(app,'1.2.3','arm64'),/Missing zh-Hant display name/);
+ fs.unlinkSync(file);assert.throws(()=>verifier.verifyMacBundle(app,'1.2.3','arm64'),/ENOENT/);
 });

@@ -15,15 +15,15 @@ const { act } = React;
 const { createRoot } = await import('react-dom/client');
 const { SettingsDialog } = await import('../app/workspace-dialogs');
 const { useLanguageRuntime } = await import('../lib/i18n-react');
-const { setLanguagePreference, getLanguagePreference } = await import('../lib/i18n');
+const { LOCALES, LANGUAGE_NAMES, messages, setLanguagePreference, getLanguagePreference } = await import('../lib/i18n');
 const { draftStore } = await import('../lib/client-storage');
 
-const labels = {
-  'zh-CN': { settings: '设置', general: '通用', language: '语言', shortcuts: '快捷键', appearance: '外观与偏好', theme: '主题' },
-  en: { settings: 'Settings', general: 'General', language: 'Language', shortcuts: 'Keyboard shortcuts', appearance: 'Appearance and preferences', theme: 'Theme' },
-};
+const labels = Object.fromEntries(LOCALES.map(locale => [locale, {
+  settings: messages[locale]['settings.title'], general: messages[locale]['settings.general'], language: messages[locale]['settings.language'],
+  shortcuts: messages[locale]['workspace.keyboardShortcuts'], appearance: messages[locale]['workspace.appearanceAndPreferences'], theme: messages[locale]['workspace.theme'],
+}])) as Record<typeof LOCALES[number], { settings: string; general: string; language: string; shortcuts: string; appearance: string; theme: string }>;
 
-for (const initialLocale of ['zh-CN', 'en'] as const) {
+for (const initialLocale of LOCALES) {
   test(`${initialLocale}: language belongs only to General; other settings and user data remain separate`, async () => {
     localStorage.clear();
     const user = { userId: 'settings-language-' + initialLocale, displayName: 'Synthetic user', email: 'fixture@example.test', mode: 'local' as const };
@@ -70,6 +70,9 @@ for (const initialLocale of ['zh-CN', 'en'] as const) {
       assert.equal(host.querySelectorAll('.language-setting').length, 1);
       assert.equal(panel().querySelector('select')?.getAttribute('aria-label'), text.language);
       assert.equal(panel().querySelector<HTMLSelectElement>('select')?.value, initialLocale);
+      const options = Array.from(panel().querySelectorAll('select option')).slice(1);
+      assert.deepEqual(options.map(option => option.textContent), LOCALES.map(locale => LANGUAGE_NAMES[locale]));
+      assert.deepEqual(options.map(option => option.getAttribute('lang')), [...LOCALES]);
       await visit(text.shortcuts);
       assertShortcutsOnly();
       await visit(text.appearance);

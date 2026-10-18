@@ -19,7 +19,9 @@ Collaboration requires a self-hosted server running in account mode. Local mode 
 
 ### Interface language
 
-The interface supports Simplified Chinese and English. Choose a language or “System default” under “Settings → General → Language”; changes take effect immediately. System default uses Simplified Chinese for Chinese system languages and English for all others. Your choice is saved only on the current device or browser and does not sync with your account. Tasks, notes, lists, and tags you create are not translated.
+The interface supports Simplified Chinese, Traditional Chinese, English, Japanese, Korean, Spanish, French, German, and Brazilian Portuguese. Choose a language or “System default” under “Settings → General → Language”; the interface, dates, numbers, and native menus update immediately. Unsupported system languages use English.
+
+Your choice is saved only on the current device or browser and does not sync with your account. Tasks, notes, lists, and tags keep their original text. Quick-entry date commands support Simplified Chinese and English; you can also use the date picker.
 
 ## Screenshots
 

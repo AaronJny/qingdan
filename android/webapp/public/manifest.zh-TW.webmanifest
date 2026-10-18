@@ -1,0 +1,17 @@
+{
+  "name": "青單",
+  "short_name": "青單",
+  "lang": "zh-TW",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#276455",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

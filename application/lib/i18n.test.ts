@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
-import { formatDate, formatNumber, getLanguagePreference, getLocale, isLanguagePreference, LANGUAGE_STORAGE_KEY, languageStorageAvailable, messages, plural, resolveLocale, setLanguagePreference, setNativeLanguage, t, translation, translateError } from './i18n';
+import { LOCALES, LANGUAGE_NAMES, countedUnitParts, formatDate, formatNumber, getLanguagePreference, getLocale, isLanguagePreference, LANGUAGE_STORAGE_KEY, languageStorageAvailable, messages, plural, resolveLocale, setLanguagePreference, setNativeLanguage, t, translation, translateError } from './i18n';
 import { displayRecordTitle } from './i18n-records';
 
 test('bundled i18next resources have matching keys and interpolation parameters', () => {
@@ -11,7 +11,7 @@ test('bundled i18next resources have matching keys and interpolation parameters'
   assert.deepEqual(keys, Object.keys(messages['zh-CN']).sort());
   const placeholders = (value: string) => [...new Set(value.match(/\{[a-zA-Z0-9_]+\}/g) || [])].sort();
   for (const key of keys) {
-    assert.ok(/^[a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+$/.test(key.replace(/_(one|other)$/, '')), key);
+    assert.ok(/^[a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+$/.test(key.replace(/_(zero|one|two|few|many|other)$/, '')), key);
     assert.ok(messages.en[key].trim() && messages['zh-CN'][key].trim(), key);
     assert.deepEqual(placeholders(messages.en[key]), placeholders(messages['zh-CN'][key]), key);
   }
@@ -22,9 +22,9 @@ test('bundled i18next resources have matching keys and interpolation parameters'
 
 test('locale selection follows the first system preference and falls back to English', () => {
   assert.equal(resolveLocale(['zh-CN', 'en']), 'zh-CN');
-  assert.equal(resolveLocale(['zh-TW']), 'zh-CN');
+  assert.equal(resolveLocale(['zh-TW']), 'zh-TW');
   assert.equal(resolveLocale(['en-GB', 'zh-CN']), 'en');
-  assert.equal(resolveLocale(['fr-FR', 'zh-CN']), 'en');
+  assert.equal(resolveLocale(['fr-FR', 'zh-CN']), 'fr');
   assert.equal(resolveLocale([]), 'en');
   assert.equal(isLanguagePreference('en'), true);
   assert.equal(isLanguagePreference('zh'), false);
@@ -50,7 +50,7 @@ test('manual language persists and blocked storage degrades without discarding t
 });
 
 test('first render restores persisted choice and unsupported system locale on a fresh process', () => {
-  for (const [saved, languages, expected] of [['en', ['zh-CN'], 'en'], ['zh-CN', ['en-US'], 'zh-CN'], [null, ['fr-FR'], 'en'], ['malformed', ['zh-HK'], 'zh-CN']] as const) {
+  for (const [saved, languages, expected] of [['en', ['zh-CN'], 'en'], ['zh-CN', ['en-US'], 'zh-CN'], [null, ['it-IT'], 'en'], ['malformed', ['zh-HK'], 'zh-TW']] as const) {
     const script = `globalThis.window={navigator:{languages:${JSON.stringify(languages)}},localStorage:{getItem:()=>${JSON.stringify(saved)}}}; const m=await import('./lib/i18n.ts'); console.log(m.getLocale());`;
     const result = spawnSync(process.execPath, ['--import', 'tsx', '--input-type=module', '-e', script], { cwd: resolve(import.meta.dirname, '..'), encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr);
@@ -61,18 +61,18 @@ test('first render restores persisted choice and unsupported system locale on a 
 test('English and Chinese use correct plurals, interpolation, numbers and local calendar dates', () => {
   try {
     setLanguagePreference('en');
-    assert.equal(plural(0, 'task', 'tasks', '条任务'), '0 tasks');
-    assert.equal(plural(1, 'task', 'tasks', '条任务'), '1 task');
-    assert.equal(plural(2, 'task', 'tasks', '条任务'), '2 tasks');
-    assert.equal(plural(1.5, 'hour', 'hours', '小时'), '1.5 hours');
+    assert.equal(plural(0, "task"), '0 tasks');
+    assert.equal(plural(1, "task"), '1 task');
+    assert.equal(plural(2, "task"), '2 tasks');
+    assert.equal(plural(1.5, "hour"), '1.5 hours');
     assert.equal(formatNumber(1200), '1,200');
     assert.match(formatDate('2026-10-18', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), /Sunday, October 18, 2026/);
     const invalidDate = translateError('无效日期：2026-99-99');
     assert.equal(invalidDate, 'Invalid date: 2026-99-99');
     setLanguagePreference('zh-CN');
     assert.equal(translateError(invalidDate), '无效日期：2026-99-99');
-    assert.equal(plural(1, 'task', 'tasks', '条任务'), '1条任务');
-    assert.equal(plural(2, 'task', 'tasks', '条任务'), '2条任务');
+    assert.equal(plural(1, "task"), '1条任务');
+    assert.equal(plural(2, "task"), '2条任务');
     assert.match(formatDate('2026-10-18', { weekday: 'long' }), /星期日/);
   } finally { setLanguagePreference('zh-CN'); }
 });
@@ -111,4 +111,95 @@ test('materialized count statuses retain singular and plural forms after live sw
       assert.equal(translateError(english), chinese);
     }
   } finally { setLanguagePreference('zh-CN'); }
+});
+
+test('all nine language preferences use canonical IDs and script-aware regional detection', () => {
+  assert.equal(LOCALES.length, 9);
+  for (const locale of LOCALES) {
+    assert.ok(LANGUAGE_NAMES[locale]);
+    assert.equal(isLanguagePreference(locale), true);
+    setLanguagePreference(locale);
+    assert.equal(getLocale(), locale);
+  }
+  for (const [tag, expected] of [
+    ['zh-Hant', 'zh-TW'], ['zh-Hant-CN', 'zh-TW'], ['zh-Hant-HK', 'zh-TW'], ['zh-HK', 'zh-TW'], ['zh-MO', 'zh-TW'],
+    ['zh-Hans-TW', 'zh-CN'], ['zh-SG', 'zh-CN'], ['zh_HK', 'zh-TW'], ['ja-JP', 'ja'], ['ko-KR', 'ko'],
+    ['es-MX', 'es'], ['fr-CA', 'fr'], ['de-AT', 'de'], ['pt-PT', 'pt-BR'], ['en-AU', 'en'], ['it-IT', 'en'], ['<script>', 'en'],
+  ]) assert.equal(resolveLocale([tag]), expected, tag);
+  assert.equal(resolveLocale(['it-IT', 'ja-JP']), 'en', 'Preserve the first system preference; unsupported first preference uses English');
+  for (const invalid of ['zh-Hant', 'zh-HK', 'pt', 'en-US', 'it', 'FR', '', null, {}, ['en']]) assert.equal(isLanguagePreference(invalid), false);
+  setLanguagePreference('zh-CN');
+});
+
+test('all locales format real dates and numbers and every counted label through i18next', () => {
+  const units = ['task', 'taskItem', 'item', 'note', 'minute', 'hour', 'day', 'week', 'session', 'checkItem', 'subtask', 'record', 'historyEntry', 'attachment', 'checklistItem', 'entry'] as const;
+  const examples = { 'zh-CN': '2条任务', en: '2 tasks', 'zh-TW': '2項任務', ja: '2件のタスク', ko: '할 일 2개', es: '2 tareas', fr: '2 tâches', de: '2 Aufgaben', 'pt-BR': '2 tarefas' };
+  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+  try {
+    for (const locale of LOCALES) {
+      setLanguagePreference(locale);
+      assert.equal(formatNumber(1234567.5), new Intl.NumberFormat(locale).format(1234567.5));
+      assert.equal(formatDate('2026-10-18', options), new Intl.DateTimeFormat(locale, options).format(new Date(2026, 9, 18, 12)));
+      assert.equal(plural(2, 'task'), examples[locale]);
+      for (const count of [0, 1, 2, 1.5, 1000000]) for (const unit of units) {
+        const result = plural(count, unit);
+        assert.ok(result.includes(formatNumber(count)), `${locale}:${unit}:${count}`);
+        const parts = countedUnitParts(count, unit);
+        assert.equal(parts.before + parts.amount + parts.after, result, 'Separate styling preserves locale word order');
+        assert.doesNotMatch(result, /units\.|\{amount\}|undefined/);
+        const form = new Intl.PluralRules(locale).select(count);
+        assert.equal(result, messages[locale][`units.${unit}_${form}`].replace('{amount}', formatNumber(count)));
+      }
+      const original = translation.getResource(locale, 'translation', 'settings.language');
+      translation.addResource(locale, 'translation', 'settings.language', '');
+      assert.equal(t('settings.language'), locale === 'en' ? 'settings.language' : 'Language', 'Empty messages use the explicit safe fallback');
+      translation.addResource(locale, 'translation', 'settings.language', original);
+    }
+  } finally { setLanguagePreference('zh-CN'); }
+});
+
+test('materialized statuses re-localize across all languages with locale-aware count parsing', () => {
+  try {
+    for (const source of LOCALES) for (const count of [1, 2, 1200, 1000000]) {
+      setLanguagePreference(source);
+      const rendered = t('workspace.addedValueTasks', { count, value0: formatNumber(count) });
+      for (const target of LOCALES) {
+        setLanguagePreference(target);
+        assert.equal(translateError(rendered), t('workspace.addedValueTasks', { count, value0: formatNumber(count) }), `${source} → ${target}: ${count}`);
+      }
+    }
+  } finally { setLanguagePreference('zh-CN'); }
+});
+
+test('native snapshots reject unsupported locales without changing selected preference', () => {
+  setNativeLanguage('system', 'zh-TW');
+  assert.equal(getLocale(), 'zh-TW');
+  setNativeLanguage('ja', 'it' as any);
+  assert.equal(getLanguagePreference(), 'system');
+  assert.equal(getLocale(), 'zh-TW');
+  for (const locale of LOCALES) { setNativeLanguage('system', locale); assert.equal(getLocale(), locale); }
+  setLanguagePreference('zh-CN');
+});
+
+test('interface language never expands parser commands or translates task record text', async () => {
+  const { parseChineseTask } = await import('../assets/recurrence');
+  const options = { today: '2026-10-18', timeZone: 'UTC' };
+  const texts = ['明天 阅读 #中文', 'tomorrow Read #English', 'mañana leer', 'demain lire', 'morgen lesen', 'amanhã ler', '내일 읽기', '明日読む', '後天閱讀'];
+  setLanguagePreference('en');
+  const reference = texts.map(text => parseChineseTask(text, options));
+  try {
+    for (const locale of LOCALES) {
+      setLanguagePreference(locale);
+      for (const [index, text] of texts.entries()) assert.deepEqual(parseChineseTask(text, options), reference[index], `${locale}: ${text}`);
+      const record: any = { id: 'user-title', kind: 'task', revision: 1, data: { title: '今天 mañana demain 日本語 한국어', description: 'English 中文', tags: ['Français'] } };
+      const before = JSON.stringify(record);
+      assert.equal(displayRecordTitle(record), record.data.title);
+      assert.equal(JSON.stringify(record), before);
+    }
+  } finally { setLanguagePreference('zh-CN'); }
+});
+
+test('translated quick-entry examples retain actual supported parser commands', async () => {
+ const { parseChineseTask } = await import('../assets/recurrence');
+ for(const locale of LOCALES){const example=messages[locale]['ui.secondary.desktopQuickEntry.tomorrowReadReading'];assert.equal(parseChineseTask(example,{today:'2026-10-18',timeZone:'UTC'}).due?.date,'2026-10-19',`${locale}: ${example}`);}
 });

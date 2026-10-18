@@ -68,3 +68,17 @@ test('remote preload exposes no local business storage and does not invoke sync 
 test('startup-only compaction releases completed-operation tombstones without weakening live-session CAS',t=>{const {profile,store}=fixture(t,{maxKeys:2});const second='qingdan:batch-tag-draft:'+principal;store.write(key,'first',0);store.write(key,null,1);store.write(second,'second',0);store.write(second,null,3);assert.throws(()=>store.write(key,'stale',0),{code:'LOCAL_WRITE_CONFLICT'});const restarted=new LocalBusinessStore({profile,principalId:principal,maxKeys:2,compactOnOpen:true});assert.equal(Object.keys(restarted.snapshot().entries).length,0);assert.equal(restarted.snapshot().revision,4);assert.equal(restarted.write(key,'new session',0).revision,5);assert.equal(JSON.parse(fs.readFileSync(restarted.file)).entries[key].value,'new session');});
 test('legacy pending-create tuples retain their original fingerprint and operation identity',()=>{const legacy='qingdan:pending-create:'+principal,value=JSON.stringify([['original-fingerprint',{id:'same-operation-id',kind:'task',data:{title:'Unconfirmed task'}}]]);assert.equal(validateEntry(legacy,value,principal),true);assert.throws(()=>validateEntry(legacy,JSON.stringify([{id:'wrong-legacy-shape',kind:'task',data:{}}]),principal));});
 test('incidental reads and export/cleanup cannot adopt another window write baseline',t=>{const {store}=fixture(t),b=bridge(store);store.write(key,'A input',0);const a=preload(b).exposed.qingdanLocalStorage,c=preload(b).exposed.qingdanLocalStorage;c.setItem(key,'B unsaved input');assert.equal(a.getItem(key),'B unsaved input');assert.throws(()=>a.removeItem(key),{code:'LOCAL_WRITE_CONFLICT'});assert.throws(()=>a.setItem(key,'stale A form'),{code:'LOCAL_WRITE_CONFLICT'});assert.equal(store.read(key).value,'B unsaved input');const reloaded=preload(b).exposed.qingdanLocalStorage;reloaded.setItem(key,'explicitly reloaded input');assert.equal(store.read(key).value,'explicitly reloaded input');});
+
+test('every canonical locale is fsync-acknowledged through the bound business bridge and survives restart',t=>{
+ const {locales}=require('../src/language-policy.cjs');let flushes=0;
+ const io=new Proxy(fs,{get(target,property){if(property==='fsyncSync')return fd=>{flushes++;return target.fsyncSync(fd)};return target[property]}});
+ const {profile,store}=fixture(t,{fs:io}),b=bridge(store),native=preload(b).exposed.qingdanLocalStorage;
+ native.setItem(key,'Unchanged input 中文 日本語 한국어');
+ for(const locale of ['system',...locales]){
+  const before=flushes;native.setItem('qingdan-language',locale);assert.ok(flushes>before,'Native acknowledgement follows file flush');
+  assert.equal(new LocalBusinessStore({profile,principalId:principal}).read('qingdan-language').value,locale);
+  assert.equal(native.getItem(key),'Unchanged input 中文 日本語 한국어');
+ }
+ for(const invalid of ['it','zh-Hant','pt','en-US','<script>'])assert.throws(()=>native.setItem('qingdan-language',invalid),{code:'INVALID_LOCAL_ENTRY'});
+ assert.equal(native.getItem('qingdan-language'),'pt-BR');
+});

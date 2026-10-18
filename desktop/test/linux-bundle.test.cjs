@@ -33,7 +33,7 @@ async function fixture(t) {
   const png = Buffer.alloc(24); Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]).copy(png); png.writeUInt32BE(1024, 16); png.writeUInt32BE(1024, 20);
   await fs.mkdir(path.dirname(path.join(extracted, icon)), { recursive: true }); await fs.writeFile(path.join(extracted, icon), png);
   for (const name of ['qingdan.png', '.DirIcon']) await fs.symlink(icon, path.join(extracted, name));
-  await fs.writeFile(path.join(extracted, 'qingdan.desktop'), '[Desktop Entry]\nName=Qingdan\nName[zh_CN]=青单\nName[zh]=青单\nExec=AppRun %U\nIcon=qingdan\nTerminal=false\nType=Application\nX-AppImage-Version=1.1.0\n');
+  await fs.writeFile(path.join(extracted, 'qingdan.desktop'), '[Desktop Entry]\nName=Qingdan\nName[zh_CN]=青单\nName[zh]=青单\nName[zh_TW]=青單\nExec=AppRun %U\nIcon=qingdan\nTerminal=false\nType=Application\nX-AppImage-Version=1.1.0\n');
   return { root, unpacked, extracted, libraries, icon };
 }
 test('Linux release config targets an x64 AppImage with a pinned toolset and no sandbox-disable desktop arguments', () => {
@@ -41,7 +41,7 @@ test('Linux release config targets an x64 AppImage with a pinned toolset and no 
   assert.deepEqual(config.linux.target, [{ target: 'AppImage', arch: ['x64'] }]);
   assert.equal(config.toolsets.appimage, '1.0.3'); assert.deepEqual(config.appImage.executableArgs, []);
   assert.equal(config.appImage.artifactName, 'Qingdan-${version}-linux-x64.${ext}');
-  assert.deepEqual(config.linux.desktop.entry, {Name:'Qingdan','Name[zh_CN]':'青单','Name[zh]':'青单'});
+  assert.deepEqual(config.linux.desktop.entry, {Name:'Qingdan','Name[zh_CN]':'青单','Name[zh]':'青单','Name[zh_TW]':'青單'});
   assert.equal(config.appId, 'app.qingdan.desktop'); assert.equal(config.electronFuses.runAsNode, false);
   assert.equal(config.electronFuses.onlyLoadAppFromAsar, true); assert.equal(config.electronFuses.enableEmbeddedAsarIntegrityValidation, true);
   assert.equal(require('../package.json').scripts['package:linux:appimage'], 'node scripts/package.cjs linux --appimage --x64');

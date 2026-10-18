@@ -20,12 +20,39 @@ const kindLabels=Object.freeze({
   'form-draft':'form.draft',
 });
 function kindLabel(kind){return tr('kind.'+(Object.hasOwn(kindLabels,kind)?kindLabels[kind]:'other'));}
-const summary=document.getElementById('summary'),message=document.getElementById('message');let nextOffset=null;
-function report(error){message.textContent=tr('error');}
-async function refresh(){try{const value=await window.qingdanRecovery.summary();summary.textContent=value.status==='none'?tr('none'):value.requiresReview?tr('pending'):tr('preferences');document.getElementById('diagnostics').textContent=value.conflictCount?tr('conflicts'):'';for(const id of ['view','export','continue'])document.getElementById(id).disabled=!!value.unavailable;}catch(error){report(error);document.getElementById('continue').disabled=true;}}
-async function viewPage(offset){try{const page=await window.qingdanRecovery.candidates(offset);const values=page.items;const host=document.getElementById('candidates');host.replaceChildren();host.hidden=false;for(const [index,item] of values.entries()){const details=document.createElement('details'),heading=document.createElement('summary'),body=document.createElement('textarea');heading.textContent=tr('candidate')+' '+(offset+index+1)+' · '+kindLabel(item.kind);body.readOnly=true;body.rows=8;body.style.width='100%';body.setAttribute('aria-label',heading.textContent);body.value=typeof item.value==='string'?item.value:tr('unreadable');details.append(heading,body);host.append(details);}if(!values.length)host.textContent=tr('no.candidates');nextOffset=page.nextOffset;document.getElementById('more').hidden=nextOffset===null;}catch(error){report(error);}}
+const summary=document.getElementById('summary'),message=document.getElementById('message');
+let nextOffset=null,summaryState=null,messageKey=null,candidateRows=[],emptyCandidates=false;
+let languageRevision=Number(document.documentElement?.dataset?.languageRevision)||0;
+function report(){messageKey='error';message.textContent=tr(messageKey);}
+function renderSummary(){if(!summaryState)return;const value=summaryState;summary.textContent=tr(value.status==='none'?'none':value.requiresReview?'pending':'preferences');document.getElementById('diagnostics').textContent=value.conflictCount?tr('conflicts'):'';}
+function renderCandidates(){
+  for(const {heading,body,item,index}of candidateRows){
+    const amount=new Intl.NumberFormat(document.documentElement?.lang||'en').format(index);
+    heading.textContent=tr('candidate')+' '+amount+' · '+kindLabel(item.kind);
+    body.setAttribute('aria-label',heading.textContent);
+    // Never rewrite readable evidence; only app-owned unavailable labels change.
+    if(typeof item.value!=='string')body.value=tr('unreadable');
+  }
+  if(emptyCandidates)document.getElementById('candidates').textContent=tr('no.candidates');
+}
+function applyLanguage(value){
+  if(!value||!['zh-CN','en','zh-TW','ja','ko','es','fr','de','pt-BR'].includes(value.locale)||!Number.isSafeInteger(value.revision)||value.revision<languageRevision)return;
+  languageRevision=value.revision;void window.i18next.changeLanguage(value.locale);document.documentElement.lang=value.locale;document.title=tr('title');
+  for(const element of document.querySelectorAll('[data-recovery-text]'))element.textContent=tr(element.dataset.recoveryText);
+  document.getElementById('candidates').setAttribute('aria-label',tr('candidates'));
+  renderSummary();renderCandidates();if(messageKey)message.textContent=tr(messageKey);
+}
+window.qingdanRecovery.onLanguageChanged?.(applyLanguage);
+async function refresh(){try{summaryState=await window.qingdanRecovery.summary();renderSummary();for(const id of ['view','export','continue'])document.getElementById(id).disabled=!!summaryState.unavailable;}catch(error){report();document.getElementById('continue').disabled=true;}}
+async function viewPage(offset){try{
+  const page=await window.qingdanRecovery.candidates(offset),host=document.getElementById('candidates');host.replaceChildren();host.hidden=false;candidateRows=[];emptyCandidates=!page.items.length;
+  for(const [index,item]of page.items.entries()){
+    const details=document.createElement('details'),heading=document.createElement('summary'),body=document.createElement('textarea');body.readOnly=true;body.rows=8;body.style.width='100%';body.value=typeof item.value==='string'?item.value:tr('unreadable');details.append(heading,body);host.append(details);candidateRows.push({heading,body,item,index:offset+index+1});
+  }
+  renderCandidates();nextOffset=page.nextOffset;document.getElementById('more').hidden=nextOffset===null;
+}catch(error){report();}}
 document.getElementById('view').addEventListener('click',()=>void viewPage(0));
 document.getElementById('more').addEventListener('click',()=>{if(nextOffset!==null)void viewPage(nextOffset);});
-document.getElementById('export').addEventListener('click',async()=>{try{const result=await window.qingdanRecovery.export();if(result.saved)message.textContent=tr('exported');}catch(error){report(error);}});
-document.getElementById('continue').addEventListener('click',async()=>{try{document.getElementById('continue').disabled=true;await window.qingdanRecovery.continue();}catch(error){report(error);document.getElementById('continue').disabled=false;}});
+document.getElementById('export').addEventListener('click',async()=>{try{const result=await window.qingdanRecovery.export();if(result.saved){messageKey='exported';message.textContent=tr(messageKey);}}catch(error){report();}});
+document.getElementById('continue').addEventListener('click',async()=>{try{document.getElementById('continue').disabled=true;await window.qingdanRecovery.continue();}catch(error){report();document.getElementById('continue').disabled=false;}});
 void refresh();

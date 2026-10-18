@@ -4,7 +4,7 @@ const message = document.querySelector('#message');
 let messageKey = null;
 let revision = Number(document.documentElement.dataset.languageRevision);
 function applyLanguage(value) {
-  if (!value || !['zh-CN', 'en'].includes(value.locale) || !Number.isSafeInteger(value.revision) || value.revision < 0 || value.revision < revision) return;
+  if (!value || !['zh-CN', 'en', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'de', 'pt-BR'].includes(value.locale) || !Number.isSafeInteger(value.revision) || value.revision < 0 || value.revision < revision) return;
   revision = value.revision;
   void window.i18next.changeLanguage(value.locale);
   document.documentElement.lang = value.locale;
@@ -14,7 +14,7 @@ function applyLanguage(value) {
   const error = detail.dataset.nativeError;
   if (error) {
     let key;
-    for (const locale of ['zh-CN', 'en']) {
+    for (const locale of ['zh-CN', 'en', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'de', 'pt-BR']) {
       const dictionary = window.i18next.getResourceBundle(locale, 'translation');
       key = Object.keys(dictionary).find(candidate => dictionary[candidate] === error);
       if (key) break;

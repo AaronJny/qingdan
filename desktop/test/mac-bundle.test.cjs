@@ -6,6 +6,7 @@ const path = require('node:path');
 const os = require('node:os');
 const plist = require('plist');
 const hook = require('../scripts/finalize-mac-bundle.cjs');
+const { MAC_LOCALIZATIONS, localizedBundleNames } = require('../scripts/bundle-locales.cjs');
 const windows = process.platform === 'win32';
 if (windows) {
   // Windows does not store POSIX execute bits. Only that fixture metadata is
@@ -42,6 +43,8 @@ test('macOS helper lookup names stay unchanged while display names follow system
     assert.equal(info.CFBundleName, `Electron Helper${suffix}`);
     assert.equal(info.CFBundleDisplayName, `Electron Helper${suffix}`);
     assert.equal(info.CFBundleDevelopmentRegion, 'en');
+    assert.deepEqual(info.CFBundleLocalizations, [...MAC_LOCALIZATIONS]);
+    for (const [locale] of localizedBundleNames('Qingdan', '青单')) assert.match(await fs.readFile(path.join(helper, `Contents/Resources/${locale}.lproj/InfoPlist.strings`), 'utf8'), /CFBundleDisplayName/);
     assert.match(await fs.readFile(path.join(helper, 'Contents/Resources/en.lproj/InfoPlist.strings'), 'utf8'), /Qingdan Helper/);
     assert.match(await fs.readFile(path.join(helper, 'Contents/Resources/zh_CN.lproj/InfoPlist.strings'), 'utf8'), /青单辅助程序/);
     assert.equal(info.CFBundleIdentifier, `app.qingdan.desktop.helper${suffix}`);
@@ -50,6 +53,8 @@ test('macOS helper lookup names stay unchanged while display names follow system
   }
   const mainInfo = plist.parse(await fs.readFile(path.join(app, 'Contents/Info.plist'), 'utf8'));
   assert.equal(mainInfo.CFBundleIdentifier, 'app.qingdan.desktop'); assert.equal(mainInfo.CFBundleDevelopmentRegion, 'en');
+  assert.deepEqual(mainInfo.CFBundleLocalizations, [...MAC_LOCALIZATIONS]);
+  for (const [locale, display] of localizedBundleNames('Qingdan', '青单')) assert.ok((await fs.readFile(path.join(app, `Contents/Resources/${locale}.lproj/InfoPlist.strings`), 'utf8')).includes(`"CFBundleDisplayName" = "${display}"`));
   assert.equal(mainInfo.CFBundleDisplayName, '青单', 'Finder lookup still matches the on-disk app name');
   assert.match(await fs.readFile(path.join(app, 'Contents/Resources/en.lproj/InfoPlist.strings'), 'utf8'), /"CFBundleDisplayName" = "Qingdan"/);
   for (const locale of ['zh_CN','zh']) assert.match(await fs.readFile(path.join(app, `Contents/Resources/${locale}.lproj/InfoPlist.strings`), 'utf8'), /"CFBundleDisplayName" = "青单"/);
@@ -80,7 +85,7 @@ test('config retains application identity, Chinese Mac filename and safety fuses
   assert.deepEqual(config.mac.target, [{ target: 'dir', arch: ['arm64', 'x64'] }]);
   assert.equal(config.mac.extendInfo.CFBundleName, '青单');
   assert.equal(config.mac.extendInfo.CFBundleDevelopmentRegion, 'en');
-  assert.deepEqual(config.mac.extendInfo.CFBundleLocalizations, ['en','zh_CN','zh']);
+  assert.deepEqual(config.mac.extendInfo.CFBundleLocalizations, ['en','zh-CN','zh-Hans','zh-TW','zh-Hant','ja','ko','es','fr','de','pt-BR','zh_CN','zh','zh_Hans','zh_TW','zh_Hant','pt_BR']);
   assert.equal(config.electronFuses.enableEmbeddedAsarIntegrityValidation, true);
   assert.equal(config.electronFuses.onlyLoadAppFromAsar, true);
   assert.equal(config.electronFuses.runAsNode, false);
@@ -91,4 +96,14 @@ test('localized metadata refuses symbolic-link resource directories', {skip:wind
   await fs.symlink(outside,path.join(app,'Contents/Resources'));
   await assert.rejects(hook.finalizeBundle(app,'Qingdan'),/Invalid bundle directory/);
   assert.deepEqual(await fs.readdir(outside),[]);
+});
+
+test('canonical Apple language IDs and legacy aliases keep the correct Chinese script', () => {
+  const names = Object.fromEntries(localizedBundleNames('Qingdan', '青单'));
+  for (const locale of ['zh-TW', 'zh-Hant', 'zh_TW', 'zh_Hant']) assert.equal(names[locale], '青單');
+  for (const locale of ['zh-CN', 'zh-Hans', 'zh_CN', 'zh_Hans', 'zh']) assert.equal(names[locale], '青单');
+  for (const locale of ['en', 'ja', 'ko', 'es', 'fr', 'de', 'pt-BR', 'pt_BR']) assert.equal(names[locale], 'Qingdan');
+  const helpers = Object.fromEntries(localizedBundleNames('Qingdan Helper (GPU)', '青单辅助程序（图形）'));
+  assert.equal(helpers['zh-Hant'], '青單輔助程式（圖形）');
+  assert.equal(helpers['zh-Hant'], helpers['zh_Hant']);
 });

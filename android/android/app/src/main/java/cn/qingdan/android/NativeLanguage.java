@@ -2,6 +2,7 @@ package cn.qingdan.android;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Arrays;
 
 /** UI-only language selection. Never changes task, note, account, or attachment data. */
 public final class NativeLanguage {
@@ -10,7 +11,9 @@ public final class NativeLanguage {
     private static volatile Translator translator = (key, locale) -> key;
     public static void setTranslator(Translator value) { if (value == null) throw new IllegalArgumentException("Missing translator"); translator = value; }
     private NativeLanguage() {}
-    public static boolean validPreference(String value) { return "system".equals(value) || "zh-CN".equals(value) || "en".equals(value); }
+    public static String[] choices() { return new String[]{"system", "zh-CN", "en", "zh-TW", "ja", "ko", "es", "fr", "de", "pt-BR"}; }
+    public static String[] names() { return new String[]{text("language.system"), "简体中文", "English", "繁體中文", "日本語", "한국어", "Español", "Français", "Deutsch", "Português (Brasil)"}; }
+    public static boolean validPreference(String value) { return value != null && Arrays.asList(choices()).contains(value); }
     public static String normalizePreference(String value) { return validPreference(value) ? value : "system"; }
     public static void setPreference(String value) {
         if (!validPreference(value)) throw new IllegalArgumentException(text("language.preference.invalid"));
@@ -18,8 +21,12 @@ public final class NativeLanguage {
     }
     public static String preference() { return preference; }
     public static String resolveLocale(String value, Locale system) {
-        if ("zh-CN".equals(value) || "en".equals(value)) return value;
-        return system != null && "zh".equals(system.getLanguage()) ? "zh-CN" : "en";
+        if (validPreference(value) && !"system".equals(value)) return value;
+        if (system == null) return "en";
+        String language = system.getLanguage();
+        if ("zh".equals(language)) return "Hans".equals(system.getScript()) ? "zh-CN" : "Hant".equals(system.getScript()) || Arrays.asList("TW", "HK", "MO").contains(system.getCountry()) ? "zh-TW" : "zh-CN";
+        if ("pt".equals(language)) return "pt-BR";
+        return validPreference(language) ? language : "en";
     }
     public static String locale() { return resolveLocale(preference, Locale.getDefault()); }
     public static String text(String key) { return translator.translate(key, locale()); }

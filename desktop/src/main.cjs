@@ -311,6 +311,10 @@ function refreshNativeLanguage() {
     settingsWindow.setTitle(t("desktop.qingdan.connection.settings"));
     settingsWindow.webContents.send?.('qingdan-desktop:language-changed', languageSnapshot());
   }
+  if (recoveryWindow && !recoveryWindow.isDestroyed()) {
+    recoveryWindow.setTitle(t('desktop.recovery.title'));
+    recoveryWindow.webContents.send?.('qingdan-desktop:language-changed', languageSnapshot());
+  }
 }
 function setNativeLanguage(event, value) {
   if (quitting || (!trustedServiceSender(event, mainWindow?.webContents, current) && !trustedSettingsSender(event, settingsWindow?.webContents))) throw new Error('Untrusted language sender');

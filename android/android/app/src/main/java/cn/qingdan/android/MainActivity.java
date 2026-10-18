@@ -188,9 +188,9 @@ public final class MainActivity extends Activity {
         content.setPadding(dp(20), dp(4), dp(20), dp(4));
         TextView languageLabel = new TextView(this); languageLabel.setText(NativeLanguage.text("language.label")); content.addView(languageLabel);
         android.widget.Spinner language = new android.widget.Spinner(this);
-        String[] preferencesList = {"system", "zh-CN", "en"};
-        language.setAdapter(new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, new String[]{NativeLanguage.text("language.system"), "简体中文", "English"}));
-        language.setSelection("zh-CN".equals(NativeLanguage.preference()) ? 1 : "en".equals(NativeLanguage.preference()) ? 2 : 0);
+        String[] preferencesList = NativeLanguage.choices();
+        language.setAdapter(new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, NativeLanguage.names()));
+        language.setSelection(java.util.Arrays.asList(preferencesList).indexOf(NativeLanguage.preference()));
         content.addView(language);
         RadioGroup modes = new RadioGroup(this);
         RadioButton local = new RadioButton(this); local.setId(View.generateViewId()); local.setText(NativeLanguage.text("mode.local"));

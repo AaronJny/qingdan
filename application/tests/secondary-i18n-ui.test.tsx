@@ -109,10 +109,10 @@ test('secondary complete-message plural forms cover zero, one and two',()=>{
 test('multi-count backup and merge summaries pluralize each quantity independently',()=>{
   setLanguagePreference('en');
   for(const count of [0,1,2]){
-    const records=plural(count,'record','records','');
-    const history=plural(count,'history entry','history entries','');
-    const attachments=plural(count,'attachment','attachments','');
-    const checks=plural(count,'checklist item','checklist items','');
+    const records=plural(count,"record");
+    const history=plural(count,"historyEntry");
+    const attachments=plural(count,"attachment");
+    const checks=plural(count,"checklistItem");
     const exported=t('ui.secondary.fullBackupPanel.fullPackageSentToTheBrowserFor',{v0:records,v1:history,v2:attachments});
     assert.ok(exported.includes(`${count} ${count===1?'record':'records'} / ${count} ${count===1?'history entry':'history entries'} / ${count} ${count===1?'attachment':'attachments'}.`));
     const merged=t('ui.secondary.mergeDialog.affectedRecordsAndChecklistItems',{v0:records,v1:checks});

@@ -38,7 +38,7 @@ function write(value) { return object(value) && string(value.id) && string(value
 function validateEntry(key, value, principalId) {
   const entry = describeKey(key, principalId); if (!entry || !string(value) || Buffer.byteLength(value,'utf8') > 8 * 1024 * 1024) fail();
   const { kind, accountId, suffix } = entry;
-  if (kind === 'language') { if (!['system','zh-CN','en'].includes(value)) fail(); return true; }
+  if (kind === 'language') { if (!['system', 'zh-CN', 'en', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'de', 'pt-BR'].includes(value)) fail(); return true; }
   if (kind === 'offline-shell-opt') { if (!['enabled','disabled'].includes(value)) fail(); return true; }
   if (TEXT.has(kind)) return true;
   let data; try { data = JSON.parse(value); } catch { fail(); }

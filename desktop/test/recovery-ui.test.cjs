@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { recoveryPage } = require('../src/local-recovery-page.cjs');
 const { css } = require('../src/local-pages.cjs');
-const { t } = require('../src/language.cjs');
+const { t, locales, resources } = require('../src/language.cjs');
 const translations = require('../src/translations.cjs');
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
@@ -14,7 +14,7 @@ function element(tagName = '') {
   const events = {};
   return {
     tagName, hidden: false, disabled: false, textContent: '', value: '',
-    style: {}, attributes: {}, children: [],
+    style: {}, attributes: {}, children: [], dataset: {},
     addEventListener(name, fn) { events[name] = fn; },
     dispatch(name) { return events[name]?.(); },
     setAttribute(name, value) { this.attributes[name] = value; },
@@ -30,12 +30,16 @@ async function harness({ locale = 'zh-CN', items = [], failCandidates = false } 
     const node = element(tag);
     node.hidden = /\bhidden\b/.test(attrs + tail);
     node.disabled = /\bdisabled\b/.test(attrs + tail);
+    const textKey = (attrs + tail).match(/data-recovery-text="([^"]+)"/); if (textKey) node.dataset.recoveryText = textKey[1];
     elements[id] = node;
   }
   const calls = { summary: 0, candidates: [], export: 0, continue: 0 };
+  let languageListener;
   const window = {
+    i18next: { changeLanguage(value) { locale = value; } },
     qingdanT: key => t(key, locale),
     qingdanRecovery: {
+      onLanguageChanged(callback) { languageListener = callback; },
       async summary() { calls.summary++; return { status: 'pending', requiresReview: true }; },
       async candidates(offset) {
         calls.candidates.push(offset);
@@ -47,10 +51,10 @@ async function harness({ locale = 'zh-CN', items = [], failCandidates = false } 
       async continue() { calls.continue++; },
     },
   };
-  const document = { getElementById: id => elements[id], createElement: element };
+  const document = { documentElement: { lang: locale, dataset: { languageRevision: '0' } }, title: '', querySelectorAll: () => Object.values(elements).filter(node => node.dataset.recoveryText), getElementById: id => elements[id], createElement: element };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/recovery.js'), 'utf8'), { window, document });
   await flush();
-  return { elements, calls, async click(id) { await elements[id].dispatch('click'); await flush(); } };
+  return { elements, calls, document, changeLanguage(locale, revision) { languageListener({preference:locale,locale,revision}); }, async click(id) { await elements[id].dispatch('click'); await flush(); } };
 }
 
 test('native hidden controls override shared display styling and start hidden', async () => {
@@ -118,14 +122,14 @@ test('candidate headings use exact bilingual labels while raw input stays unchan
 
 test('all supported storage categories have bilingual display labels and unknown kinds stay generic', async () => {
   const kinds = ['language', 'quick-draft', 'desktop-quick-draft', 'batch-tag-draft', 'queue-create', 'pending-create', 'queue-write', 'pending-write', 'pending-import', 'pending-template', 'matrix-draft', 'calendar-batch', 'draft', 'check-draft', 'subtask-draft', 'comment-draft', 'focus-note', 'view', 'full-backup-pending', 'habit-group-rename', 'reminder-actions', 'offline-shell-opt', 'offline', 'offline-shell-session', 'comment-mentions', 'background-upload', 'attachment-upload', 'list-transfer', 'form-draft'];
-  for (const locale of ['zh-CN', 'en']) {
+  for (const locale of locales) {
     for (let offset = 0; offset < kinds.length; offset += 25) {
       const h = await harness({ locale, items: kinds.slice(offset, offset + 25).map(kind => ({ kind, value: '' })) });
       await h.click('view');
       for (const row of h.elements.candidates.children) {
         const label = row.children[0].textContent.split(' · ')[1];
         assert.ok(label);
-        assert.notEqual(label, translations['desktop.recovery.kind.other'][locale]);
+        assert.notEqual(label, resources[locale].translation['desktop.recovery.kind.other']);
         assert.doesNotMatch(label, /^desktop\./);
         if (locale === 'zh-CN') assert.match(label, /[\u4e00-\u9fff]/);
       }
@@ -133,8 +137,8 @@ test('all supported storage categories have bilingual display labels and unknown
     const h = await harness({ locale, items: [undefined, '__proto__', 'constructor', '<script>raw-kind</script>'].map(kind => ({ kind })) });
     await h.click('view');
     for (const row of h.elements.candidates.children) {
-      assert.equal(row.children[0].textContent.split(' · ')[1], translations['desktop.recovery.kind.other'][locale]);
-      assert.equal(row.children[1].value, translations['desktop.recovery.unreadable'][locale]);
+      assert.equal(row.children[0].textContent.split(' · ')[1], resources[locale].translation['desktop.recovery.kind.other']);
+      assert.equal(row.children[1].value, resources[locale].translation['desktop.recovery.unreadable']);
       assert.equal(row.children[1].readOnly, true);
     }
   }
@@ -148,4 +152,21 @@ test('failed candidate reads keep controls hidden and do not expose private diag
   assert.equal(h.elements.message.textContent, t('desktop.recovery.error', 'zh-CN'));
   assert.equal(h.calls.export, 0);
   assert.equal(h.calls.continue, 0);
+});
+
+test('live recovery language changes relabel controls and candidates without rereading or modifying evidence',async()=>{
+ const evidence='原始输入 mañana demain 日本語 한국어 <script>text</script>';
+ const h=await harness({items:[{kind:'quick-draft',value:evidence},{kind:'other'}]});await h.click('view');
+ const original=h.elements.candidates.children[0].children[1];
+ let revision=0;
+ for(const locale of locales){
+  h.changeLanguage(locale,++revision);
+  assert.equal(h.document.documentElement.lang,locale);assert.equal(h.document.title,t('desktop.recovery.title',locale));
+  assert.equal(h.elements.view.textContent,t('desktop.recovery.view',locale));
+  assert.equal(h.elements.candidates.children[0].children[0].textContent,`${t('desktop.recovery.candidate',locale)} 1 · ${t('desktop.recovery.kind.quick.draft',locale)}`);
+  assert.equal(original.value,evidence);assert.equal(h.elements.candidates.children[0].children[1],original);
+  assert.equal(h.elements.candidates.children[1].children[1].value,t('desktop.recovery.unreadable',locale));
+ }
+ h.changeLanguage('en',0);assert.equal(h.document.documentElement.lang,'pt-BR');
+ assert.deepEqual(h.calls,{summary:1,candidates:[0],export:0,continue:0});
 });

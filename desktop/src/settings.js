@@ -22,7 +22,7 @@ function reflectMode() {
 function nativeMessage(value) {
   // Only an explicit native error/status message is matched against known resources.
   // Never called for the server field, account data, or other user-provided text.
-  for (const locale of ['zh-CN', 'en']) {
+  for (const locale of ['zh-CN', 'en', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'de', 'pt-BR']) {
     const dictionary = window.i18next.getResourceBundle(locale, 'translation');
     const key = Object.keys(dictionary).find(key => dictionary[key] === value);
     if (key) return t(key);
@@ -55,10 +55,10 @@ async function readCurrentConnection() {
   try { const result = await window.qingdanConnection.get(); if (!closed && request === connectionRequest) receiveConnection(result); } catch {}
 }
 function validLanguage(value) {
-  return value && ['system', 'zh-CN', 'en'].includes(value.preference) && ['zh-CN', 'en'].includes(value.locale) && Number.isSafeInteger(value.revision) && value.revision >= 0;
+  return value && ['system', 'zh-CN', 'en', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'de', 'pt-BR'].includes(value.preference) && ['zh-CN', 'en', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'de', 'pt-BR'].includes(value.locale) && Number.isSafeInteger(value.revision) && value.revision >= 0;
 }
 function applyLanguage(value) {
-  if (closed || !validLanguage(value) || confirmedLanguage && value.revision < confirmedLanguage.revision) return;
+  if (closed || !validLanguage(value) || confirmedLanguage && value.revision < confirmedLanguage.revision) return false;
   confirmedLanguage = value;
   void window.i18next.changeLanguage(value.locale);
   document.documentElement.lang = value.locale;
@@ -67,6 +67,7 @@ function applyLanguage(value) {
   language.value = value.preference;
   if (currentResult) showConnection(currentResult);
   renderMessage();
+  return true;
 }
 mode.addEventListener('change', () => { edited = true; reflectMode(); });
 input.addEventListener('input', () => { edited = true; });
@@ -90,16 +91,23 @@ window.qingdanConnection.onLanguageChanged(value => {
 });
 language.addEventListener('change', async () => {
   const preference = language.value;
-  if (!['system', 'zh-CN', 'en'].includes(preference)) return;
+  if (!['system', 'zh-CN', 'en', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'de', 'pt-BR'].includes(preference)) return;
   const request = ++languageRequest;
+  const revisionAtRequest = confirmedLanguage?.revision ?? -1;
+  const superseded = () => confirmedLanguage && confirmedLanguage.revision > revisionAtRequest;
   changingLanguage = true;
   try {
     const value = await window.qingdanConnection.setLanguagePreference(preference);
     if (closed || request !== languageRequest) return;
-    changingLanguage = false; applyLanguage(value);
+    if (!validLanguage(value) || value.preference !== preference) throw new TypeError('Invalid native language acknowledgement');
+    if (value.revision <= revisionAtRequest) throw new TypeError('Stale native language acknowledgement');
+    changingLanguage = false;
+    if (applyLanguage(value)) { if (messageState?.key === 'desktop.could.not.save.the.language.preference') showMessage(null); }
+    else if (!superseded()) throw new TypeError('Unaccepted native language acknowledgement');
   } catch {
     if (closed || request !== languageRequest) return;
     changingLanguage = false;
+    if (superseded()) return;
     if (confirmedLanguage) applyLanguage(confirmedLanguage);
     showMessage('desktop.could.not.save.the.language.preference');
     try {

@@ -25,8 +25,7 @@ const finalRecoveryBinding = isMac ? require('./smoke-packaged-recovery.cjs').fi
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const extract = name => asar.extractFile(archive, nativeAsarEntryPath(name));
 const same = name => assert(extract(name).equals(fs.readFileSync(path.join(root, name))), name + ' differs');
-const sourceFiles = fs.readdirSync(path.join(root, 'src')).filter(n => fs.statSync(path.join(root, 'src', n)).isFile());
-for (const name of sourceFiles) same('src/' + name);
+const sourceFiles = require('./packaged-source.cjs').verifyPackagedSources(root, extract);
 const sourcePackage = JSON.parse(fs.readFileSync(path.join(root, 'package.json')));
 const packagedPackage = JSON.parse(extract('package.json'));
 // electron-builder removes build-only scripts/dependencies from the production package.

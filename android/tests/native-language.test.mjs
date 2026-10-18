@@ -24,3 +24,15 @@ test('native language uses existing trusted top-frame command routing and Androi
  const helper=read('java/cn/qingdan/android/NativeLanguage.java');
  assert.match(helper,/query\.size\(\) != 1/);assert.match(helper,/validPreference\(query\.get\("preference"\)\)/);
 });
+
+test('all nine Android resource sets have complete stable keys and compatible interpolation',()=>{
+ const baseline=strings('values');
+ const parameters=value=>[...new Set(value.match(/%\d+\$[sd]|%[sd]/g)||[])].sort();
+ for(const directory of ['values-zh-rCN','values-b+zh+Hant','values-ja','values-ko','values-es','values-fr','values-de','values-pt-rBR']){
+  const dictionary=strings(directory);assert.deepEqual(Object.keys(dictionary).sort(),Object.keys(baseline).sort(),directory);
+  for(const [key,value]of Object.entries(dictionary)){assert.ok(value.trim(),`${directory}:${key}`);assert.deepEqual(parameters(value),parameters(baseline[key]),`${directory}:${key}`);}
+ }
+ const activity=read('java/cn/qingdan/android/MainActivity.java');assert.match(activity,/NativeLanguage\.choices\(\)/);assert.match(activity,/NativeLanguage\.names\(\)/);
+ const helper=read('java/cn/qingdan/android/NativeLanguage.java');
+ for(const locale of ['zh-CN','en','zh-TW','ja','ko','es','fr','de','pt-BR'])assert.ok(helper.includes(`"${locale}"`));
+});

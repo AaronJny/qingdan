@@ -8,6 +8,7 @@ const crypto = require('node:crypto');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const plist = require('plist');
+const { MAC_LOCALIZATIONS, localizedBundleNames } = require('./bundle-locales.cjs');
 const { nativeAsarEntryPath } = require('./asar-entry-path.cjs');
 const { verifyMacArchitecture } = require('./verify-mac-architecture.cjs');
 const { assertNativeMac } = require('./assert-native-macos.cjs');
@@ -85,7 +86,7 @@ function comparePayload(original, extracted, unixModes) {
     inventorySha256: crypto.createHash('sha256').update(JSON.stringify(expected)).digest('hex') };
 }
 function verifyLocalizedNames(contents, englishDisplay, chineseDisplay, stableName) {
-  for (const [locale, display] of [['en', englishDisplay], ['zh_CN', chineseDisplay], ['zh', chineseDisplay]]) {
+  for (const [locale, display] of localizedBundleNames(englishDisplay, chineseDisplay)) {
     const directory = path.join(contents, 'Resources', locale + '.lproj'); realDirectory(directory);
     const file = path.join(directory, 'InfoPlist.strings'); realFile(file);
     const strings = fs.readFileSync(file, 'utf8');
@@ -104,6 +105,7 @@ function verifyMacBundle(bundle, version, arch) {
   realDirectory(path.join(contents, 'MacOS')); realDirectory(resources); realFile(executable, true);
   realFile(path.join(resources, 'app.asar'));
   assert.equal(info.CFBundleDevelopmentRegion, 'en', 'macOS fallback language');
+  assert.deepEqual(info.CFBundleLocalizations, [...MAC_LOCALIZATIONS], 'macOS supported languages');
   verifyLocalizedNames(contents, 'Qingdan', '青单');
   assert.equal(info.LSMinimumSystemVersion, '13.0', 'macOS minimum supported version');
   assert(typeof info.CFBundleIconFile === 'string' && path.basename(info.CFBundleIconFile) === info.CFBundleIconFile, 'Invalid macOS icon metadata');
@@ -121,6 +123,7 @@ function verifyMacBundle(bundle, version, arch) {
     assert.equal(metadata.CFBundleIdentifier, 'app.qingdan.desktop.helper' + (suffix ? '.' + suffix.trim().replace(/[()]/g, '') : ''), 'macOS helper identity');
     assert.equal(metadata.CFBundleDisplayName, name, 'macOS helper unlocalized display identity');
     assert.equal(metadata.CFBundleDevelopmentRegion, 'en', 'macOS helper fallback language');
+    assert.deepEqual(metadata.CFBundleLocalizations, [...MAC_LOCALIZATIONS], 'macOS helper supported languages');
     const chineseSuffix = {'':'', ' (GPU)':'（图形）', ' (Plugin)':'（插件）', ' (Renderer)':'（渲染器）'}[suffix];
     verifyLocalizedNames(path.join(helper, 'Contents'), 'Qingdan Helper' + suffix, '青单辅助程序' + chineseSuffix, name);
     realFile(path.join(helper, 'Contents', 'MacOS', name), true);

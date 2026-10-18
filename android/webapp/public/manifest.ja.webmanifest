@@ -1,0 +1,17 @@
+{
+  "name": "Qingdan",
+  "short_name": "Qingdan",
+  "lang": "ja",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#276455",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
