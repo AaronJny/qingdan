@@ -46,6 +46,9 @@ function runtimeLayout(executable, platform = process.platform) {
   return { root, executable: real, relativeExecutable: path.relative(root, real) };
 }
 function validateRuntimeTree(root) {
+  // macOS exposes /var through /private/var. Compare resolved link targets
+  // against the same existing root, not against its lexical ancestor alias.
+  root = fs.realpathSync(root);
   let files = 0, bytes = 0;
   function visit(directory) {
     for (const name of fs.readdirSync(directory)) {
@@ -66,6 +69,9 @@ function validateRuntimeTree(root) {
 async function prepareRuntime(executable, fixture, platform = process.platform) {
   const { getCurrentFuseWire, flipFuses, FuseVersion, FuseV1Options } = require('@electron/fuses');
   const layout = runtimeLayout(executable, platform);
+  // The launcher has already created this directory. Resolve only that
+  // existing path so an ancestor alias cannot hide a copy into the source.
+  fixture = fs.realpathSync(fixture);
   if (inside(layout.root, fixture)) fail('UNSAFE_RUNTIME_COPY', 'The test fixture cannot be inside the source runtime.');
   const tree = validateRuntimeTree(layout.root);
   const sourceWire = await getCurrentFuseWire(layout.executable);

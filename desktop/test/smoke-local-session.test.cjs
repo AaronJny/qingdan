@@ -45,8 +45,8 @@ test('stock Electron ESM app loader dispatches the selected CJS child without re
 });
 test('runtime layout accepts complete stock tree and native Mac bundle paths', t => {
   const directory = fixture(t), linux = syntheticRuntime(directory), mac = syntheticRuntime(directory, 'darwin');
-  assert.equal(runtimeLayout(linux.executable, 'linux').root, linux.root);
-  assert.equal(runtimeLayout(mac.executable, 'darwin').root, mac.root);
+  assert.equal(runtimeLayout(linux.executable, 'linux').root, fs.realpathSync(linux.root));
+  assert.equal(runtimeLayout(mac.executable, 'darwin').root, fs.realpathSync(mac.root));
   assert.throws(() => runtimeLayout(linux.executable, 'darwin'), { code:'NOT_STOCK_RUNTIME' });
   fs.unlinkSync(path.join(linux.resources, 'default_app.asar'));
   assert.throws(() => runtimeLayout(linux.executable, 'linux'));
@@ -74,6 +74,37 @@ test('runtime copy enables only CookieEncryption and cannot mutate the source bi
   assert.notDeepEqual(fs.readFileSync(result.executable), before);
   assert.notEqual(crypto.createHash('sha256').update(fs.readFileSync(result.executable)).digest('hex'), crypto.createHash('sha256').update(before).digest('hex'));
   await assert.rejects(prepareRuntime(stock.executable, stock.root, 'linux'), { code:'UNSAFE_RUNTIME_COPY' });
+});
+test('existing ancestor aliases are canonicalized without weakening source-copy or symlink guards', async t => {
+  const directory = fixture(t), parent = path.join(directory, 'real-parent'), alias = path.join(directory, 'ancestor-alias');
+  fs.mkdirSync(parent);
+  // A junction exercises the same ancestor-alias case on Windows without
+  // requiring permission to create file symlinks.
+  fs.symlinkSync(fs.realpathSync(parent), alias, process.platform === 'win32' ? 'junction' : 'dir');
+  const stock = syntheticRuntime(parent), aliasedRoot = path.join(alias, 'stock'), aliasedExecutable = path.join(aliasedRoot, 'electron');
+  assert.equal(runtimeLayout(aliasedExecutable, 'linux').root, fs.realpathSync(stock.root));
+  if (process.platform !== 'win32') {
+    fs.symlinkSync('resources/default_app.asar', path.join(stock.root, 'internal'));
+    assert.equal(validateRuntimeTree(aliasedRoot).files, 4);
+    fs.writeFileSync(path.join(directory, 'outside'), 'outside');
+    fs.symlinkSync('../../outside', path.join(stock.root, 'escape'));
+    assert.throws(() => validateRuntimeTree(aliasedRoot), { code:'UNSAFE_RUNTIME_LINK' });
+    fs.unlinkSync(path.join(stock.root, 'escape'));
+  }
+  assert.deepEqual(validateRuntimeTree(aliasedRoot), validateRuntimeTree(stock.root));
+  const destination = path.join(parent, 'fixture'); fs.mkdirSync(destination);
+  const before = fs.readFileSync(stock.executable), originalWire = await getCurrentFuseWire(stock.executable);
+  const result = await prepareRuntime(aliasedExecutable, path.join(alias, 'fixture'), 'linux');
+  assert.equal(result.executable, path.join(fs.realpathSync(destination), 'test-runtime', 'electron'));
+  assert.equal(result.report.testCookieEncryption, true);
+  assert.equal(result.report.onlyCookieEncryptionFuseChanged, true);
+  assert.equal(result.report.sourceFuseWireUnchanged, true);
+  assert.deepEqual(fs.readFileSync(stock.executable), before);
+  assert.deepEqual(await getCurrentFuseWire(stock.executable), originalWire);
+  await assert.rejects(prepareRuntime(stock.executable, aliasedRoot, 'linux'), { code:'UNSAFE_RUNTIME_COPY' });
+  await assert.rejects(prepareRuntime(aliasedExecutable, stock.root, 'linux'), { code:'UNSAFE_RUNTIME_COPY' });
+  await assert.rejects(prepareRuntime(aliasedExecutable, path.join(alias, 'not-created'), 'linux'), { code:'ENOENT' });
+  assert.deepEqual(fs.readFileSync(stock.executable), before);
 });
 test('path containment does not confuse sibling names or parent traversal', () => {
   const root = path.resolve('runtime');

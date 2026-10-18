@@ -22,7 +22,28 @@ test('per-key revisions reject concurrent stale writes and removals; tombstones 
 });
 test('quota failure preserves prior bytes, state and revisions',t=>{const {store}=fixture(t,{maxBytes:400});store.write(key,'saved',0);const bytes=fs.readFileSync(store.file);assert.throws(()=>store.write(key,'x'.repeat(1000),1),{code:'LOCAL_STORAGE_QUOTA'});assert.deepEqual(fs.readFileSync(store.file),bytes);assert.equal(store.read(key).value,'saved');});
 test('failure before atomic replacement does not change prior durable value',t=>{let fail=false;const io=new Proxy(fs,{get(target,property){if(property==='fsyncSync')return fd=>{if(fail)throw Error('disk failure');return target.fsyncSync(fd);};return target[property];}});const {store}=fixture(t,{fs:io});store.write(key,'saved',0);const bytes=fs.readFileSync(store.file);fail=true;assert.throws(()=>store.write(key,'not acknowledged',1),{code:'LOCAL_WRITE_FAILED'});assert.deepEqual(fs.readFileSync(store.file),bytes);assert.equal(store.read(key).value,'saved');});
-test('uncertain directory flush blocks further writes rather than silently acknowledging',t=>{let count=0,fail=false;const io=new Proxy(fs,{get(target,property){if(property==='fsyncSync')return fd=>{if(fail&&++count===2)throw Error('directory flush failure');return target.fsyncSync(fd);};return target[property];}});const {profile,store}=fixture(t,{fs:io,platform:'linux'});store.write(key,'saved',0);fail=true;assert.throws(()=>store.write(key,'possibly committed',1),{code:'LOCAL_WRITE_UNCERTAIN'});assert.throws(()=>store.write(key,'later',2),{code:'LOCAL_WRITE_UNCERTAIN'});assert.equal(new LocalBusinessStore({profile,principalId:principal}).read(key).value,'possibly committed');});
+test('uncertain directory flush blocks further writes rather than silently acknowledging',t=>{
+ let fail=false,directoryFlushes=0;const directoryHandle=Symbol('simulated POSIX directory handle');
+ // Exercise the POSIX acknowledgement boundary on every host without asking
+ // Windows CRT to open a real directory. File data still uses real fsync.
+ const io=new Proxy(fs,{get(target,property){
+  if(property==='openSync')return (file,flags,...rest)=>flags==='r'&&target.statSync(file).isDirectory()?directoryHandle:target.openSync(file,flags,...rest);
+  if(property==='fsyncSync')return fd=>{if(fd!==directoryHandle)return target.fsyncSync(fd);directoryFlushes++;if(fail)throw Error('directory flush failure');};
+  if(property==='closeSync')return fd=>{if(fd!==directoryHandle)return target.closeSync(fd);};
+  return target[property];
+ }});
+ const {profile,store}=fixture(t,{fs:io,platform:'linux'});store.write(key,'saved',0);assert.equal(directoryFlushes,1);fail=true;
+ assert.throws(()=>store.write(key,'possibly committed',1),{code:'LOCAL_WRITE_UNCERTAIN'});assert.equal(directoryFlushes,2);
+ assert.throws(()=>store.write(key,'later',2),{code:'LOCAL_WRITE_UNCERTAIN'});assert.equal(new LocalBusinessStore({profile,principalId:principal}).read(key).value,'possibly committed');
+});
+test('Windows durable replacement flushes file data without opening a CRT directory handle',t=>{
+ let flushes=0;const io=new Proxy(fs,{get(target,property){
+  if(property==='openSync')return (file,flags,...rest)=>{assert.notEqual(flags,'r','Windows must not open a directory for fsync');return target.openSync(file,flags,...rest);};
+  if(property==='fsyncSync')return fd=>{flushes++;return target.fsyncSync(fd);};
+  return target[property];
+ }});
+ const {profile,store}=fixture(t,{fs:io,platform:'win32'});store.write(key,'durable file bytes',0);assert.equal(flushes,1);assert.equal(new LocalBusinessStore({profile,principalId:principal}).read(key).value,'durable file bytes');
+});
 test('corrupt native store is never reset or rewritten',t=>{const {profile,store}=fixture(t);store.write(key,'saved',0);fs.writeFileSync(store.file,'{broken');assert.throws(()=>new LocalBusinessStore({profile,principalId:principal}),{code:'INVALID_LOCAL_STORE'});assert.equal(fs.readFileSync(store.file,'utf8'),'{broken');});
 test('symlink file and directory are refused',t=>{const {profile,store}=fixture(t);const target=path.join(profile,'untouched');fs.writeFileSync(target,'original');fs.symlinkSync(target,store.file);assert.throws(()=>store.write(key,'unsafe',0),{code:'LOCAL_WRITE_FAILED'});assert.equal(fs.readFileSync(target,'utf8'),'original');assert.throws(()=>new LocalBusinessStore({profile,principalId:principal}),{code:'INVALID_LOCAL_STORE'});});
 test('different stable local principal uses isolated files and cannot access another principal key',t=>{const {profile,store}=fixture(t);store.write(key,'saved',0);const next=new LocalBusinessStore({profile,principalId:other});assert.notEqual(next.file,store.file);assert.throws(()=>next.read(key),{code:'INVALID_LOCAL_KEY'});assert.equal(next.keys().length,0);});

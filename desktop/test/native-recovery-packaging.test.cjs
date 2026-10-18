@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
 const asar = require('@electron/asar');
 const { Arch } = require('builder-util');
 const { TmpDir } = require('temp-file');
@@ -195,12 +196,32 @@ test('real staged prebuild loads through node-gyp-build and performs a database 
   const source = path.join(project, 'node_modules/classic-level'), sourceFile = path.join(source, ...hook.targetBinding(process.platform, process.arch).source.split('/')), before = sha(fs.readFileSync(sourceFile));
   const result = hook.stageBinding(source, stage, process.platform, process.arch);
   write(packageRoot, 'package.json', JSON.stringify({ name: 'classic-level', version: '3.0.0' }));
-  const loader = require('node-gyp-build'); assert.equal(loader.resolve(packageRoot), result.file);
-  const binding = loader(packageRoot), context = binding.db_init(), database = path.join(root, 'db'); fs.mkdirSync(database);
-  await binding.db_open(context, database, { createIfMissing: true, errorIfExists: false });
-  try { await binding.db_put(context, 'recovery-test', '保存 works', {}); assert.equal(await binding.db_get(context, 1, 'recovery-test', undefined), '保存 works'); }
-  finally { await binding.db_close(context); }
+  // Windows keeps a loaded .node DLL locked until its process exits, even
+  // after LevelDB closes. Keep the real native proof in a child so the parent
+  // can remove the staged dependency only after the DLL has been unloaded.
+  const child = spawnSync(process.execPath, ['-e', `
+    'use strict';
+    const assert = require('node:assert/strict');
+    const fs = require('node:fs');
+    const [packageRoot, expectedFile, loaderFile, database] = process.argv.slice(1);
+    (async () => {
+      assert.equal(process.versions.node.split('.')[0], '24');
+      const loader = require(loaderFile);
+      assert.equal(loader.resolve(packageRoot), expectedFile);
+      const binding = loader(packageRoot), context = binding.db_init();
+      fs.mkdirSync(database);
+      await binding.db_open(context, database, { createIfMissing: true, errorIfExists: false });
+      try {
+        await binding.db_put(context, 'recovery-test', '保存 works', { sync: true });
+        assert.equal(await binding.db_get(context, 1, 'recovery-test', undefined), '保存 works');
+      } finally { await binding.db_close(context); }
+      console.log(JSON.stringify({ resolved: expectedFile, value: '保存 works', closed: true }));
+    })().catch(error => { console.error(error.stack || error); process.exitCode = 1; });
+  `, packageRoot, result.file, require.resolve('node-gyp-build'), path.join(root, 'db')], { encoding: 'utf8', timeout: 30000, maxBuffer: 1024 * 1024 });
   assert.equal(sha(fs.readFileSync(sourceFile)), before);
+  assert.ifError(child.error);
+  assert.equal(child.status, 0, `Staged native binding child failed (${child.signal || 'no signal'}): ${child.stderr || child.stdout}`);
+  assert.deepEqual(JSON.parse(child.stdout.trim()), { resolved: result.file, value: '保存 works', closed: true });
 });
 
 test('configuration preserves existing hooks and verifies the staged binding before bundle finalization', () => {
