@@ -43,11 +43,13 @@ test('real endpoints only; body moves still preserve duration, edges cross week 
     assert.equal(f.host.querySelector('[data-calendar-date="2026-10-18"] .event-resize'),null);
     await resize(f,'end','2026-10-27');assert.equal(f.tasks[0].data.dueDate,'2026-10-27');assert.equal(f.tasks[0].data.startDate,'2026-10-17');assert.equal(f.saves[0].duration,11*1440);assert.equal(f.opened.length,0);
     await resize(f,'start','2026-10-14','touch');assert.equal(f.tasks[0].data.startDate,'2026-10-14');assert.equal(f.tasks[0].data.dueDate,'2026-10-27');
-    const event=f.host.querySelector('[data-calendar-task]');let dragged='';const start=new window.Event('dragstart',{bubbles:true,cancelable:true});Object.defineProperty(start,'dataTransfer',{value:{setData:(_key:string,id:string)=>dragged=id}});
+    const event=f.host.querySelector<HTMLElement>('[data-calendar-task]');assert.ok(event);let dragged='';const start=new window.Event('dragstart',{bubbles:true,cancelable:true});Object.defineProperty(start,'dataTransfer',{value:{setData:(_key:string,id:string)=>dragged=id}});
     await act(async()=>event.dispatchEvent(start));assert.equal(dragged,'task');
     const drop=new window.Event('drop',{bubbles:true,cancelable:true});Object.defineProperty(drop,'dataTransfer',{value:{getData:()=>dragged}});
-    await act(async()=>f.host.querySelector('[data-calendar-date="2026-10-20"]').dispatchEvent(drop));assert.equal(f.tasks[0].data.startDate,'2026-10-20');assert.equal(f.tasks[0].data.dueDate,'2026-11-02');assert.equal(f.tasks[0].data.duration,14*1440);
-    await act(async()=>f.host.querySelector('.calendar-event-main').click());assert.deepEqual(f.opened,['task']);
+    const dropTarget=f.host.querySelector<HTMLElement>('[data-calendar-date="2026-10-20"]');assert.ok(dropTarget);
+    await act(async()=>dropTarget.dispatchEvent(drop));assert.equal(f.tasks[0].data.startDate,'2026-10-20');assert.equal(f.tasks[0].data.dueDate,'2026-11-02');assert.equal(f.tasks[0].data.duration,14*1440);
+    const mainButton=f.host.querySelector<HTMLButtonElement>('.calendar-event-main');assert.ok(mainButton);
+    await act(async()=>mainButton.click());assert.deepEqual(f.opened,['task']);
   }finally{await f.close()}
 });
 

@@ -521,9 +521,9 @@ def main(argv=None):
     download = f'https://github.com/{repository}/releases/download/{tag}'
     notes = '\n'.join([f'# 青单 / Qingdan {tag}', '', status, '',
                        '## 更新 / What’s new',
-                       '- 新增繁體中文、日本語、한국어、Español、Français、Deutsch 和 Português (Brasil)，连同简体中文与 English 共支持九种界面语言。 / Seven new interface languages join Simplified Chinese and English: Traditional Chinese, Japanese, Korean, Spanish, French, German and Brazilian Portuguese.',
-                       '- 在“设置 → 通用 → 语言”中选择语言或跟随系统，日期、数字和原生菜单随之切换；设置仅对当前设备生效。 / Choose a language or System default in Settings → General → Language. Dates, numbers and native menus follow your choice, saved on this device.',
-                       '- 任务、笔记、清单和标签保留原文；快速录入的日期命令支持简体中文与英文。 / Tasks, notes, lists and tags keep their original text. Quick-entry date commands support Simplified Chinese and English.',
+                       '- 日历任务支持拖动左边缘调整开始日期、拖动右边缘调整结束日期，可跨周行扩展或缩短。 / Drag a calendar task’s left edge to adjust its start date or its right edge to adjust its end date, including across week rows.',
+                       '- 拖动任务中间仍会整体移动，保留任务跨度；调整范围时实时预览日期，并防止开始、结束日期倒置。 / Drag the task body to move the entire task while keeping its span. Date previews update as you resize, and endpoints cannot cross.',
+                       '- 支持触屏拖动与键盘方向键调整；按 Esc 可取消当前调整。九种界面语言同步更新。 / Resize with touch or keyboard arrows, and press Esc to cancel a drag. Updated guidance is available in all nine interface languages.',
                        '', '## 下载 / Downloads',
                        f'- macOS Apple Silicon：[DMG]({download}/Qingdan-{version}-mac-arm64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-arm64.zip)',
                        f'- macOS Intel：[DMG]({download}/Qingdan-{version}-mac-x64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-x64.zip)',
