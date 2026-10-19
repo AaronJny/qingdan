@@ -743,5 +743,7 @@
   "workspace.processedValueTasksBatchChangesAreSavedIndividually_other": "Processed {amount} tasks. Batch changes are saved individually and can be restored separately.",
   "workspace.processedValueItemsRemainingSelectionsAndInputAre_one": "Processed {amount} item. Remaining selections and input are preserved: {error}",
   "workspace.processedValueItemsRemainingSelectionsAndInputAre_other": "Processed {amount} items. Remaining selections and input are preserved: {error}",
-  "workspace.listsHeading": "Lists"
+  "workspace.listsHeading": "Lists",
+  "workspace.adjustTaskStartTime": "Adjust task start time",
+  "workspace.dragCalendarTaskEdges": "Drag a task’s body to move it. Drag its edges to change its date range, including across weeks."
 }

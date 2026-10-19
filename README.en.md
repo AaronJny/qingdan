@@ -36,7 +36,7 @@ Schedule tasks by date and organize work and life with lists and tags.
 
 ### Calendar
 
-See scheduled tasks in a monthly calendar, with unscheduled tasks on the right.
+See scheduled tasks in a monthly calendar, with unscheduled tasks on the right. Drag a task’s body to move it, or its left and right edges to adjust the start and end dates, including across week rows.
 
 ![Qingdan calendar: month view, scheduled tasks, and unscheduled tasks](docs/screenshots/calendar.jpg)
 

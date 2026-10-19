@@ -743,5 +743,7 @@
   "workspace.processedValueTasksBatchChangesAreSavedIndividually_other": "{amount} tâches traitées. Les modifications groupées sont enregistrées individuellement et peuvent être restaurées séparément.",
   "workspace.processedValueItemsRemainingSelectionsAndInputAre_one": "{amount} élément traité. Les sélections restantes et la saisie sont conservées : {error}",
   "workspace.processedValueItemsRemainingSelectionsAndInputAre_other": "{amount} éléments traités. Les sélections restantes et la saisie sont conservées : {error}",
-  "workspace.listsHeading": "Listes"
+  "workspace.listsHeading": "Listes",
+  "workspace.adjustTaskStartTime": "Ajuster le début de la tâche",
+  "workspace.dragCalendarTaskEdges": "Faites glisser le corps de la tâche pour la déplacer, ou ses bords pour modifier ses dates, même sur plusieurs semaines."
 }

@@ -743,5 +743,7 @@
   "workspace.processedValueTasksBatchChangesAreSavedIndividually_other": "할 일 {amount}개를 처리했습니다. 일괄 변경은 각각 저장되며 개별적으로 복원할 수 있습니다.",
   "workspace.processedValueItemsRemainingSelectionsAndInputAre_one": "항목 {amount}개를 처리했습니다. 나머지 선택 항목과 입력 내용은 보관되었습니다: {error}",
   "workspace.processedValueItemsRemainingSelectionsAndInputAre_other": "항목 {amount}개를 처리했습니다. 나머지 선택 항목과 입력 내용은 보관되었습니다: {error}",
-  "workspace.listsHeading": "목록"
+  "workspace.listsHeading": "목록",
+  "workspace.adjustTaskStartTime": "작업 시작 시간 조정",
+  "workspace.dragCalendarTaskEdges": "작업의 가운데 부분을 끌어 이동하세요. 양쪽 끝을 끌면 주를 넘어서 날짜 범위를 조정할 수 있습니다."
 }

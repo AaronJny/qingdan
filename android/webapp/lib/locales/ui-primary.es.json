@@ -753,5 +753,7 @@
   "workspace.createdValueTasksAndSubtasks_many": "Se han creado {amount} tareas y subtareas",
   "workspace.exportIncludesValueFormatNotices_many": "La exportación incluye {amount} avisos de formato",
   "workspace.processedValueTasksBatchChangesAreSavedIndividually_many": "Se han procesado {amount} tareas. Los cambios en bloque se guardan individualmente y se pueden restaurar por separado.",
-  "workspace.processedValueItemsRemainingSelectionsAndInputAre_many": "Se han procesado {amount} elementos. Se conservan las selecciones y los datos restantes: {error}"
+  "workspace.processedValueItemsRemainingSelectionsAndInputAre_many": "Se han procesado {amount} elementos. Se conservan las selecciones y los datos restantes: {error}",
+  "workspace.adjustTaskStartTime": "Ajustar el inicio de la tarea",
+  "workspace.dragCalendarTaskEdges": "Arrastra el cuerpo de la tarea para moverla. Arrastra sus bordes para cambiar el intervalo de fechas, incluso entre semanas."
 }

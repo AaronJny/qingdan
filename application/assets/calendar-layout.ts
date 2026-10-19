@@ -157,6 +157,30 @@ export function resizeAllDayTask(data: TaskSchedule, deltaDays: number): Schedul
   if (!source.allDay) throw new RangeError('Use resizeTimedTask for a timed task');
   return intervalPatch({ ...source, end: Math.max(source.start + DAY, source.end + deltaDays * DAY) });
 }
+export type CalendarEdge = 'start' | 'end';
+/** Resize the actual endpoint to a calendar date, independently of grid rows.
+ * The end date is the last occupied day (all-day due dates stay inclusive).
+ * Timed tasks retain their wall-clock endpoint, including exclusive midnight.
+ */
+export function resizeTaskDateEdge(data: TaskSchedule, edge: CalendarEdge, date: string): SchedulePatch {
+  const source = requireInterval(data), day = dateToDay(date);
+  const minimum = source.allDay ? DAY : 15;
+  if (edge === 'start') {
+    const start = Math.min(source.end - minimum, source.start + (day - Math.floor(source.start / DAY)) * DAY);
+    return intervalPatch({ ...source, start });
+  }
+  const end = Math.max(source.start + minimum, source.end + (day - (Math.ceil(source.end / DAY) - 1)) * DAY);
+  return intervalPatch({ ...source, end });
+}
+/** Vertical time-grid handles use the same fixed opposite endpoint and snapping. */
+export function resizeTaskTimeEdge(data: TaskSchedule, edge: CalendarEdge, deltaPixels: number, pixelsPerHour: number): SchedulePatch {
+  const source = requireInterval(data);
+  if (source.allDay) throw new RangeError('Use date edges for an all-day task');
+  const delta = pixelsToMinuteDelta(deltaPixels, pixelsPerHour);
+  return intervalPatch(edge === 'start'
+    ? { ...source, start: Math.min(source.end - 15, source.start + delta) }
+    : { ...source, end: Math.max(source.start + 15, source.end + delta) });
+}
 function validateInterval(interval: MinuteInterval): void {
   integer(interval.start, 'Interval start'); integer(interval.end, 'Interval end');
   if (interval.end <= interval.start) throw new RangeError('Interval must have positive duration');

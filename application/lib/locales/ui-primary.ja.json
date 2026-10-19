@@ -743,5 +743,7 @@
   "workspace.processedValueTasksBatchChangesAreSavedIndividually_other": "タスクを{amount}件処理しました。一括変更は個別に保存され、それぞれ復元できます。",
   "workspace.processedValueItemsRemainingSelectionsAndInputAre_one": "{amount}件処理しました。残りの選択項目と入力内容は保持されています：{error}",
   "workspace.processedValueItemsRemainingSelectionsAndInputAre_other": "{amount}件処理しました。残りの選択項目と入力内容は保持されています：{error}",
-  "workspace.listsHeading": "リスト"
+  "workspace.listsHeading": "リスト",
+  "workspace.adjustTaskStartTime": "タスクの開始日時を調整",
+  "workspace.dragCalendarTaskEdges": "タスクの中央部分をドラッグして移動し、左右の端をドラッグして日付範囲を変更できます。週をまたぐ操作にも対応しています。"
 }

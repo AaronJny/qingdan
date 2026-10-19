@@ -743,5 +743,7 @@
   "workspace.processedValueTasksBatchChangesAreSavedIndividually_other": "已處理 {amount} 項任務；批次操作逐條儲存，可分別還原。",
   "workspace.processedValueItemsRemainingSelectionsAndInputAre_one": "已處理 {amount} 條，剩餘選擇與輸入保留：{error}",
   "workspace.processedValueItemsRemainingSelectionsAndInputAre_other": "已處理 {amount} 條，剩餘選擇與輸入保留：{error}",
-  "workspace.listsHeading": "清單"
+  "workspace.listsHeading": "清單",
+  "workspace.adjustTaskStartTime": "調整任務開始時間",
+  "workspace.dragCalendarTaskEdges": "拖曳任務中間可整體移動；拖曳左右邊緣可調整日期範圍，支援跨週。"
 }
