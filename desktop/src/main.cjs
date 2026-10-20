@@ -12,8 +12,6 @@ const { menuTemplate } = require('./menu.cjs');
 const { probeServer, probeLocalPrincipal } = require('./server-info.cjs');
 const { LocalBusinessStore } = require('./local-business-store.cjs');
 const { handleLocalBusiness } = require('./local-business-ipc.cjs');
-const { createLegacyRecovery } = require('./legacy-local-recovery.cjs');
-const { recoveryPage } = require('./local-recovery-page.cjs');
 const { createBackendManager } = require('./backend-manager.cjs');
 app.enableSandbox();
 protocol.registerSchemesAsPrivileged([{ scheme: SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } }]);
@@ -27,8 +25,8 @@ const languageFile = path.join(profile, 'language.json');
 let stored = readConnection(connectionFile);
 let current = endpoint(stored.serverUrl || defaults.serverUrl, stored.mode === 'builtin');
 let backend; let openingPromise = null; let openingGeneration = 0; let switchDecision = null; let shutdownPromise = null; let exitAfterShutdown = false;
-let mainWindow = null; let settingsWindow = null; let popupWindow = null; let recoveryWindow = null;
-let localBusinessStore = null; let legacyRecovery = null; let recoveryReady = null;
+let mainWindow = null; let settingsWindow = null; let popupWindow = null;
+let localBusinessStore = null;
 const openedBusinessPrincipals = new Set();
 let quitting = false; let switching = false; let externalDialog = false;
 const pendingCloses = new Map(); let saveTimer; let status = 'connecting'; let lastWindowClosed = false;
@@ -96,12 +94,6 @@ async function connectWindow(window, connection) {
       if (!localBusinessStore || localBusinessStore.principalId !== principalId) {
         localBusinessStore = new LocalBusinessStore({profile,principalId,compactOnOpen:!openedBusinessPrincipals.has(principalId)});
         openedBusinessPrincipals.add(principalId);
-      }
-      await recoveryReady;
-      if (!active()) return false;
-      const recovery = legacyRecovery.summary();
-      if (recovery.requiresReview && !recovery.acknowledgedContinue) {
-        connectionError = t('desktop.recovery.waiting'); showStatus(window); openRecovery(); return false;
       }
     } catch {
       if (active()) { localBusinessStore = null; connectionError = t('desktop.recovery.storage.failed'); showStatus(window); }
@@ -248,7 +240,7 @@ async function switchConnection(raw, requester) {
     return { ok: false, error: error.code ? t("desktop.could.not.save.the.connection") : translateNativeError(error.message) || t("desktop.could.not.save.the.connection") };
   } finally {
     switching = false; releaseDecision();
-    if (lastWindowClosed && !mainWindow && !settingsWindow && !recoveryWindow && !popupWindow && process.platform !== 'darwin' && !quitting) app.quit();
+    if (lastWindowClosed && !mainWindow && !settingsWindow && !popupWindow && process.platform !== 'darwin' && !quitting) app.quit();
   }
 }
 
@@ -265,39 +257,11 @@ function openSettings() {
   window.once('ready-to-show', () => show(window)); window.on('closed', () => { if (settingsWindow === window) settingsWindow = null; });
   void window.loadURL(LOCAL_SETTINGS_URL).catch(() => window.close());
 }
-function trustedRecoverySender(event) {
-  return !quitting && !!recoveryWindow && !recoveryWindow.isDestroyed() && event?.sender === recoveryWindow.webContents && event.senderFrame === recoveryWindow.webContents.mainFrame && isLocalUiUrl(event.senderFrame?.url,'recovery');
-}
-function openRecovery() {
-  if (quitting) return;
-  if (recoveryWindow && !recoveryWindow.isDestroyed()) { show(recoveryWindow); return; }
-  const options = windowOptions({platform:process.platform,title:t('desktop.recovery.title'),state:{width:820,height:880},partition:'qingdan-standalone-local-ui',packaged:app.isPackaged});
-  options.webPreferences.preload = path.join(__dirname,'local-recovery-preload.cjs');
-  const window = new BrowserWindow(options); recoveryWindow = window;
-  installSettingsContents(window.webContents); window.setMenu(null);
-  window.once('ready-to-show',()=>show(window));
-  window.on('closed',()=>{if(recoveryWindow===window)recoveryWindow=null;});
-  void window.loadURL(`${UI_ORIGIN}/recovery`).catch(()=>window.close());
-}
-async function exportRecovery(event) {
-  if (!trustedRecoverySender(event)) throw new Error('Untrusted recovery sender');
-  const owner = recoveryWindow;
-  await recoveryReady;
-  if (!trustedRecoverySender(event) || owner !== recoveryWindow) throw new Error('Recovery window changed');
-  const result = await dialog.showSaveDialog(owner,{title:t('desktop.recovery.export'),defaultPath:'qingdan-local-input-review.json',filters:[{name:'JSON',extensions:['json']}]});
-  if (result.canceled || !result.filePath) return {saved:false};
-  if (!trustedRecoverySender(event) || owner !== recoveryWindow) throw new Error('Recovery window changed');
-  const bytes = Buffer.from(JSON.stringify(legacyRecovery.exportDocument(),null,2)+'\n');
-  // The path comes exclusively from the native save dialog, never the renderer.
-  const fd = fs.openSync(result.filePath,'w',0o600);
-  try {fs.writeFileSync(fd,bytes);fs.fsyncSync(fd);} finally {fs.closeSync(fd);}
-  return {saved:true};
-}
 function refreshNativeLanguage() {
     app.setName(t("desktop.qingdan"));
     app.setAboutPanelOptions({ applicationName: t("desktop.qingdan"), applicationVersion: app.getVersion(), copyright: t("desktop.an.independently.built.workspace.for.your.lists") });
     Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate({
-      platform: process.platform, packaged: app.isPackaged, settings: openSettings, recovery: openRecovery,
+      platform: process.platform, packaged: app.isPackaged, settings: openSettings,
       reconnect: () => { if (!quitting && !switching) void openConfiguredConnection(); },
       openWeb: () => confirmExternal(current.serverUrl), quit: () => app.quit(),
       explain: () => dialog.showMessageBox(mainWindow || undefined, { type: 'info', title: t("desktop.modes.and.your.data"), message: t("desktop.use.qingdan.locally.or.connect.to.your"), detail: t("desktop.local.mode.starts.the.built.in.service") }),
@@ -311,10 +275,7 @@ function refreshNativeLanguage() {
     settingsWindow.setTitle(t("desktop.qingdan.connection.settings"));
     settingsWindow.webContents.send?.('qingdan-desktop:language-changed', languageSnapshot());
   }
-  if (recoveryWindow && !recoveryWindow.isDestroyed()) {
-    recoveryWindow.setTitle(t('desktop.recovery.title'));
-    recoveryWindow.webContents.send?.('qingdan-desktop:language-changed', languageSnapshot());
-  }
+
 }
 function setNativeLanguage(event, value) {
   if (quitting || (!trustedServiceSender(event, mainWindow?.webContents, current) && !trustedSettingsSender(event, settingsWindow?.webContents))) throw new Error('Untrusted language sender');
@@ -346,12 +307,9 @@ else {
     initializeLanguage(languageFile, app.getLocale?.() || 'zh-CN');
     backend = createBackendManager({ utilityProcess, userData: profile, backendRoot: path.join(__dirname, '../backend'), bootstrapPath: path.join(__dirname, 'backend-bootstrap.cjs') });
     backend.on('failure', () => { if (stored.mode === 'builtin' && !quitting && !switching) { connectionError = t("desktop.the.local.service.stopped.please.reconnect.your"); if (mainWindow) showStatus(mainWindow); } });
-    legacyRecovery = createLegacyRecovery({profile}); recoveryReady = legacyRecovery.prepare();
     const local = session.fromPartition('qingdan-standalone-local-ui'); installLocalSession(local);
     local.protocol.handle(SCHEME, request => {
       if (isLocalUiUrl(request.url, 'settings')) return response(settingsPage());
-      if (isLocalUiUrl(request.url, 'recovery')) return response(recoveryPage());
-      if (isLocalUiUrl(request.url, 'recovery.js')) return response(fs.readFileSync(path.join(__dirname,'recovery.js')),'text/javascript; charset=utf-8');
       if (isLocalUiUrl(request.url, 'i18next.js')) return response(fs.readFileSync(path.join(__dirname, '../node_modules/i18next/dist/umd/i18next.min.js')), 'text/javascript; charset=utf-8');
       if (isLocalUiUrl(request.url, 'native-language.js')) return response(`i18next.init(${JSON.stringify({ lng: languageSnapshot().locale, fallbackLng: 'en', resources: languageResources, initAsync: false, keySeparator: false, interpolation: { escapeValue: false } })});window.qingdanT=(key,options)=>i18next.t(key,options);`, 'text/javascript; charset=utf-8');
       if (isLocalUiUrl(request.url, 'ui.css')) return response(css, 'text/css; charset=utf-8');
@@ -360,27 +318,6 @@ else {
     });
     ipcMain.on('qingdan-local-business',(event,request)=>{
       event.returnValue = handleLocalBusiness(event,request,{connection:current,backend,windows:[mainWindow,popupWindow],store:localBusinessStore,quitting,expectedSession:sessions.get(current.partition)});
-    });
-    ipcMain.handle('qingdan-desktop:local-recovery',async event=>{
-      if (!current.builtin || (!trustedServiceSender(event,mainWindow?.webContents,current) && !trustedServiceSender(event,popupWindow?.webContents,current)) || quitting) throw new Error('Untrusted local recovery sender');
-      await recoveryReady; const value = legacyRecovery.summary();
-      return {status:value.status,requiresReview:value.requiresReview,acknowledgedContinue:value.acknowledgedContinue,candidateCount:value.candidateCount,conflictCount:value.conflictCount};
-    });
-    ipcMain.handle('qingdan-desktop:open-recovery',event=>{
-      if (!current.builtin || (!trustedServiceSender(event,mainWindow?.webContents,current) && !trustedServiceSender(event,popupWindow?.webContents,current)) || quitting) throw new Error('Untrusted local recovery sender');
-      openRecovery(); return {ok:true};
-    });
-    ipcMain.handle('qingdan-recovery:summary',async event=>{if(!trustedRecoverySender(event))throw new Error('Untrusted recovery sender');await recoveryReady;if(!trustedRecoverySender(event))throw new Error('Recovery window changed');return legacyRecovery.summary();});
-    ipcMain.handle('qingdan-recovery:candidates',async (event,offset=0)=>{if(!trustedRecoverySender(event))throw new Error('Untrusted recovery sender');if(!Number.isSafeInteger(offset)||offset<0)throw new Error('Invalid candidate page');await recoveryReady;if(!trustedRecoverySender(event))throw new Error('Recovery window changed');return legacyRecovery.candidatePage(offset,25);});
-    ipcMain.handle('qingdan-recovery:export',exportRecovery);
-    ipcMain.handle('qingdan-recovery:continue',async event=>{
-      if(!trustedRecoverySender(event))throw new Error('Untrusted recovery sender');
-      await recoveryReady; if(!trustedRecoverySender(event))throw new Error('Recovery window changed');
-      await legacyRecovery.acknowledgeContinue();
-      if(!trustedRecoverySender(event))return {ok:true};
-      recoveryWindow.close();
-      if(current.builtin && !quitting && !switching)void openConfiguredConnection();
-      return {ok:true};
     });
     ipcMain.handle('qingdan-desktop:get-language', event => {
       if (quitting || (!trustedServiceSender(event, mainWindow?.webContents, current) && !trustedSettingsSender(event, settingsWindow?.webContents))) throw new Error('Untrusted language sender');

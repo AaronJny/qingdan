@@ -31,7 +31,7 @@ async function mount(initial:any[]){
 }
 async function resize(f:any,edge:string,to:string,pointerType='mouse'){
   const handle=f.host.querySelector(`[data-calendar-resize="${edge}"]`);assert.ok(handle);
-  const cell=handle.closest('[data-calendar-date]');const from=center(f.host,cell.dataset.calendarDate),dest=center(f.host,to);
+  const cell=handle.closest('[data-calendar-date]'),span=handle.closest('[data-calendar-segment-start]');const date=cell?.dataset.calendarDate||(edge==='start'?span?.dataset.calendarSegmentStart:span?.dataset.calendarSegmentEnd);const from=center(f.host,date),dest=center(f.host,to);
   await act(async()=>pointer(handle,'pointerdown',from,1,pointerType));
   await act(async()=>pointer(window,'pointermove',dest,1,pointerType));
   await act(async()=>pointer(window,'pointerup',dest,1,pointerType));await settle();geometry(f.host);
@@ -73,7 +73,7 @@ test('no-motion, outside release, Escape, pointer cancellation and unrelated poi
 
 test('keyboard endpoint changes retain focus for repeated arrows and clamp crossing',async()=>{
   const f=await mount([task()]);try{
-    let handle=f.host.querySelector<HTMLElement>('[data-calendar-resize=end]')!;handle.focus();
+    let handle=f.host.querySelector<HTMLElement>('[data-calendar-resize=end]')!;await act(async()=>handle.focus());
     for(let i=0;i<2;i++){
       await act(async()=>document.activeElement!.dispatchEvent(new window.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true,cancelable:true})));await settle();
       assert.equal((document.activeElement as HTMLElement).dataset.calendarResize,'end');
@@ -88,9 +88,37 @@ test('read-only tasks have no handles; clipping and exclusive midnight suppress 
     assert.equal(f.host.querySelector('[data-calendar-task="task"] .event-resize'),null);
     assert.equal(f.host.querySelector('[data-calendar-task="readonly"] .event-resize'),null);
     assert.equal(f.host.querySelector('[data-calendar-date="2026-10-21"] [data-calendar-task="midnight"]'),null);
-    assert.ok(f.host.querySelector('[data-calendar-date="2026-10-20"] [data-calendar-task="midnight"] [data-calendar-resize=end]'));
+    assert.ok(f.host.querySelector('[data-calendar-segment-end="2026-10-20"] [data-calendar-task="midnight"] [data-calendar-resize=end]'));
     const surface=f.host.querySelector<HTMLElement>('.calendar-surface')!;surface.getBoundingClientRect=()=>rect(0,0,700,200) as DOMRect;
     assert.equal(calendarDateAtPoint(surface,50,250),null);
+  }finally{await f.close()}
+});
+
+test('month bars connect dates, link focus and hover, and keep every overlapping task visible',async()=>{
+  const f=await mount([task({startDate:'2026-10-16',dueDate:'2026-10-21'}),...Array.from({length:7},(_,i)=>({...task({title:'Overlap '+i,startDate:'2026-10-19',dueDate:'2026-10-21'}),id:'overlap-'+i}))]);
+  try{
+    const bars=[...f.host.querySelectorAll<HTMLElement>('[data-calendar-segment-task="task"]')];
+    assert.equal(bars.length,2,'one bar for each of the two weeks, not one card per day');
+    assert.equal(bars[0].style.gridColumn,'5 / 8');assert.equal(bars[1].style.gridColumn,'1 / 4');
+    assert.ok(bars[0].classList.contains('continues-after'));assert.ok(bars[1].classList.contains('continues-before'));
+    assert.equal(bars[0].querySelectorAll('[data-calendar-resize=start]').length,1);
+    assert.equal(bars[0].querySelectorAll('[data-calendar-resize=end]').length,0);
+    assert.equal(bars[1].querySelectorAll('[data-calendar-resize=start]').length,0);
+    assert.equal(bars[1].querySelectorAll('[data-calendar-resize=end]').length,1);
+    assert.equal(bars[1].closest('.month-week')!.querySelectorAll('.month-span').length,8,'do not independently truncate each date and break continuity');
+    await act(async()=>bars[0].querySelector<HTMLElement>('.calendar-event-main')!.focus());
+    assert.equal(f.host.querySelectorAll('.month-span.is-active').length,2);
+    await act(async()=>f.host.querySelector<HTMLElement>('[data-calendar-add-date]')!.focus());
+    assert.equal(f.host.querySelectorAll('.month-span.is-active').length,0);
+    await act(async()=>bars[0].dispatchEvent(new window.MouseEvent('mouseover',{bubbles:true})));
+    assert.equal(f.host.querySelectorAll('.month-span.is-active').length,2);
+    await act(async()=>bars[0].dispatchEvent(new window.MouseEvent('mouseout',{bubbles:true})));
+    assert.equal(f.host.querySelectorAll('.month-span.is-active').length,0);
+    const drop=new window.MouseEvent('drop',{bubbles:true,cancelable:true,...center(f.host,'2026-10-20')});
+    Object.defineProperty(drop,'dataTransfer',{value:{getData:()=> 'task'}});
+    await act(async()=>bars[1].dispatchEvent(drop));
+    assert.equal(f.tasks[0].data.startDate,'2026-10-20');assert.equal(f.tasks[0].data.dueDate,'2026-10-25');
+    assert.equal(f.saves.length,1,'dropping over a multi-date bar resolves the pointer date and saves once');
   }finally{await f.close()}
 });
 
@@ -126,7 +154,7 @@ test('timed top and bottom handles preserve opposite endpoints across midnight a
     assert.equal(f.tasks[0].data.startTime,'23:30');assert.equal(f.tasks[0].data.dueDate,'2026-10-20');assert.equal(f.tasks[0].data.dueTime,'00:30');assert.equal(f.tasks[0].data.duration,60);
     await drag('end',13);
     assert.equal(f.tasks[0].data.startDate,'2026-10-19');assert.equal(f.tasks[0].data.startTime,'23:30');assert.equal(f.tasks[0].data.dueTime,'00:45');assert.equal(f.tasks[0].data.duration,75);
-    f.host.querySelector<HTMLElement>('[data-calendar-resize=start]')!.focus();
+    await act(async()=>f.host.querySelector<HTMLElement>('[data-calendar-resize=start]')!.focus());
     for(const expected of ['23:45','00:00']){
       const previous=document.activeElement;
       await act(async()=>previous!.dispatchEvent(new window.KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true})));await settle();
@@ -136,7 +164,7 @@ test('timed top and bottom handles preserve opposite endpoints across midnight a
     }
     assert.equal(f.tasks[0].data.startDate,'2026-10-20');
     assert.equal(document.activeElement!.closest('.time-row'),f.host.querySelector('.time-row'));
-    f.host.querySelector<HTMLElement>('[data-calendar-resize=end]')!.focus();
+    await act(async()=>f.host.querySelector<HTMLElement>('[data-calendar-resize=end]')!.focus());
     for(const expected of ['00:30','00:15']){
       await act(async()=>document.activeElement!.dispatchEvent(new window.KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true,cancelable:true})));await settle();
       assert.equal(f.tasks[0].data.dueTime,expected);assert.equal(f.tasks[0].data.startTime,'00:00');
@@ -164,7 +192,7 @@ test('an in-flight timed resize blocks duplicate pointer and keyboard saves and 
     };
     await drag('start',-13);assert.equal(attempts,1);assert.equal(f.saves.length,0);
     await drag('end',26);
-    const end=f.host.querySelector<HTMLElement>('[data-calendar-resize=end]')!;end.focus();
+    const end=f.host.querySelector<HTMLElement>('[data-calendar-resize=end]')!;await act(async()=>end.focus());
     await act(async()=>end.dispatchEvent(new window.KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true})));await settle();
     assert.equal(attempts,1);assert.equal(f.saves.length,0);assert.equal(f.host.querySelector('.calendar-event.resizing'),null);
     await act(async()=>release());await settle();
@@ -195,4 +223,22 @@ test('timed resize previews and commits follow scroll displacement from the gest
     await act(async()=>{surface.scrollTop=208;surface.dispatchEvent(new window.Event('scroll'));});
     assert.equal(f.host.querySelector('.calendar-drag-preview'),null);assert.equal(f.saves.length,2,'scroll listener is removed after committing');
   }finally{await f.close()}
+});
+
+
+test('keyboard resizing across a week creates a continuation and restores the true endpoint focus', async()=>{
+  const f=await mount([task({startDate:'2026-10-16',dueDate:'2026-10-18'})]);
+  try {
+    assert.equal(f.host.querySelectorAll('[data-calendar-segment-task="task"]').length,1);
+    await act(async()=>f.host.querySelector<HTMLElement>('[data-calendar-resize=end]')!.focus());
+    for (const date of ['2026-10-19','2026-10-20']) {
+      await act(async()=>document.activeElement!.dispatchEvent(new window.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true,cancelable:true})));await settle();
+      assert.equal(f.tasks[0].data.dueDate,date);
+      assert.equal(f.host.querySelectorAll('[data-calendar-segment-task="task"]').length,2);
+      assert.equal((document.activeElement as HTMLElement).dataset.calendarResize,'end');
+      assert.equal((document.activeElement!.closest('[data-calendar-segment-end]') as HTMLElement).dataset.calendarSegmentEnd,date);
+    }
+    assert.equal(f.host.querySelectorAll('[data-calendar-resize=start]').length,1);
+    assert.equal(f.host.querySelectorAll('[data-calendar-resize=end]').length,1);
+  } finally { await f.close(); }
 });

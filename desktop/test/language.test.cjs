@@ -29,7 +29,7 @@ test('native dictionaries have complete semantic keys and English local pages do
  assert.equal(menuTemplate({platform:'win32',packaged:true})[0].label,'文件');
 });
 
-test('nine native locales persist, render menus and preserve endpoint and recovery candidate data', () => {
+test('nine native locales persist, render menus and preserve endpoint data', () => {
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'qingdan-nine-language-'));const file=path.join(dir,'language.json');
  try {
   for(const locale of language.locales){

@@ -114,3 +114,21 @@
 .time-row .calendar-event-main>span{white-space:normal;align-self:flex-start}
 
 .time-row .calendar-event-main{align-items:flex-start}.time-row .calendar-event-main>span{line-height:1.4}
+
+/* One connected bar per week; the date grid remains underneath for hit testing. */
+.continuous-month-grid{grid-template-columns:minmax(0,1fr)}
+.month-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));position:relative;min-width:0}
+.month-week>.day-cell{grid-row:1;min-height:90px}
+.month-week>.day-cell:nth-child(7){border-right:0}
+.month-week-events{grid-column:1/-1;grid-row:1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px 0;margin-top:36px;margin-bottom:6px;align-self:start;pointer-events:none;z-index:1;min-width:0}
+.month-span{min-width:0;margin:0 3px;pointer-events:auto;position:relative}
+.month-span>.calendar-event{height:23px;min-height:23px;width:100%;max-width:100%;box-sizing:border-box}
+.month-span.continues-before{margin-left:0}
+.month-span.continues-after{margin-right:0}
+.month-span.continues-before>.calendar-event{border-top-left-radius:0;border-bottom-left-radius:0;border-left-color:transparent!important;padding-left:12px}
+.month-span.continues-after>.calendar-event{border-top-right-radius:0;border-bottom-right-radius:0;padding-right:12px}
+.month-span.continues-before::before,.month-span.continues-after::after{position:absolute;top:6px;width:5px;height:5px;border-top:1px solid currentColor;border-right:1px solid currentColor;opacity:.55;pointer-events:none;z-index:2;content:''}
+.month-span.continues-before::before{left:4px;transform:rotate(-135deg)}
+.month-span.continues-after::after{right:4px;transform:rotate(45deg)}
+.month-span.is-active>.calendar-event{box-shadow:inset 0 0 0 1px var(--blue);filter:brightness(.97)}
+@media(max-width:640px){.month-week-events{margin-top:32px}.month-span{margin-left:1px;margin-right:1px}.month-span.continues-before{margin-left:0}.month-span.continues-after{margin-right:0}}

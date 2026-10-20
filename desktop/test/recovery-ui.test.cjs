@@ -3,170 +3,23 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
-const { recoveryPage } = require('../src/local-recovery-page.cjs');
 const { css } = require('../src/local-pages.cjs');
-const { t, locales, resources } = require('../src/language.cjs');
-const translations = require('../src/translations.cjs');
-const flush = () => new Promise(resolve => setImmediate(resolve));
+const { menuTemplate } = require('../src/menu.cjs');
+const { locales, initialize, resources } = require('../src/language.cjs');
 
-function element(tagName = '') {
-  const events = {};
-  return {
-    tagName, hidden: false, disabled: false, textContent: '', value: '',
-    style: {}, attributes: {}, children: [], dataset: {},
-    addEventListener(name, fn) { events[name] = fn; },
-    dispatch(name) { return events[name]?.(); },
-    setAttribute(name, value) { this.attributes[name] = value; },
-    append(...children) { this.children.push(...children); },
-    replaceChildren() { this.children = []; this.textContent = ''; },
-  };
-}
-
-async function harness({ locale = 'zh-CN', items = [], failCandidates = false } = {}) {
-  const elements = {};
-  // Seed the mocked DOM from the shipped page, including initial hidden state.
-  for (const [, tag, attrs, id, tail] of recoveryPage().matchAll(/<(\w+)\b([^>]*?)\bid="([^"]+)"([^>]*)>/g)) {
-    const node = element(tag);
-    node.hidden = /\bhidden\b/.test(attrs + tail);
-    node.disabled = /\bdisabled\b/.test(attrs + tail);
-    const textKey = (attrs + tail).match(/data-recovery-text="([^"]+)"/); if (textKey) node.dataset.recoveryText = textKey[1];
-    elements[id] = node;
-  }
-  const calls = { summary: 0, candidates: [], export: 0, continue: 0 };
-  let languageListener;
-  const window = {
-    i18next: { changeLanguage(value) { locale = value; } },
-    qingdanT: key => t(key, locale),
-    qingdanRecovery: {
-      onLanguageChanged(callback) { languageListener = callback; },
-      async summary() { calls.summary++; return { status: 'pending', requiresReview: true }; },
-      async candidates(offset) {
-        calls.candidates.push(offset);
-        if (failCandidates) throw new Error('Synthetic private diagnostic');
-        const page = items.slice(offset, offset + 25);
-        return { items: page, total: items.length, nextOffset: offset + page.length < items.length ? offset + page.length : null };
-      },
-      async export() { calls.export++; return { saved: true }; },
-      async continue() { calls.continue++; },
-    },
-  };
-  const document = { documentElement: { lang: locale, dataset: { languageRevision: '0' } }, title: '', querySelectorAll: () => Object.values(elements).filter(node => node.dataset.recoveryText), getElementById: id => elements[id], createElement: element };
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/recovery.js'), 'utf8'), { window, document });
-  await flush();
-  return { elements, calls, document, changeLanguage(locale, revision) { languageListener({preference:locale,locale,revision}); }, async click(id) { await elements[id].dispatch('click'); await flush(); } };
-}
-
-test('native hidden controls override shared display styling and start hidden', async () => {
-  // Author display rules override the browser's built-in [hidden] rule unless
-  // the local stylesheet explicitly preserves the hidden contract.
-  assert.match(css, /\[hidden\]\s*\{\s*display\s*:\s*none\s*!important\s*;?\s*\}/);
-  assert.match(css, /a,button\{display:inline-block/);
-  const h = await harness();
-  assert.equal(h.elements.candidates.hidden, true);
-  assert.equal(h.elements.more.hidden, true);
-  assert.deepEqual(h.calls, { summary: 1, candidates: [], export: 0, continue: 0 });
-});
-
-test('zero, three and exactly 25 candidates never expose a next page', async () => {
-  for (const count of [0, 3, 25]) {
-    const h = await harness({ items: Array.from({ length: count }, () => ({ kind: 'quick-draft', value: 'Preserved text' })) });
-    await h.click('view');
-    assert.equal(h.elements.candidates.hidden, false);
-    assert.equal(h.elements.candidates.children.length, count);
-    assert.equal(h.elements.more.hidden, true);
-    if (!count) assert.equal(h.elements.candidates.textContent, t('desktop.recovery.no.candidates', 'zh-CN'));
-    await h.click('more'); // Even a synthetic click cannot request a nonexistent page.
-    assert.deepEqual(h.calls.candidates, [0]);
-    assert.equal(h.calls.export, 0);
-    assert.equal(h.calls.continue, 0);
-  }
-});
-
-test('25-item pages show next only until the final page and viewing again restarts at one', async () => {
-  const h = await harness({ items: Array.from({ length: 28 }, (_, i) => ({ kind: 'quick-draft', value: `Input ${i + 1}` })) });
-  await h.click('view');
-  assert.equal(h.elements.candidates.children.length, 25);
-  assert.equal(h.elements.more.hidden, false);
-  await h.click('more');
-  assert.equal(h.elements.candidates.children.length, 3);
-  assert.equal(h.elements.candidates.children[0].children[0].textContent, '输入 26 · 快速录入草稿');
-  assert.equal(h.elements.more.hidden, true);
-  await h.click('view');
-  assert.equal(h.elements.candidates.children.length, 25);
-  assert.equal(h.elements.candidates.children[0].children[0].textContent, '输入 1 · 快速录入草稿');
-  assert.equal(h.elements.more.hidden, false);
-  assert.deepEqual(h.calls.candidates, [0, 25, 0]);
-});
-
-test('candidate headings use exact bilingual labels while raw input stays unchanged and read-only', async () => {
-  const value = '<script>not executable</script> 原始输入';
-  for (const [locale, expected] of [
-    ['zh-CN', ['输入 1 · 语言偏好', '输入 2 · 未确认的新建操作', '输入 3 · 快速录入草稿']],
-    ['en', ['Item 1 · Language preference', 'Item 2 · Unconfirmed creation', 'Item 3 · Quick-entry draft']],
-  ]) {
-    const h = await harness({ locale, items: ['language', 'queue-create', 'quick-draft'].map(kind => ({ kind, value, candidateId: 'private-hash', key: 'private-principal' })) });
-    await h.click('view');
-    assert.deepEqual(h.elements.candidates.children.map(row => row.children[0].textContent), expected);
-    for (const [i, row] of h.elements.candidates.children.entries()) {
-      const body = row.children[1];
-      assert.equal(body.value, value);
-      assert.equal(body.readOnly, true);
-      assert.equal(body.attributes['aria-label'], expected[i]);
-      assert.doesNotMatch(row.children[0].textContent, /private-hash|private-principal|queue-create|quick-draft/);
-    }
-    assert.equal(h.calls.export, 0);
-    assert.equal(h.calls.continue, 0);
-  }
-});
-
-test('all supported storage categories have bilingual display labels and unknown kinds stay generic', async () => {
-  const kinds = ['language', 'quick-draft', 'desktop-quick-draft', 'batch-tag-draft', 'queue-create', 'pending-create', 'queue-write', 'pending-write', 'pending-import', 'pending-template', 'matrix-draft', 'calendar-batch', 'draft', 'check-draft', 'subtask-draft', 'comment-draft', 'focus-note', 'view', 'full-backup-pending', 'habit-group-rename', 'reminder-actions', 'offline-shell-opt', 'offline', 'offline-shell-session', 'comment-mentions', 'background-upload', 'attachment-upload', 'list-transfer', 'form-draft'];
-  for (const locale of locales) {
-    for (let offset = 0; offset < kinds.length; offset += 25) {
-      const h = await harness({ locale, items: kinds.slice(offset, offset + 25).map(kind => ({ kind, value: '' })) });
-      await h.click('view');
-      for (const row of h.elements.candidates.children) {
-        const label = row.children[0].textContent.split(' · ')[1];
-        assert.ok(label);
-        assert.notEqual(label, resources[locale].translation['desktop.recovery.kind.other']);
-        assert.doesNotMatch(label, /^desktop\./);
-        if (locale === 'zh-CN') assert.match(label, /[\u4e00-\u9fff]/);
-      }
-    }
-    const h = await harness({ locale, items: [undefined, '__proto__', 'constructor', '<script>raw-kind</script>'].map(kind => ({ kind })) });
-    await h.click('view');
-    for (const row of h.elements.candidates.children) {
-      assert.equal(row.children[0].textContent.split(' · ')[1], resources[locale].translation['desktop.recovery.kind.other']);
-      assert.equal(row.children[1].value, resources[locale].translation['desktop.recovery.unreadable']);
-      assert.equal(row.children[1].readOnly, true);
-    }
-  }
-});
-
-test('failed candidate reads keep controls hidden and do not expose private diagnostics', async () => {
-  const h = await harness({ failCandidates: true });
-  await h.click('view');
-  assert.equal(h.elements.candidates.hidden, true);
-  assert.equal(h.elements.more.hidden, true);
-  assert.equal(h.elements.message.textContent, t('desktop.recovery.error', 'zh-CN'));
-  assert.equal(h.calls.export, 0);
-  assert.equal(h.calls.continue, 0);
-});
-
-test('live recovery language changes relabel controls and candidates without rereading or modifying evidence',async()=>{
- const evidence='原始输入 mañana demain 日本語 한국어 <script>text</script>';
- const h=await harness({items:[{kind:'quick-draft',value:evidence},{kind:'other'}]});await h.click('view');
- const original=h.elements.candidates.children[0].children[1];
- let revision=0;
+test('removed legacy review has no shipped page, script, preload, menu entry or UI translations',()=>{
+ for(const file of ['local-recovery-page.cjs','local-recovery-preload.cjs','recovery.js'])assert.equal(fs.existsSync(path.join(__dirname,'../src',file)),false,file);
  for(const locale of locales){
-  h.changeLanguage(locale,++revision);
-  assert.equal(h.document.documentElement.lang,locale);assert.equal(h.document.title,t('desktop.recovery.title',locale));
-  assert.equal(h.elements.view.textContent,t('desktop.recovery.view',locale));
-  assert.equal(h.elements.candidates.children[0].children[0].textContent,`${t('desktop.recovery.candidate',locale)} 1 · ${t('desktop.recovery.kind.quick.draft',locale)}`);
-  assert.equal(original.value,evidence);assert.equal(h.elements.candidates.children[0].children[1],original);
-  assert.equal(h.elements.candidates.children[1].children[1].value,t('desktop.recovery.unreadable',locale));
+  initialize('/nonexistent/qingdan-language',locale);
+  const dictionary=resources[locale].translation;
+  assert.deepEqual(Object.keys(dictionary).filter(key=>key.startsWith('desktop.recovery.')),['desktop.recovery.storage.failed']);
+  const labels=menuTemplate({platform:'win32',packaged:true}).flatMap(group=>group.submenu||[]).map(item=>item.label).filter(Boolean);
+  assert.ok(labels.every(label=>!label.includes('desktop.recovery.')));
  }
- h.changeLanguage('en',0);assert.equal(h.document.documentElement.lang,'pt-BR');
- assert.deepEqual(h.calls,{summary:1,candidates:[0],export:0,continue:0});
+ initialize('/nonexistent/qingdan-language','zh-CN');
+ assert.ok(!menuTemplate({platform:'darwin',packaged:true}).flatMap(group=>group.submenu||[]).some(item=>item.label==='核对旧版输入'));
+});
+
+test('native hidden controls retain shared display override',()=>{
+ assert.match(css,/\[hidden\]\s*\{\s*display\s*:\s*none\s*!important\s*;?\s*\}/);
 });

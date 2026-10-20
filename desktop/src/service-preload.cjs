@@ -6,8 +6,6 @@ const localBusinessStorageRequired = typeof process !== 'undefined' && process.a
 // cannot select a server, access files, or mutate other settings.
 contextBridge.exposeInMainWorld('qingdanDesktop', Object.freeze({
   localBusinessStorageRequired,
-  getLocalRecovery: () => ipcRenderer.invoke('qingdan-desktop:local-recovery'),
-  openLocalRecovery: () => ipcRenderer.invoke('qingdan-desktop:open-recovery'),
   getLanguage: () => ipcRenderer.invoke('qingdan-desktop:get-language'),
   setLanguagePreference: preference => {
     if (!['system', 'zh-CN', 'en', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'de', 'pt-BR'].includes(preference)) return Promise.reject(new TypeError('Invalid language preference'));

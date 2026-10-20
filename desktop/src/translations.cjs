@@ -1,34 +1,5 @@
 'use strict';
 module.exports = Object.freeze({
-  "desktop.recovery.more":{"zh-CN":"下一页","en":"Next page"},
-  "desktop.recovery.unreadable":{"zh-CN":"无法显示此项输入。原始内容保留在本机，可导出核对报告。","en":"This input cannot be displayed. Its original contents are kept on this computer. You can export a review report."},
-  "desktop.recovery.kind.language":{"zh-CN":"语言偏好","en":"Language preference"},
-  "desktop.recovery.kind.quick.draft":{"zh-CN":"快速录入草稿","en":"Quick-entry draft"},
-  "desktop.recovery.kind.tags.draft":{"zh-CN":"批量标签草稿","en":"Batch tag draft"},
-  "desktop.recovery.kind.pending.create":{"zh-CN":"未确认的新建操作","en":"Unconfirmed creation"},
-  "desktop.recovery.kind.pending.write":{"zh-CN":"未确认的修改操作","en":"Unconfirmed change"},
-  "desktop.recovery.kind.pending.import":{"zh-CN":"未确认的导入操作","en":"Unconfirmed import"},
-  "desktop.recovery.kind.pending.template":{"zh-CN":"未确认的模板操作","en":"Unconfirmed template operation"},
-  "desktop.recovery.kind.matrix.draft":{"zh-CN":"四象限规则草稿","en":"Eisenhower matrix rule draft"},
-  "desktop.recovery.kind.calendar.batch":{"zh-CN":"批量日程草稿","en":"Batch scheduling draft"},
-  "desktop.recovery.kind.task.draft":{"zh-CN":"任务详情草稿","en":"Task detail draft"},
-  "desktop.recovery.kind.checklist.draft":{"zh-CN":"检查项草稿","en":"Checklist item draft"},
-  "desktop.recovery.kind.subtask.draft":{"zh-CN":"子任务草稿","en":"Subtask draft"},
-  "desktop.recovery.kind.comment.draft":{"zh-CN":"评论草稿","en":"Comment draft"},
-  "desktop.recovery.kind.focus.note":{"zh-CN":"专注笔记","en":"Focus note"},
-  "desktop.recovery.kind.view":{"zh-CN":"视图偏好","en":"View preference"},
-  "desktop.recovery.kind.pending.backup":{"zh-CN":"未确认的备份操作","en":"Unconfirmed backup operation"},
-  "desktop.recovery.kind.habit.groups":{"zh-CN":"习惯分组修改","en":"Habit group change"},
-  "desktop.recovery.kind.reminder.actions":{"zh-CN":"未确认的提醒操作","en":"Unconfirmed reminder actions"},
-  "desktop.recovery.kind.offline.preference":{"zh-CN":"离线访问偏好","en":"Offline access preference"},
-  "desktop.recovery.kind.offline.copy":{"zh-CN":"离线数据副本","en":"Offline data copy"},
-  "desktop.recovery.kind.offline.session":{"zh-CN":"离线会话记录","en":"Offline session record"},
-  "desktop.recovery.kind.comment.mentions":{"zh-CN":"评论提及选择","en":"Comment mention selection"},
-  "desktop.recovery.kind.background.upload":{"zh-CN":"未确认的背景上传","en":"Unconfirmed background upload"},
-  "desktop.recovery.kind.attachment.upload":{"zh-CN":"未确认的附件上传","en":"Unconfirmed attachment upload"},
-  "desktop.recovery.kind.list.transfer":{"zh-CN":"未确认的清单转让","en":"Unconfirmed list transfer"},
-  "desktop.recovery.kind.form.draft":{"zh-CN":"表单草稿","en":"Form draft"},
-  "desktop.recovery.kind.other":{"zh-CN":"其他保留输入","en":"Other preserved input"},
   "desktop.qingdan": {
     "zh-CN": "青单",
     "en": "Qingdan"
@@ -528,82 +499,6 @@ module.exports = Object.freeze({
   "desktop.connection.current": {
     "zh-CN": "当前：{{name}}（{{state}}）",
     "en": "Current: {{name}} ({{state}})"
-  },
-  "desktop.recovery.title": {
-    "zh-CN": "核对旧版输入",
-    "en": "Review previous input"
-  },
-  "desktop.recovery.intro": {
-    "zh-CN": "旧版草稿、待确认操作和偏好已保留，供你核对，不会自动应用。已保存的任务和附件仍可使用。",
-    "en": "Earlier drafts, pending changes and preferences are kept for review. Nothing is applied automatically. Your saved tasks and attachments remain available."
-  },
-  "desktop.recovery.limits": {
-    "zh-CN": "部分输入可能无法找回，包括损坏记录、临时输入和未保存的文件。",
-    "en": "Some input may be missing, including damaged records, temporary input and unsaved files."
-  },
-  "desktop.recovery.loading": {
-    "zh-CN": "正在查找旧版输入…",
-    "en": "Looking for previous input…"
-  },
-  "desktop.recovery.view": {
-    "zh-CN": "查看旧版输入",
-    "en": "View previous input"
-  },
-  "desktop.recovery.export": {
-    "zh-CN": "导出核对报告",
-    "en": "Export review report"
-  },
-  "desktop.recovery.candidates": {
-    "zh-CN": "待核对输入",
-    "en": "Input to review"
-  },
-  "desktop.recovery.review": {
-    "zh-CN": "使用前请与已保存任务核对。先确认待处理操作是否已经成功，避免重复操作或覆盖较新的修改。",
-    "en": "Compare this input with your saved tasks before using it. Check whether pending changes already succeeded to avoid duplicates or overwriting newer changes."
-  },
-  "desktop.recovery.continue": {
-    "zh-CN": "继续使用已保存任务",
-    "en": "Continue with saved tasks"
-  },
-  "desktop.recovery.later": {
-    "zh-CN": "旧版输入会保留，稍后可从“帮助 → 核对旧版输入”或工作台提示返回。",
-    "en": "Previous input stays here for later review. Open Help → Review previous input, or use the notice in your workspace."
-  },
-  "desktop.recovery.error": {
-    "zh-CN": "操作未完成，原始资料仍保留。请重试，或检查磁盘空间与访问权限。",
-    "en": "The action did not finish. Original data is preserved. Try again, or check disk space and access permissions."
-  },
-  "desktop.recovery.none": {
-    "zh-CN": "未发现需要核对的旧版本机数据。",
-    "en": "No previous local data was found for review."
-  },
-  "desktop.recovery.pending": {
-    "zh-CN": "有旧版数据需要核对。你可以先查看或导出报告，也可以稍后处理。",
-    "en": "Previous data needs review. View it or export a report now, or review it later."
-  },
-  "desktop.recovery.preferences": {
-    "zh-CN": "已找到旧版偏好。其他输入可能未能读取，原始资料仍保留。",
-    "en": "Previous preferences were found. Other input may not have been read; original data is preserved."
-  },
-  "desktop.recovery.conflicts": {
-    "zh-CN": "找到了不同版本的输入，其中部分内容可能已被删除。请逐项核对。",
-    "en": "Different versions of the input were found. Some entries may have been deleted. Review each version."
-  },
-  "desktop.recovery.candidate": {
-    "zh-CN": "输入",
-    "en": "Item"
-  },
-  "desktop.recovery.no.candidates": {
-    "zh-CN": "没有可显示的输入。可导出核对报告，原始文件仍保留在本机。",
-    "en": "No readable input was found. You can export the review report; original files remain on this computer."
-  },
-  "desktop.recovery.exported": {
-    "zh-CN": "核对报告已导出，旧版输入仍待核对。",
-    "en": "Review report exported. Previous input still needs review."
-  },
-  "desktop.recovery.waiting": {
-    "zh-CN": "请在打开的窗口核对旧版输入，或选择“继续使用已保存任务”，稍后再处理。",
-    "en": "Review previous input in the open window, or choose “Continue with saved tasks” to review it later."
   },
   "desktop.recovery.storage.failed": {
     "zh-CN": "无法读取本机输入，原始文件未更改。请检查磁盘空间与访问权限后重新连接。",

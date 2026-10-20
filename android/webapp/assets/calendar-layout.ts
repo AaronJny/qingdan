@@ -224,6 +224,39 @@ export function clipToDateGrid(interval: MinuteInterval, dates: readonly string[
   return result;
 }
 export type LaneInterval<T extends MinuteInterval> = T & { lane: number; laneCount: number; group: number };
+/** Horizontal bars reserve whole date columns, even when their clock times do
+ * not overlap. Continue in the previous week's lane when it remains available.
+ * Stable IDs break ties so a refresh/input ordering change cannot shuffle bars.
+ */
+export function layoutDateGrid<T extends {id: string; data: TaskSchedule}>(tasks: readonly T[], dates: readonly string[], columns = 7): {lanes: number; segments: {task: T; segment: GridSegment; lane: number}[]}[] {
+  positive(columns, 'Columns');
+  const rows = Array.from({length: Math.ceil(dates.length / columns)}, () => ({lanes: 0, segments: [] as {task: T; segment: GridSegment; lane: number}[]}));
+  const pending = rows.map(() => [] as {task: T; segment: GridSegment}[]);
+  for (const task of tasks) {
+    let interval: TaskInterval | null;
+    try { interval = normalizeTaskInterval(task.data); } catch { continue; }
+    if (interval) for (const segment of clipToDateGrid(interval, dates, columns)) pending[segment.row].push({task, segment});
+  }
+  let previous = new Map<string, number>();
+  pending.forEach((items, row) => {
+    const occupied: boolean[][] = [];
+    const next = new Map<string, number>();
+    items.sort((a, b) => Number(b.segment.continuesBefore) - Number(a.segment.continuesBefore)
+      || a.segment.startColumn - b.segment.startColumn || b.segment.endColumn - a.segment.endColumn || a.task.id.localeCompare(b.task.id));
+    for (const {task, segment} of items) {
+      const free = (lane: number) => !occupied[lane]?.slice(segment.startColumn, segment.endColumn).some(Boolean);
+      const preferred = segment.continuesBefore ? previous.get(task.id) : undefined;
+      let lane = preferred !== undefined && free(preferred) ? preferred : 0;
+      while (!free(lane)) lane++;
+      occupied[lane] ??= Array(columns).fill(false);
+      occupied[lane].fill(true, segment.startColumn, segment.endColumn);
+      rows[row].segments.push({task, segment, lane}); rows[row].lanes = Math.max(rows[row].lanes, lane + 1);
+      if (segment.continuesAfter) next.set(task.id, lane);
+    }
+    previous = next;
+  });
+  return rows;
+}
 /** Interval graph coloring: adjacent endpoints do not overlap. laneCount is the
  * maximum concurrency of each connected overlap group, including cross-hour
  * chains. Pass clipped day segments to compute lanes separately per day.

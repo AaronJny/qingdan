@@ -36,7 +36,7 @@ function isLocalUiUrl(value, page) {
   return !!url && url.protocol === `${SCHEME}:` && url.hostname === 'ui' && !url.port && !url.username && !url.password && !url.search && !url.hash && url.pathname === `/${page}`;
 }
 function isStatusUrl(value) { return ['status', 'ui.css', 'status.js', 'i18next.js', 'native-language.js'].some(page => isLocalUiUrl(value, page)); }
-function isSettingsResource(value) { return ['settings', 'recovery', 'recovery.js', 'ui.css', 'settings.js', 'i18next.js', 'native-language.js'].some(page => isLocalUiUrl(value, page)); }
+function isSettingsResource(value) { return ['settings', 'ui.css', 'settings.js', 'i18next.js', 'native-language.js'].some(page => isLocalUiUrl(value, page)); }
 function safeExternalUrl(value) {
   const url = parseUrl(value);
   if (!url || url.username || url.password || !url.hostname || url.port === '0') return null;

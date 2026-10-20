@@ -10,7 +10,7 @@ test('service preload exposes only fixed narrow actions and settings never forwa
   const electron = { contextBridge: { exposeInMainWorld(key, value) { name = key; bridge = value; } }, ipcRenderer: { invoke(...args) { calls.push(args); return Promise.resolve({ ok: true }); } } };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../src/service-preload.cjs'), 'utf8'), { require(id) { assert.equal(id, 'electron'); return electron; } });
   assert.equal(name, 'qingdanDesktop');
-  assert.deepEqual(Object.keys(bridge).sort(), ['forgetReminders', 'getConnection', 'getLanguage', 'getLocalRecovery', 'localBusinessStorageRequired', 'onLanguageChanged', 'onRuntimeEvent', 'openConnectionSettings', 'openLocalRecovery', 'runtimeReady', 'setLanguagePreference']);
+  assert.deepEqual(Object.keys(bridge).sort(), ['forgetReminders', 'getConnection', 'getLanguage', 'localBusinessStorageRequired', 'onLanguageChanged', 'onRuntimeEvent', 'openConnectionSettings', 'runtimeReady', 'setLanguagePreference']);
   assert.equal(Object.isFrozen(bridge), true);
   await bridge.getConnection({ arbitraryPath: '/private' }); await bridge.openConnectionSettings({ mode: 'server', serverUrl: 'https://attacker.example/' });
   assert.deepEqual(calls, [['qingdan-desktop:connection'], ['qingdan-desktop:open-settings']]);
@@ -53,15 +53,4 @@ test('service and settings preloads accept exactly the nine canonical locale cho
   for(const invalid of ['zh-Hant','zh-HK','en-US','pt','it',null,{},['ja']])await assert.rejects(bridge.setLanguagePreference(invalid),/Invalid language/);
   for(const locale of ['it','pt','zh-Hant'])receive({secret:true},{preference:'en',locale,revision:2});assert.equal(values.length,9);
  }
-});
-
-test('recovery language subscription strips IPC details and exposes no preference mutation API',()=>{
- let bridge,receive,removed;const values=[];
- const ipcRenderer={invoke(){throw Error('No invocation should be needed for language updates')},on(channel,fn){assert.equal(channel,'qingdan-desktop:language-changed');receive=fn},removeListener(_channel,fn){removed=fn}};
- vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/local-recovery-preload.cjs'),'utf8'),{require:()=>({ipcRenderer,contextBridge:{exposeInMainWorld(_name,value){bridge=value;}}})});
- assert.equal(bridge.setLanguagePreference,undefined);assert.equal(bridge.getLanguage,undefined);
- const stop=bridge.onLanguageChanged(value=>values.push(value));
- receive({sender:'hidden'},{preference:'ja',locale:'ja',revision:1,secret:'hidden'});
- for(const value of [{preference:'it',locale:'en',revision:2},{preference:'ja',locale:'it',revision:2},{preference:'ja',locale:'ja',revision:-1}])receive({},value);
- assert.equal(JSON.stringify(values),JSON.stringify([{preference:'ja',locale:'ja',revision:1}]));stop();assert.equal(removed,receive);
 });
