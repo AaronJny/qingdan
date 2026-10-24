@@ -7,6 +7,7 @@ const os = require('node:os');
 const crypto = require('node:crypto');
 const { spawnSync } = require('node:child_process');
 const asar = require('@electron/asar');
+const { createAsarFixture } = require('./fixtures/asar.cjs');
 const { Arch } = require('builder-util');
 const { TmpDir } = require('temp-file');
 const hook = require('../scripts/prepare-native-recovery.cjs');
@@ -155,10 +156,10 @@ test('presign afterPack validation rejects packed natives, altered bytes and ext
   const f = await builderArchive(t, 'linux', 'x64'), physical = path.join(f.archive + '.unpacked', ...f.result.entry.split('/'));
   fs.appendFileSync(physical, Buffer.from('tampered')); assert.throws(() => hook.verifyPackagedBindingBeforeSigning(f.archive, 'linux', 'x64'), /ASAR size/);
   const source = path.join(f.root, 'archive-source'); write(source, f.result.entry, elf());
-  await asar.createPackage(source, f.archive); asar.uncache(f.archive);
+  await createAsarFixture(source, f.archive);
   assert.throws(() => hook.verifyPackagedBindingBeforeSigning(f.archive, 'linux', 'x64'), /unpacked and signable/);
   write(source, 'node_modules/classic-level/prebuilds/win32-x64/classic-level.node', pe());
-  await asar.createPackageWithOptions(source, f.archive, { unpack: '*.node' }); asar.uncache(f.archive);
+  await createAsarFixture(source, f.archive, { unpack: '*.node' });
   assert.throws(() => hook.verifyPackagedBindingBeforeSigning(f.archive, 'linux', 'x64'), /exactly the target/);
 });
 test('final Mac architecture gate reads post-sign unpacked bytes despite presign ASAR metadata', async t => {

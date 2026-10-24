@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const asar = require('@electron/asar');
+const { createAsarFixture } = require('./fixtures/asar.cjs');
 const { parseArgs, nodeEnvironment, inspectPackage, finalBindingEvidence, runSmoke } = require('../scripts/smoke-packaged-recovery.cjs');
 
 function temporary(t) {
@@ -43,7 +44,7 @@ test('final ASAR inspection verifies one unpacked target binary without requirin
   const entry = 'node_modules/classic-level/prebuilds/linux-x64/classic-level.node';
   write(source, 'node_modules/classic-level/package.json', JSON.stringify({ name: 'classic-level', version: '3.0.0' }));
   write(source, entry, elf());
-  await asar.createPackageWithOptions(source, archive, { unpack: '**/*.node' });
+  await createAsarFixture(source, archive, { unpack: '**/*.node' });
   const first = inspectPackage(archive, 'linux', 'x64');
   const finalBefore = finalBindingEvidence(archive, 'linux', 'x64');
   assert.deepEqual(finalBefore, { entry, sha256: first.bindingSha256, bytes: 64, unpacked: true, finalDiskBytes: true });
@@ -66,14 +67,14 @@ test('ASAR inspection rejects packed, foreign, duplicate or symlinked native bin
   const entry = 'node_modules/classic-level/prebuilds/linux-x64/classic-level.node';
   write(source, 'node_modules/classic-level/package.json', JSON.stringify({ name: 'classic-level', version: '3.0.0' }));
   write(source, entry, elf());
-  await asar.createPackage(source, archive);
+  await createAsarFixture(source, archive);
   assert.throws(() => inspectPackage(archive, 'linux', 'x64'), /unpacked/);
   asar.uncacheAll(); fs.unlinkSync(archive);
   write(source, 'node_modules/classic-level/prebuilds/win32-x64/classic-level.node', elf());
-  await asar.createPackageWithOptions(source, archive, { unpack: '**/*.node' });
+  await createAsarFixture(source, archive, { unpack: '**/*.node' });
   assert.throws(() => inspectPackage(archive, 'linux', 'x64'), /Only the target/);
   asar.uncacheAll(); fs.unlinkSync(archive); fs.rmSync(path.join(source, 'node_modules/classic-level/prebuilds/win32-x64'), { recursive: true });
-  await asar.createPackageWithOptions(source, archive, { unpack: '**/*.node' });
+  await createAsarFixture(source, archive, { unpack: '**/*.node' });
   assert.throws(() => inspectPackage(archive, 'darwin', 'x64'), /Only the target/);
   if (process.platform !== 'win32') {
     const native = path.join(archive + '.unpacked', entry), outside = write(directory, 'outside.node', elf());

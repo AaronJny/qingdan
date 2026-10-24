@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const asar = require('@electron/asar');
+const { createAsarFixture } = require('./fixtures/asar.cjs');
 const { sourceFiles, verifyPackagedSources } = require('../scripts/packaged-source.cjs');
 const { nativeAsarEntryPath } = require('../scripts/asar-entry-path.cjs');
 
@@ -16,7 +17,7 @@ function fixture(t) {
  fs.writeFileSync(path.join(source,'src/main.cjs'),"'use strict';\n");
  for(const locale of ['zh-TW','ja','ko','es','fr','de','pt-BR'])fs.writeFileSync(path.join(source,`src/locales/${locale}.json`),JSON.stringify({'desktop.language':locale}));
  fs.cpSync(source,packaged,{recursive:true});
- return {directory,source,packaged,archive,extract:name=>asar.extractFile(archive,nativeAsarEntryPath(name)),async pack(){asar.uncacheAll();await asar.createPackage(packaged,archive)}};
+ return {directory,source,packaged,archive,extract:name=>asar.extractFile(archive,nativeAsarEntryPath(name)),async pack(){await createAsarFixture(packaged,archive)}};
 }
 test('final ASAR source verification includes every nested native locale dictionary',async t=>{
  const f=fixture(t);await f.pack();const files=verifyPackagedSources(f.source,f.extract);

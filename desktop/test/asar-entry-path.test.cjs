@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const asar = require('@electron/asar');
+const { createAsarFixture } = require('./fixtures/asar.cjs');
 const { nativeAsarEntryPath } = require('../scripts/asar-entry-path.cjs');
 
 test('ASAR entry conversion preserves exact components on POSIX and Windows', () => {
@@ -33,7 +34,7 @@ test('real ASAR deeply nested frontend/dependency entries extract with host path
   for (const [name, bytes] of Object.entries(files)) {
     const file = path.join(source, ...name.split('/')); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, bytes);
   }
-  await asar.createPackage(source, archive);
+  await createAsarFixture(source, archive);
   for (const [name, bytes] of Object.entries(files)) assert(asar.extractFile(archive, nativeAsarEntryPath(name)).equals(bytes), name);
   const header = asar.getRawHeader(archive).header;
   // Reproduce @electron/asar's public-entry lookup semantics with injected
