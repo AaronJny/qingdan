@@ -49,3 +49,33 @@ test('local mode never creates an account outbox or performs account replay veri
 test('account switch hides old projected tasks while leaving their persisted partition intact',async()=>{
  const f=await fixture();try{f.offline();await act(async()=>type(f.host.querySelector<HTMLTextAreaElement>('.quick-add textarea')!,'原账号离线任务'));await act(async()=>click(f.host.querySelector('.quick-submit')));await settle();await act(async()=>window.dispatchEvent(new window.Event('qingdan-account-changed')));assert.match(f.host.textContent||'',/账号会话已变化/);assert.doesNotMatch(f.host.textContent||'',/原账号离线任务/);assert.ok(Object.keys(localStorage).some(key=>key.startsWith('qingdan:task-outbox:')&&localStorage.getItem(key)?.includes('原账号离线任务')));f.online();await act(async()=>window.dispatchEvent(new window.Event('online')));await settle();assert.equal(f.writes(),0)}finally{await f.close()}
 });
+
+test('quick entry surface focuses input while helper and controls stay separate',async()=>{
+ const f=await fixture('local');try{
+  const input=f.host.querySelector<HTMLTextAreaElement>('.quick-add textarea')!;
+  const surface=f.host.querySelector<HTMLElement>('.quick-add-line')!;
+  const help=f.host.querySelector<HTMLElement>('.quick-language-help')!;
+  assert.ok(input.getAttribute('aria-label'));
+  assert.equal(input.getAttribute('aria-describedby'),help.id);
+  assert.equal(surface.contains(help),false,'language help is outside the input surface');
+  assert.ok(surface.compareDocumentPosition(help)&4,'help follows the input, not above it');
+  input.blur();await act(async()=>click(surface));assert.equal(document.activeElement,input);
+  input.blur();await act(async()=>surface.querySelector('svg')!.dispatchEvent(new window.MouseEvent('click',{bubbles:true})));assert.equal(document.activeElement,input);
+  await act(async()=>type(input,'明天 10:00 测试快速输入'));await settle();
+  const date=f.host.querySelector<HTMLInputElement>('.quick-options input[type="date"]')!;
+  date.focus();await act(async()=>click(date));assert.equal(document.activeElement,date);
+  const priority=f.host.querySelector<HTMLSelectElement>('.quick-options select')!;
+  priority.focus();await act(async()=>click(priority));assert.equal(document.activeElement,priority);
+  const submit=surface.querySelector<HTMLButtonElement>('.quick-submit')!;
+  assert.ok(submit.getAttribute('aria-label'));assert.equal(submit.disabled,false);
+  await act(async()=>{input.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Enter',isComposing:true,bubbles:true}))});await settle();
+  assert.equal(f.writes(),0,'IME confirmation must not submit');
+  await act(async()=>{input.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Enter',shiftKey:true,bubbles:true}))});await settle();
+  assert.equal(f.writes(),0,'Shift+Enter must not submit');
+  await act(async()=>click(submit));await settle();
+  assert.equal(f.writes(),1,'submit button creates exactly one task');
+  const task=f.state.records.find(r=>r.kind==='task')!;
+  assert.equal(task.data.title,'测试快速输入');assert.ok(task.data.dueDate);
+  assert.equal(input.value,'');
+ }finally{await f.close()}
+});

@@ -521,9 +521,9 @@ def main(argv=None):
     download = f'https://github.com/{repository}/releases/download/{tag}'
     notes = '\n'.join([f'# 青单 / Qingdan {tag}', '', status, '',
                        '## 更新 / What’s new',
-                       '- 日历任务支持拖动左边缘调整开始日期、拖动右边缘调整结束日期，可跨周行扩展或缩短。 / Drag a calendar task’s left edge to adjust its start date or its right edge to adjust its end date, including across week rows.',
-                       '- 拖动任务中间仍会整体移动，保留任务跨度；调整范围时实时预览日期，并防止开始、结束日期倒置。 / Drag the task body to move the entire task while keeping its span. Date previews update as you resize, and endpoints cannot cross.',
-                       '- 支持触屏拖动与键盘方向键调整；按 Esc 可取消当前调整。九种界面语言同步更新。 / Resize with touch or keyboard arrows, and press Esc to cancel a drag. Updated guidance is available in all nine interface languages.',
+                       '- 快速添加的日期语言提示移到输入框外下方，移除顶部看似可输入却无法操作的区域。 / Move date-language guidance below the quick-entry field, outside its border, removing the misleading inactive input area.',
+                       '- 点击输入框留白或左侧加号即可聚焦输入，并显示清晰焦点边框；补充无障碍名称与说明关联。 / Clicking field padding or the leading plus focuses the input with a visible focus border; accessible names and help associations are included.',
+                       '- 保留日期识别、日期选择、中文输入法和快捷提交行为，并加入回归测试。 / Preserve date parsing, date selection, IME composition and quick submission with regression coverage.',
                        '', '## 下载 / Downloads',
                        f'- macOS Apple Silicon：[DMG]({download}/Qingdan-{version}-mac-arm64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-arm64.zip)',
                        f'- macOS Intel：[DMG]({download}/Qingdan-{version}-mac-x64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-x64.zip)',
