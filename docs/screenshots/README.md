@@ -1,20 +1,20 @@
-# 更新界面截图
+# Updating screenshots
 
-本目录的图片用于仓库首页展示。更新界面后，可按以下步骤重新截图。
+The repository's default [English README](../../README.md) uses the images in `en/`. The [Simplified Chinese README](../../README.zh-CN.md) uses the original images in this directory.
 
-## 图片
+| View | English | 简体中文 |
+| --- | --- | --- |
+| Task workspace | `en/tasks.jpg` | `tasks.jpg` |
+| Monthly calendar | `en/calendar.jpg` | `calendar.jpg` |
+| Eisenhower matrix | `en/matrix.jpg` | `matrix.jpg` |
+| Habit tracking | `en/habits.jpg` | `habits.jpg` |
 
-| 文件 | 内容 |
-| --- | --- |
-| `tasks.jpg` | 所有任务、日期分组、清单和标签 |
-| `calendar.jpg` | 日历月视图与待安排事项 |
-| `matrix.jpg` | 按优先级与日期分类的四象限 |
-| `habits.jpg` | 阅读习惯、每日目标与打卡记录 |
+## Capture workflow
 
-## 操作步骤
+1. With Node.js 24, run `npm ci` and `npm run build` in `application/`.
+2. Set `QINGDAN_DATA_DIR` to an empty, screenshot-only directory and run `npm start`.
+3. Open the local app in a browser. Before adding sample tasks, choose **English** or **简体中文** under **Settings → General → Language** (设置 → 通用 → 语言). Sample content should match the documentation language as well as the interface.
+4. Use the light theme and a 1180 × 757 viewport. Open All tasks, Calendar, Eisenhower matrix, and Habits. For the habit view, complete the sample reading goal.
+5. Capture the actual running interface, save each image to its language-specific path, and review the pixels for readable text, complete layout, matching language, and absence of personal information. Do not translate or recreate interface text in an image editor.
 
-1. 使用 Node.js 24，在 `application/` 执行 `npm ci` 和 `npm run build`。
-2. 将 `QINGDAN_DATA_DIR` 设为截图专用的空目录，执行 `npm start`。
-3. 打开本机页面，在空任务页添加示例任务。
-4. 使用浅色主题，将浏览器视口设为 1180 × 757，依次打开“所有任务”“日历”“四象限”“习惯”。习惯截图中可先为阅读目标打卡。
-5. 保存截图并替换对应图片，检查文字清晰、内容完整。提交前检查图片中是否含有个人信息。
+Keep both language links and screenshot paths working when updating the READMEs.

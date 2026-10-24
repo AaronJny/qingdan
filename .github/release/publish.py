@@ -522,8 +522,8 @@ def main(argv=None):
     notes = '\n'.join([f'# 青单 / Qingdan {tag}', '', status, '',
                        '## 更新 / What’s new',
                        '- 快速添加的日期语言提示移到输入框外下方，移除顶部看似可输入却无法操作的区域。 / Move date-language guidance below the quick-entry field, outside its border, removing the misleading inactive input area.',
-                       '- 点击输入框留白或左侧加号即可聚焦输入，并显示清晰焦点边框；补充无障碍名称与说明关联。 / Clicking field padding or the leading plus focuses the input with a visible focus border; accessible names and help associations are included.',
-                       '- 保留日期识别、日期选择、中文输入法和快捷提交行为，并加入回归测试。 / Preserve date parsing, date selection, IME composition and quick submission with regression coverage.',
+                       '- 点击输入框留白或左侧加号即可聚焦输入，并显示清晰焦点边框。 / Click anywhere in the field or the leading plus to start typing, with a clear focus border.',
+                       '- 产品说明支持中英文切换，英文说明配有英文界面截图。 / The product guide is available in English and Chinese, with English interface screenshots for the English guide.',
                        '', '## 下载 / Downloads',
                        f'- macOS Apple Silicon：[DMG]({download}/Qingdan-{version}-mac-arm64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-arm64.zip)',
                        f'- macOS Intel：[DMG]({download}/Qingdan-{version}-mac-x64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-x64.zip)',
@@ -533,7 +533,7 @@ def main(argv=None):
                        f'- 服务端 / Server：[ZIP]({download}/qingdan-server-v{version}.zip)，支持 Linux x64 / macOS arm64，内置运行环境与启动脚本。 / Supports Linux x64 and macOS arm64, with bundled runtimes and start scripts.',
                        (f'- Android {android_version}：[APK]({download}/Qingdan-{android_version}-android.apk)。更新前请导出完整备份，覆盖升级须签名一致。 / Export a full backup before updating; upgrades require the same signing identity.'
                         if complete else f'- Android {android_version}：等待发布签名。 / Awaiting release signing.'),
-                       '', f'[中文说明](https://github.com/{repository}/blob/{commit}/README.md) · [English guide](https://github.com/{repository}/blob/{commit}/README.en.md)', ''])
+                       '', f'[中文说明](https://github.com/{repository}/blob/{commit}/README.zh-CN.md) · [English guide](https://github.com/{repository}/blob/{commit}/README.md)', ''])
     notes_path = root.parent / 'release-notes.md'
     notes_path.write_text(notes)
     old = remote_release(repository, tag, optional=True)
