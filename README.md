@@ -25,7 +25,7 @@ The language setting applies only to the current device or browser. Tasks and no
 
 ## Agent access
 
-Connect an MCP-compatible agent through the desktop app to selected local or private-server lists. Access is off by default, list-scoped and session-only. See the [Agent access guide](docs/AGENT-ACCESS.md) for setup. Requires v1.3.7 or later on both the desktop app and the connected private server.
+Connect an MCP-compatible agent through the desktop app to selected local or private-server lists. Access is off by default, list-scoped and session-only. See the [Agent access guide](docs/AGENT-ACCESS.md) for setup. Requires v1.3.8 or later on both the desktop app and the connected private server.
 
 ## Screenshots
 
@@ -60,16 +60,16 @@ View daily goals, this week's check-ins, streaks, and completion over the past 3
 
 ## Download and install
 
-Visit [Releases](https://github.com/AaronJny/qingdan/releases/latest) to download the version for your platform. The current release is [v1.3.7](https://github.com/AaronJny/qingdan/releases/tag/v1.3.7), with desktop, server, and Android builds.
+Visit [Releases](https://github.com/AaronJny/qingdan/releases/latest) to download the version for your platform. The current release is [v1.3.8](https://github.com/AaronJny/qingdan/releases/tag/v1.3.8), with desktop, server, and Android builds.
 
 | Platform | Download | Instructions and requirements |
 | --- | --- | --- |
-| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.3.7/Qingdan-1.3.7-mac-arm64.dmg) | macOS 13 or later. Quit the previous version normally, then drag the app into Applications. |
-| macOS · Intel | [x64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.3.7/Qingdan-1.3.7-mac-x64.dmg) | macOS 13 or later. Drag the app into Applications. |
-| Windows · x64 | [Portable ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.3.7/Qingdan-1.3.7-win-x64.zip) | Extract the entire archive and run `Qingdan.exe`. Do not copy just the EXE. |
-| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.3.7/Qingdan-1.3.7-linux-x64.AppImage) | Make the file executable before running it. See the [desktop guide](desktop/README.md) for system requirements and launching without FUSE. |
-| Self-hosted server / web app | [ZIP with bundled runtimes](https://github.com/AaronJny/qingdan/releases/download/v1.3.7/qingdan-server-v1.3.7.zip) | Includes Linux x64 and macOS arm64 runtimes and launch scripts. No separate Node.js or npm installation is needed. |
-| Android | [0.3.6 APK](https://github.com/AaronJny/qingdan/releases/download/v1.3.7/Qingdan-0.3.6-android.apk) | Android 8.0 or later, with an up-to-date system WebView. See the [Android guide](android/README.md) for installation and signing details. |
+| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.3.8/Qingdan-1.3.8-mac-arm64.dmg) | macOS 13 or later. Quit the previous version normally, then drag the app into Applications. |
+| macOS · Intel | [x64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.3.8/Qingdan-1.3.8-mac-x64.dmg) | macOS 13 or later. Drag the app into Applications. |
+| Windows · x64 | [Portable ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.3.8/Qingdan-1.3.8-win-x64.zip) | Extract the entire archive and run `Qingdan.exe`. Do not copy just the EXE. |
+| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.3.8/Qingdan-1.3.8-linux-x64.AppImage) | Make the file executable before running it. See the [desktop guide](desktop/README.md) for system requirements and launching without FUSE. |
+| Self-hosted server / web app | [ZIP with bundled runtimes](https://github.com/AaronJny/qingdan/releases/download/v1.3.8/qingdan-server-v1.3.8.zip) | Includes Linux x64 and macOS arm64 runtimes and launch scripts. No separate Node.js or npm installation is needed. |
+| Android | [0.3.7 APK](https://github.com/AaronJny/qingdan/releases/download/v1.3.8/Qingdan-0.3.7-android.apk) | Android 8.0 or later, with an up-to-date system WebView. See the [Android guide](android/README.md) for installation and signing details. |
 
 ### Known platform limitations
 
