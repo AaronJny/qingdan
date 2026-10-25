@@ -704,10 +704,13 @@
   "agentAccess.descriptorHelp": "此配置引用本机私密凭据文件，不包含令牌本身。撤销访问或正常退出时会删除文件。重新授权同一服务器和账户会恢复此路径，其他目标使用不同路径。更新授权后请重启 MCP 客户端，切勿上传或分享此文件。",
   "agentAccess.tokenConfigHelp": "此平台暂不支持受保护的凭据文件。请将一次性令牌填入下方环境变量，不要放入网址或命令行参数。新的桌面会话需要更新地址和令牌。",
   "agentAccess.packagedConfigHelp": "将此配置添加到支持本地 stdio 的 MCP 客户端。它使用已安装的青单程序，无须另行安装 Node.js。青单桌面客户端仍须运行并保持登录。",
-  "agentAccess.client": "MCP 客户端",
+  "agentAccess.client": "连接格式",
   "agentAccess.codexHelp": "将此 TOML 合并到 ~/.codex/config.toml。已有 qingdan 条目时请更新它，不要重复添加，并保留其他设置。完成后重启 Codex。",
   "agentAccess.opencodeHelp": "将 qingdan 条目合并到 opencode.json 或 opencode.jsonc 的 mcp 对象中，保留其他配置，然后重启 OpenCode。",
-  "agentAccess.copyConfig": "复制配置",
-  "agentAccess.configCopied": "配置已复制。请合并到所选客户端的设置中；Windows 的令牌占位符仍需私下替换。",
-  "agentAccess.configCopyFailed": "无法复制，请选中配置并手动复制。"
+  "agentAccess.copyConfig": "复制连接信息",
+  "agentAccess.configCopied": "连接信息已复制。请按客户端格式填写，并私下替换令牌占位符。",
+  "agentAccess.configCopyFailed": "无法复制，请选中配置并手动复制。",
+  "agentAccess.generic": "通用本地 stdio",
+  "agentAccess.templateOnly": "格式模板",
+  "agentAccess.genericHelp": "下方 command、args 和 env 字段描述标准本地 stdio 连接，不是所有客户端通用的配置文件。请按所用 MCP 客户端的格式填写。Codex 和 OpenCode 仅提供可选格式模板，不限制协议支持范围。"
 }

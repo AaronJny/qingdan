@@ -11,6 +11,7 @@ import { pathToFileURL } from 'node:url';
 import { Client } from '@modelcontextprotocol/client';
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
 import { createGatewayInvoker, parseGatewayEndpoint } from './gateway.ts';
+import applicationPackage from '../package.json' with { type: 'json' };
 
 const adapterCommand = process.env.QINGDAN_TEST_ELECTRON || process.execPath;
 const adapterArgs = process.env.QINGDAN_TEST_ELECTRON_ENTRY ? [process.env.QINGDAN_TEST_ELECTRON_ENTRY, '--mcp'] : process.env.QINGDAN_TEST_BUILT_MCP === '1' ? ['dist/server/mcp.mjs'] : ['--import', 'tsx', 'mcp/main.ts'];
@@ -64,6 +65,7 @@ for (const era of ['legacy', 'modern'] as const) test(`real SDK stdio ${era}: li
   try {
     await client.connect(transport);
     assert.equal(client.getProtocolEra(), era);
+    assert.equal(client.getServerVersion()?.version, applicationPackage.version);
     const listed = await client.listTools();
     assert.deepEqual(listed.tools.map(t => t.name).sort(), ['complete_task', 'create_task', 'get_task', 'list_lists', 'search_tasks', 'update_task']);
     const result = await client.callTool({name: 'list_lists', arguments: {}});

@@ -2,34 +2,57 @@
 
 [English](AGENT-ACCESS.md) · [简体中文](AGENT-ACCESS.zh-CN.md)
 
-Qingdan's desktop app can connect an MCP-compatible agent to tasks in selected lists. The same local desktop gateway works with the app's built-in local data or with the private server account currently signed in. You do not configure a public or remote HTTP MCP server.
+## What you can do
 
-Agent access is available in v1.3.7 and later. Update both the desktop app and a connected private server before using it.
+Let an MCP-compatible agent find, create, edit and complete tasks in the lists you choose. It works with local data or the private-server account signed in to Qingdan. Access is off by default; allowing changes is a separate choice.
 
 ## Before you start
 
-- Use a Qingdan desktop build with **Settings → Agent access** and an MCP client that can launch a local stdio process.
-- Keep Qingdan running. For a private server, connect and sign in normally in Qingdan first. The agent does not receive your password, browser cookies or CSRF token.
-- An updated packaged desktop build runs the adapter using the installed Qingdan executable with `--mcp`; no separate Node.js installation is needed. Settings shows the executable path. Source-only setup is described below.
-- Agent access is off by default. Opening settings does not grant access. This does not provide local Android access, browser-only MCP hosting, or a cloud agent's direct connection to your laptop.
+- Use Qingdan desktop v1.3.8 or later. Update your private server too, if you use one.
+- Your agent must support local stdio MCP connections and run on the same computer as Qingdan.
+- Keep Qingdan open and signed in. No separate Node.js installation is needed for the packaged desktop app.
+- Android, browser-only use and agents running on another computer are not supported by this connection method.
 
-## Enable access deliberately
+## Connect in five steps
 
-1. Open **Settings → Agent access** in Qingdan's desktop window.
-2. Check the displayed server and account. Choose individual lists. There is no “all future lists” permission.
-3. Leave task changes disabled for read-only access. Enable them only if your agent should create, edit or complete tasks.
-4. Review the scope and check the confirmation box, then choose **Enable agent access**.
-5. On macOS/Linux, Qingdan creates an owner-only local credential file and shows configuration that references its path. No token needs to be copied. On Windows, use the one-time token fallback described below. Restart the MCP client after every grant or renewal.
+1. Open **Settings → Agent access** in Qingdan.
+2. Check the server and account, then select the lists your agent may access.
+3. Leave **Allow task changes** off for read-only access. Turn it on only for creating, editing or completing tasks.
+4. Review the permissions, check the confirmation box and click **Enable agent access**.
+5. Add the displayed connection details to your MCP client, then restart the client.
 
-Read access includes list names and task titles, descriptions and supported task fields. It excludes comments, attachments, membership details and history. Write access currently covers task creation, supported field edits and completion, not arbitrary administration, file access, task deletion or list migration. Completing a parent task can also complete its subtasks; completing a recurring task can create the next instance. Existing account and list permissions still apply.
+The default **Generic local stdio** view shows `command`, `args` and `env`. These are connection details, not a configuration file that every client can import:
 
-## Configure your MCP client
+```json
+{
+  "command": "<Qingdan-executable-path-from-settings>",
+  "args": ["--mcp"],
+  "env": {
+    "QINGDAN_AGENT_DESCRIPTOR": "<private-connection-file-path-from-settings>"
+  }
+}
+```
 
-Select Codex or OpenCode in the settings panel before copying. Their formats differ; generic `mcpServers` JSON is not their configuration format. For Codex, merge the TOML into `~/.codex/config.toml`, updating an existing `[mcp_servers.qingdan]` entry rather than duplicating it. For OpenCode, merge `qingdan` into the `mcp` object of your existing `opencode.json` or `opencode.jsonc`. Preserve other settings and restart the client. Formats follow the [official Codex MCP configuration](https://developers.openai.com/codex/mcp) and [stable OpenCode MCP documentation](https://opencode.ai/docs/mcp-servers/).
+- `command`: the Qingdan executable shown in settings.
+- `args`: the arguments passed to that executable.
+- `env`: environment variables for that process.
 
-On macOS/Linux, copy the configuration shown by the settings panel. The descriptor path is bound to this exact server and account; it is not a pointer to whichever account you open later.
+Enter them using your client's setup format. Use the paths shown in Qingdan, not your private server URL. On macOS, the executable is inside the `.app` folder. Keep the private connection file confidential.
 
-#### Codex · config.toml
+### Windows
+
+Use the displayed executable and `args: ["--mcp"]`. In `env`, copy the displayed `QINGDAN_AGENT_ENDPOINT`, supply `QINGDAN_AGENT_TOKEN`, and set `ELECTRON_NO_ATTACH_CONSOLE` to `"1"`. Replace the token placeholder privately with the token displayed once by Qingdan.
+
+Prefer your client's secure secret storage if available. After saving it, choose **Clear token** and clear your clipboard. Do not share the token in messages or screenshots. Restarting Qingdan requires updating both the address and token; renewing permissions requires a new token.
+
+## Optional client templates
+
+Codex and OpenCode are optional formatting templates, not a restriction on which MCP clients you can use. Copy the template shown in settings and preserve your client's other configuration.
+
+<details>
+<summary>Codex</summary>
+
+Merge the entry into `~/.codex/config.toml`. Update an existing `qingdan` entry rather than adding a duplicate.
 
 ```toml
 [mcp_servers.qingdan]
@@ -37,22 +60,28 @@ command = "<Qingdan-executable-path-from-settings>"
 args = ["--mcp"]
 
 [mcp_servers.qingdan.env]
-QINGDAN_AGENT_DESCRIPTOR = "<private-credential-file-path-from-settings>"
+QINGDAN_AGENT_DESCRIPTOR = "<private-connection-file-path-from-settings>"
 ```
 
-#### OpenCode · opencode.json / opencode.jsonc
+On Windows, use the environment variables shown in Qingdan instead of `QINGDAN_AGENT_DESCRIPTOR`.
+
+[Codex configuration help](https://developers.openai.com/codex/mcp)
+
+</details>
+
+<details>
+<summary>OpenCode</summary>
+
+Merge `qingdan` into the `mcp` section of your existing `opencode.json` or `opencode.jsonc`.
 
 ```json
 {
   "mcp": {
     "qingdan": {
       "type": "local",
-      "command": [
-        "<Qingdan-executable-path-from-settings>",
-        "--mcp"
-      ],
+      "command": ["<Qingdan-executable-path-from-settings>", "--mcp"],
       "environment": {
-        "QINGDAN_AGENT_DESCRIPTOR": "<private-credential-file-path-from-settings>"
+        "QINGDAN_AGENT_DESCRIPTOR": "<private-connection-file-path-from-settings>"
       },
       "enabled": true
     }
@@ -60,64 +89,27 @@ QINGDAN_AGENT_DESCRIPTOR = "<private-credential-file-path-from-settings>"
 }
 ```
 
-The private file contains the current loopback endpoint and token. It is created only after you explicitly enable access and removed when you revoke access or quit normally. An interrupted exit can leave a stale file, but it cannot reactivate the expired grant. Re-enabling the same bound account and server restores the same path, so you do not need to edit this configuration each time. You must still restart the MCP process: it reads the credential file once, and a revoked process does not automatically adopt a newer grant. Another account or server gets a different path.
+On Windows, use the environment variables shown in Qingdan instead of `QINGDAN_AGENT_DESCRIPTOR`.
 
-Keep the file private; do not upload it, commit it to source control or share its contents. Use the exact executable and credential paths shown by Qingdan. On macOS the command points to the executable inside the app bundle, not the `.app` folder; on Windows it points to `Qingdan.exe`. The `--mcp` process runs the stdio adapter without opening another GUI, but it still needs the already-running desktop gateway.
+[OpenCode configuration help](https://opencode.ai/docs/mcp-servers/)
 
-On Linux, the desktop and its MCP process require working Electron sandbox support. Ubuntu 24.04 may block an unpacked AppImage under its user-namespace policy; extracting it does not remove that restriction. Keep sandbox protection enabled. This version does not automatically change system security policy.
+</details>
 
-### Windows fallback
+Start by asking your agent to list the allowed lists or find unfinished tasks. Check that the intended account and list are being used before asking for changes.
 
-The initial implementation does not yet verify Windows credential-file ACLs, so it uses explicit environment variables instead:
+## Permissions and reconnecting
 
-#### Codex · config.toml
+- Read access covers list names and task details, not comments, attachments, members or history. Existing account and list permissions still apply.
+- Write access allows creating, editing and completing tasks, not deleting tasks or managing accounts. Completing a parent task may complete its subtasks; completing a recurring task may create its next occurrence.
+- New lists are not automatically included. To change access, select the lists and permissions, review them and choose **Apply permissions and renew access**. Restart your MCP client afterward.
+- Choose **Revoke agent access** to stop access immediately.
+- Quitting Qingdan, signing out or switching servers ends access. Reopen settings, check the account and enable access again, then restart your MCP client. Access never silently switches to another account.
+- On macOS/Linux, the same account and server keep the same connection-file path. On Windows, refresh the address and token as described above.
 
-```toml
-[mcp_servers.qingdan]
-command = "C:\\path\\to\\Qingdan.exe"
-args = ["--mcp"]
+## Troubleshooting
 
-[mcp_servers.qingdan.env]
-QINGDAN_AGENT_ENDPOINT = "http://127.0.0.1:<port-from-settings>/tools"
-QINGDAN_AGENT_TOKEN = "<your-one-time-token>"
-ELECTRON_NO_ATTACH_CONSOLE = "1"
-```
+If the agent cannot connect, check that Qingdan is open, the correct account is signed in, both Qingdan and your private server are updated, and the client has the current connection details. Do not expose the connection port to the internet.
 
-#### OpenCode · opencode.json / opencode.jsonc
+If a task change fails or its outcome is unclear, check the task before retrying.
 
-```json
-{
-  "mcp": {
-    "qingdan": {
-      "type": "local",
-      "command": [
-        "C:\\path\\to\\Qingdan.exe",
-        "--mcp"
-      ],
-      "environment": {
-        "QINGDAN_AGENT_ENDPOINT": "http://127.0.0.1:<port-from-settings>/tools",
-        "QINGDAN_AGENT_TOKEN": "<your-one-time-token>",
-        "ELECTRON_NO_ATTACH_CONSOLE": "1"
-      },
-      "enabled": true
-    }
-  }
-}
-```
-
-Copy the token once into your MCP client's private configuration. Prefer its secure secret facility, if available. Then choose **Clear token** and clear your clipboard. Closing the panel also removes the displayed token; Qingdan does not show it again. Never put it in a URL, command-line argument, chat or screenshot. Use the endpoint shown in settings, not your private server URL. Update both endpoint and token after restarting Qingdan, and the token after renewing a grant.
-
-You can start by asking your agent to list the allowed lists or find open tasks. Confirm that the intended account and list are being used before requesting changes. Agents should reuse the same operation ID when retrying an uncertain write and reread a task after a revision conflict, rather than silently overwriting a later edit.
-
-### Running from source
-
-For an unpackaged checkout, use Node.js 24. From `application`, run `npm ci` and `npm run build`. For Codex, set `command` to `node` (or its absolute path) and `args` to `["/absolute/path/to/qingdan/application/dist/server/mcp.mjs"]`. For OpenCode, set the `command` array to `["node", "/absolute/path/to/qingdan/application/dist/server/mcp.mjs"]`. Keep the same descriptor or Windows fallback variables under `env` or `environment`, respectively. Run Node directly rather than `npm run` to avoid package-manager output on the MCP stdio stream. Settings shows source-path placeholders when no packaged launcher is available.
-
-## Change or revoke access
-
-- Change the selected lists or read/write permission, review again, and choose **Apply permissions and renew access**. This replaces the old credential. Restart the MCP client; on Windows also update the token configuration.
-- Choose **Revoke agent access** to stop access immediately. No confirmation box is needed to revoke.
-- Grants are session-only. Quitting/restarting Qingdan, signing out or switching server invalidates access. Reopen settings, verify the target, grant access again, and restart your MCP client. The same target retains its descriptor path; on Windows refresh the endpoint and token.
-- Access is bound to the verified account and server. It does not silently follow a newly selected account or server. Disconnected or unauthenticated requests fail rather than being queued for later.
-
-If a settings change has an uncertain outcome, reopen the panel to check its current state before renewing access. If the agent cannot connect, check that Qingdan is still running, the correct server/account is signed in, the private server supports this feature, and the configured credential file (or Windows endpoint and token) belongs to the current grant. Do not expose the gateway port on your network as a workaround.
+Linux requires working Electron sandbox support. Ubuntu 24.04 may prevent this version's AppImage from starting, even after extraction. Do not disable the sandbox to work around it; this version does not include a fix for that system restriction.

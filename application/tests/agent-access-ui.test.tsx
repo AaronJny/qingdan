@@ -163,6 +163,10 @@ test('Protected descriptor configuration exposes a path, never a token or endpoi
     assert.equal(host.querySelector('pre'), null, 'Reading settings must not imply a grant');
     await act(async () => Array.from(host.querySelectorAll<HTMLLabelElement>('label')).find(label => label.textContent!.startsWith('I have reviewed'))!.querySelector<HTMLInputElement>('input')!.click());
     await act(async () => Array.from(host.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent!.startsWith('Enable agent'))!.click());
+    assert.equal(host.querySelector<HTMLSelectElement>('select')!.value, 'generic');
+    assert.deepEqual(JSON.parse(host.querySelector('pre')!.textContent!), { command: '/synthetic/Qingdan', args: ['--mcp'], env: { QINGDAN_AGENT_DESCRIPTOR: descriptorPath } });
+    assert.ok(host.textContent!.includes('not a universal client configuration file'));
+    await act(async () => { const select = host.querySelector<HTMLSelectElement>('select')!; select.value = 'codex'; select.dispatchEvent(new window.Event('change', { bubbles: true })); });
     assert.ok(host.querySelector('pre')!.textContent!.startsWith('[mcp_servers.qingdan]'));
     await act(async () => { const select = host.querySelector<HTMLSelectElement>('select')!; select.value = 'opencode'; select.dispatchEvent(new window.Event('change', { bubbles: true })); });
     const config = JSON.parse(host.querySelector('pre')!.textContent!);
@@ -179,6 +183,12 @@ test('Protected descriptor configuration exposes a path, never a token or endpoi
 
 test('Client snippets escape paths and keep Windows credentials as placeholders', () => {
   const settings = { ...base, enabled: true, mcpCommand: 'C:\\Program Files\\Qingdan\\Qingdan.exe', mcpArgs: ['--mcp'], endpoint: 'http://127.0.0.1:32123/tools' };
+  const generic = JSON.parse(agentClientConfig(settings, 'generic'));
+  assert.deepEqual(generic.args, ['--mcp']);
+  assert.equal(generic.command, settings.mcpCommand);
+  assert.equal(generic.env.ELECTRON_NO_ATTACH_CONSOLE, '1');
+  assert.equal(generic.env.QINGDAN_AGENT_TOKEN, '<access-token>');
+  assert.equal(generic.mcpServers, undefined);
   const codex = agentClientConfig(settings, 'codex');
   assert.ok(codex.startsWith('[mcp_servers.qingdan]'));
   assert.ok(codex.includes('[mcp_servers.qingdan.env]'));

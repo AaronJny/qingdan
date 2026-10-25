@@ -5,13 +5,14 @@ import { desktopBridge, type AgentAccessSettings } from '../lib/desktop-connecti
 import { displayRecordTitle } from '../lib/i18n-records';
 import type { Bootstrap } from '../lib/types';
 
-export function agentClientConfig(settings: AgentAccessSettings, client: 'codex' | 'opencode'): string {
+export function agentClientConfig(settings: AgentAccessSettings, client: 'generic' | 'codex' | 'opencode'): string {
   const command = settings.mcpCommand || 'node';
   const args = settings.mcpCommand ? settings.mcpArgs || ['--mcp'] : ['/absolute/path/to/qingdan/application/dist/server/mcp.mjs'];
   const env: Record<string, string> = settings.descriptorPath ? { QINGDAN_AGENT_DESCRIPTOR: settings.descriptorPath } : { QINGDAN_AGENT_ENDPOINT: settings.endpoint || '<endpoint-from-settings>', QINGDAN_AGENT_TOKEN: '<access-token>' };
   // Keep Electron's Windows GUI launcher attached to the MCP client's pipes,
   // rather than replacing them with the parent's interactive console.
   if (settings.mcpCommand && /\.exe$/i.test(settings.mcpCommand)) env.ELECTRON_NO_ATTACH_CONSOLE = '1';
+  if (client === 'generic') return JSON.stringify({ command, args, env }, null, 2);
   if (client === 'opencode') return JSON.stringify({ mcp: { qingdan: { type: 'local', command: [command, ...args], environment: env, enabled: true } } }, null, 2);
   return ['[mcp_servers.qingdan]', 'command = ' + JSON.stringify(command), 'args = ' + JSON.stringify(args), '', '[mcp_servers.qingdan.env]', ...Object.entries(env).map(([key, value]) => key + ' = ' + JSON.stringify(value))].join('\n');
 }
@@ -25,7 +26,7 @@ export default function AgentAccessSettingsPanel({ state }: { state: Bootstrap }
   const [writeEnabled, setWriteEnabled] = useState(false);
   const [reviewed, setReviewed] = useState(false);
   const [token, setToken] = useState('');
-  const [client, setClient] = useState<'codex' | 'opencode'>('codex');
+  const [client, setClient] = useState<'generic' | 'codex' | 'opencode'>('generic');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -110,8 +111,8 @@ export default function AgentAccessSettingsPanel({ state }: { state: Bootstrap }
         <h4>{tr('agentAccess.configuration')}</h4>
         <p className="form-help">{tr(settings.mcpCommand ? 'agentAccess.packagedConfigHelp' : 'agentAccess.configHelp')}</p>
         <p className="form-help">{tr(settings.descriptorPath ? 'agentAccess.descriptorHelp' : 'agentAccess.tokenConfigHelp')}</p>
-        <label>{tr('agentAccess.client')}<select aria-label={tr('agentAccess.client')} value={client} onChange={event => setClient(event.target.value as 'codex' | 'opencode')}><option value="codex">Codex</option><option value="opencode">OpenCode</option></select></label>
-        <p className="form-help">{tr(client === 'codex' ? 'agentAccess.codexHelp' : 'agentAccess.opencodeHelp')}</p>
+        <label>{tr('agentAccess.client')}<select aria-label={tr('agentAccess.client')} value={client} onChange={event => setClient(event.target.value as 'generic' | 'codex' | 'opencode')}><option value="generic">{tr('agentAccess.generic')}</option><option value="codex">Codex · {tr('agentAccess.templateOnly')}</option><option value="opencode">OpenCode · {tr('agentAccess.templateOnly')}</option></select></label>
+        <p className="form-help">{tr(client === 'generic' ? 'agentAccess.genericHelp' : client === 'codex' ? 'agentAccess.codexHelp' : 'agentAccess.opencodeHelp')}</p>
         <pre className="agent-config">{agentClientConfig(settings, client)}</pre>
         <button type="button" onClick={async () => {
           try { await navigator.clipboard.writeText(agentClientConfig(settings, client)); if (alive.current) setMessage(tr('agentAccess.configCopied')); }

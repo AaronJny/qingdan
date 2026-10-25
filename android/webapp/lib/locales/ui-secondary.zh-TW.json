@@ -704,10 +704,13 @@
   "agentAccess.descriptorHelp": "This configuration references a private credential file, not the token itself. Revoking access or quitting normally removes the file. Re-enabling the same server and account restores this path; another target gets a different path. Restart the MCP client after renewing access. Never upload or share the file.",
   "agentAccess.tokenConfigHelp": "Protected credential files are unavailable on this platform. Put the one-time token in the environment variable below, never in a URL or command-line argument. Update the endpoint and token after a new desktop session.",
   "agentAccess.packagedConfigHelp": "Add this configuration to an MCP client that supports local stdio. It uses your installed Qingdan executable; no separate Node.js is needed. The Qingdan desktop app must remain running and signed in.",
-  "agentAccess.client": "MCP client",
+  "agentAccess.client": "連線格式",
   "agentAccess.codexHelp": "Merge this TOML into ~/.codex/config.toml. Update an existing qingdan entry instead of duplicating it; keep your other settings. Restart Codex afterward.",
   "agentAccess.opencodeHelp": "Merge the qingdan entry into the mcp object in your opencode.json or opencode.jsonc. Keep other configuration entries, then restart OpenCode.",
-  "agentAccess.copyConfig": "Copy configuration",
-  "agentAccess.configCopied": "Configuration copied. Merge it into the selected client’s settings; Windows token placeholders still need to be replaced privately.",
-  "agentAccess.configCopyFailed": "Could not copy. Select and copy the configuration manually."
+  "agentAccess.copyConfig": "複製連線資訊",
+  "agentAccess.configCopied": "已複製連線資訊。請依用戶端格式填寫，並私下替換權杖預留位置。",
+  "agentAccess.configCopyFailed": "Could not copy. Select and copy the configuration manually.",
+  "agentAccess.generic": "通用本機 stdio",
+  "agentAccess.templateOnly": "格式範本",
+  "agentAccess.genericHelp": "下方 command、args 和 env 欄位描述標準本機 stdio 連線，並非所有用戶端通用的設定檔。請依所用 MCP 用戶端的格式填寫。Codex 和 OpenCode 僅提供可選格式範本，不限制協定支援範圍。"
 }

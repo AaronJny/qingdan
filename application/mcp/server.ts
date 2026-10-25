@@ -1,4 +1,5 @@
 import { GatewayError } from './errors.ts';
+import applicationPackage from '../package.json' with { type: 'json' };
 import { McpServer, fromJsonSchema, type JsonSchemaType, type ToolAnnotations } from '@modelcontextprotocol/server';
 
 export interface QingdanToolDefinition {
@@ -13,7 +14,7 @@ export type InvokeQingdanTool = (name: string, args: Record<string, unknown>, si
 
 /** SDK owns framing, discovery/initialize, validation and protocol-version handling. */
 export function createQingdanMcpServer(tools: readonly QingdanToolDefinition[], invoke: InvokeQingdanTool) {
-  const server = new McpServer({ name: 'qingdan', version: '1.3.6' });
+  const server = new McpServer({ name: 'qingdan', version: applicationPackage.version });
   for (const tool of tools) {
     server.registerTool(tool.name, {
       description: tool.description,
