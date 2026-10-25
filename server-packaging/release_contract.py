@@ -4,19 +4,21 @@ import json
 import re
 from pathlib import Path, PurePosixPath
 
-NODE_VERSION = '24.19.0'
+# Security release includes the Brotli decoder fix (CVE-2026-111497).
+# https://nodejs.org/en/blog/release/v24.22.1
+NODE_VERSION = '24.22.1'
 NODE_URL = f'https://nodejs.org/dist/v{NODE_VERSION}/'
 ARCHIVE_SHA256 = {
-    'linux-x64': '14b342e71204f811bde6153be8e04b62aef63c236fef92b55f9c83154b409647',
-    'darwin-arm64': '3f1cf157479c1480352083105e13faf9d008ede98e7e157746b6df940d197b94',
+    'linux-x64': '6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6',
+    'darwin-arm64': '654ba79de6155647e22321932b45f2a1ccb705976cc337c9b8e278beb085a628',
 }
 # Byte sizes measured from the complete archives matching the fixed official SHA256 values.
-ARCHIVE_BYTES = {'linux-x64': 31633904, 'darwin-arm64': 27162556}
+ARCHIVE_BYTES = {'linux-x64': 32026916, 'darwin-arm64': 27518756}
 BINARY_SHA256 = {
-    'linux-x64': 'bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12',
-    'darwin-arm64': '27db838bb204ef7c21df2931f5656e4c8fb32e6e947f363a402b49714d32b5b1',
+    'linux-x64': 'e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb',
+    'darwin-arm64': '6f32069480ec14d52b6d7b1f3c7124cfbbc46203abf5ddf5c65b127435f3f329',
 }
-LICENSE_SHA256 = '148eacf7863ef4329224a29398623077200a27194aa075569faf4a0a85566ca5'
+LICENSE_SHA256 = '5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace'
 CHECKS = ('test', 'test:ui', 'test:server', 'typecheck', 'build')
 ENTRYPOINTS = ('start.sh', 'start.command', 'stop.sh', 'stop.command',
                'start-accounts.sh', 'start-accounts.command', 'init-admin.sh', 'init-admin.command')

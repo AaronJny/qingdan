@@ -9,3 +9,18 @@ function transport(responses:{status:number;headers?:Record<string,string>;body?
 test('redirect repeats public address resolution, cross-origin tokens and private redirect are blocked',async()=>{let calls=0;const seen:any[]=[];const fetcher=createSafeCalendarFetcher(async(host)=>{calls++;if(host==='127.0.0.1')throw Error('blocked');return{address:'8.8.8.8',family:4}},transport([{status:302,headers:{location:'/updated'}},{status:200,body:'OK'}],seen));assert.equal((await fetcher('https://example.test/a?token=hidden')).text,'OK');assert.equal(calls,2);const cross=createSafeCalendarFetcher(async()=>({address:'8.8.8.8',family:4}),transport([{status:302,headers:{location:'https://127.0.0.1/private'}}]));await assert.rejects(cross('https://example.test/a?token=hidden'),/重定向/);assert.equal(seen[0].options.agent,false);let pinned:any;seen[0].options.lookup('example.test',{all:true},(_:any,result:any)=>pinned=result);assert.deepEqual(pinned,[{address:'8.8.8.8',family:4}])});
 test('response byte cap, decompression rejection, absolute timeout and conditional headers are enforced',async()=>{const address=async()=>({address:'8.8.8.8',family:4});await assert.rejects(createSafeCalendarFetcher(address,transport([{status:200,body:'0123456789'}]))('https://example.test/a',{maxBytes:4}),/大小/);await assert.rejects(createSafeCalendarFetcher(address,transport([{status:200,headers:{'content-encoding':'gzip'}}]))('https://example.test/a'),/压缩/);await assert.rejects(createSafeCalendarFetcher(address,transport([{status:200,hang:true}]))('https://example.test/a',{timeoutMs:5}),/超时/);const seen:any[]=[];const result=await createSafeCalendarFetcher(address,transport([{status:304}],seen))('https://example.test/a',{headers:{'If-None-Match':'safe-tag','Authorization':'must-not-send'}});assert.equal(result.status,304);assert.equal(seen[0].options.headers['If-None-Match'],'safe-tag');assert.equal(seen[0].options.headers.Authorization,undefined)});
 test('holiday no-redirect mode keeps each logical fetch to one actual request',async()=>{const seen:any[]=[];const fetcher=createSafeCalendarFetcher(async()=>({address:'8.8.8.8',family:4}),transport([{status:302,headers:{location:'/again'}}],seen));await assert.rejects(fetcher('https://example.test/source',{maxRedirects:0}),/重定向/);assert.equal(seen.length,1)});
+test('Brotli responses abort the request before any body listener is attached',async()=>{
+ const seen:any[]=[];let destroyed=false;let bodyListeners=0;
+ const request=((url:any,options:any,callback:any)=>{
+  seen.push({url:String(url),options});const req:any=new EventEmitter();
+  req.destroy=(error?:Error)=>{destroyed=true;if(error)req.emit('error',error);req.emit('close');return req};
+  req.end=()=>queueMicrotask(()=>{
+   const res:any=new EventEmitter();res.statusCode=200;res.headers={'content-encoding':'br'};
+   res.destroy=()=>res;callback(res);bodyListeners=res.listenerCount('data');
+  });return req;
+ })as any;
+ const fetcher=createSafeCalendarFetcher(async()=>({address:'8.8.8.8',family:4}),request);
+ await assert.rejects(fetcher('https://example.test/calendar.ics'),/压缩/);
+ assert.equal(seen[0].options.headers['Accept-Encoding'],'identity');
+ assert.equal(destroyed,true);assert.equal(bodyListeners,0);
+});

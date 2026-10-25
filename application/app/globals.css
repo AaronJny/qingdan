@@ -136,3 +136,9 @@
 .month-span.continues-after::after{right:4px;transform:rotate(45deg)}
 .month-span.is-active>.calendar-event{box-shadow:inset 0 0 0 1px var(--blue);filter:brightness(.97)}
 @media(max-width:640px){.month-week-events{margin-top:32px}.month-span{margin-left:1px;margin-right:1px}.month-span.continues-before{margin-left:0}.month-span.continues-after{margin-right:0}}
+
+/* Task identity colors remain stable through date changes and week wraps. */
+.calendar-event.task-colored{background:var(--task-surface);border-left-color:var(--task-edge)}
+:root[data-theme=dark] .calendar-event.task-colored{background:var(--task-dark-surface);border-left-color:var(--task-dark-edge)}
+.calendar-event.task-colored time{color:inherit}
+.calendar-event.task-colored.done .calendar-event-main>span{color:inherit;opacity:.75}

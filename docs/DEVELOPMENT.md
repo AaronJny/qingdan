@@ -5,7 +5,7 @@ Technical setup and build references for contributors and server administrators.
 ## Run from source
 
 
-Requires **Node.js 24** and npm. From the repository root, run:
+Requires **Node.js 24.22.1 or a newer patched 24.x release** and npm. From the repository root, run:
 
 ```sh
 cd application
@@ -21,7 +21,7 @@ See [application/README.md](../application/README.md) for self-hosting configura
 ## 从源码运行
 
 
-需要 **Node.js 24** 和 npm。在仓库根目录执行：
+需要 **Node.js 24.22.1 或更新的 24.x 安全版本** 和 npm。在仓库根目录执行：
 
 ```sh
 cd application

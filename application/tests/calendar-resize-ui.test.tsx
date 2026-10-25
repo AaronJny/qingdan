@@ -242,3 +242,21 @@ test('keyboard resizing across a week creates a continuation and restores the tr
     assert.equal(f.host.querySelectorAll('[data-calendar-resize=end]').length,1);
   } finally { await f.close(); }
 });
+
+
+test('task tones differ within one list and survive week wraps, resize and selection',async()=>{
+  const f=await mount([task({title:'Plan a picnic',listId:'one-list'}),{...task({title:'Read a chapter',listId:'one-list'}),id:'task-two'}]);
+  try{
+    const bars=()=>[...f.host.querySelectorAll<HTMLElement>('[data-calendar-task="task"]')];
+    const tone=bars()[0].style.getPropertyValue('--task-surface');assert.ok(tone);
+    assert.ok(bars().length>1);assert.ok(bars().every(bar=>bar.style.getPropertyValue('--task-surface')===tone));
+    assert.notEqual(f.host.querySelector<HTMLElement>('[data-calendar-task="task-two"]')!.style.getPropertyValue('--task-surface'),tone);
+    await resize(f,'end','2026-10-27');
+    assert.ok(bars().every(bar=>bar.style.getPropertyValue('--task-surface')===tone));
+    assert.equal(f.tasks[0].data.color,undefined,'presentation does not persist colors into user records');
+    const select=f.host.querySelector<HTMLElement>('[aria-label="Calendar batch selection"]');assert.ok(select);
+    await act(async()=>select.click());await act(async()=>bars()[0].querySelector<HTMLElement>('.calendar-event-main')!.click());
+    assert.ok(bars().every(bar=>bar.classList.contains('batch-selected')));
+    assert.ok(bars().every(bar=>bar.style.getPropertyValue('--task-surface')===tone));
+  }finally{await f.close()}
+});

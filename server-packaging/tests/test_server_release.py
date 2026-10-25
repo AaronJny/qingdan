@@ -48,17 +48,17 @@ class ServerReleaseTests(unittest.TestCase):
         for arch in ('linux-x64', 'darwin-arm64'):
             node = (b'\x7fELF\x02\x01\x00\x00' if arch == 'linux-x64' else b'\xcf\xfa\xed\xfe\x00\x00\x00\x00') + b'fixture-' + arch.encode()
             self.binary_hashes[arch] = __import__('hashlib').sha256(node).hexdigest()
-            name = f'node-v24.19.0-{arch}.tar.xz'
+            name = f'node-v24.22.1-{arch}.tar.xz'
             with tarfile.open(self.nodes / name, 'w:xz') as archive:
                 for relative, content in (('bin/node', node), ('LICENSE', self.license)):
                     info = tarfile.TarInfo(name[:-7] + '/' + relative)
                     info.size = len(content)
                     archive.addfile(info, io.BytesIO(content))
             self.archive_hashes[arch] = contract.digest(self.nodes / name)
-        (self.nodes / 'SHASUMS256.txt').write_text(''.join(f'{value}  node-v24.19.0-{arch}.tar.xz\n' for arch, value in self.archive_hashes.items()))
+        (self.nodes / 'SHASUMS256.txt').write_text(''.join(f'{value}  node-v24.22.1-{arch}.tar.xz\n' for arch, value in self.archive_hashes.items()))
         self.addCleanup(mock.patch.stopall)
         mock.patch.dict(contract.ARCHIVE_SHA256, self.archive_hashes).start()
-        mock.patch.dict(contract.ARCHIVE_BYTES, {arch: (self.nodes / f'node-v24.19.0-{arch}.tar.xz').stat().st_size for arch in self.archive_hashes}).start()
+        mock.patch.dict(contract.ARCHIVE_BYTES, {arch: (self.nodes / f'node-v24.22.1-{arch}.tar.xz').stat().st_size for arch in self.archive_hashes}).start()
         mock.patch.dict(contract.BINARY_SHA256, self.binary_hashes).start()
         license_hash = __import__('hashlib').sha256(self.license).hexdigest()
         for module in (contract, assembler, verifier):
@@ -227,7 +227,7 @@ class ServerReleaseTests(unittest.TestCase):
         self.assertFalse(self.server.exists())
 
     def test_unverified_runtime_archive_rejected_and_staging_cleaned(self):
-        (self.nodes / 'node-v24.19.0-darwin-arm64.tar.xz').write_bytes(b'not pinned')
+        (self.nodes / 'node-v24.22.1-darwin-arm64.tar.xz').write_bytes(b'not pinned')
         with self.assertRaisesRegex(ValueError, 'archive mismatch'):
             self.build()
         self.assertFalse(self.server.exists())
@@ -241,7 +241,7 @@ class ServerReleaseTests(unittest.TestCase):
         self.assertFalse(list(self.root.glob('.qingdan-server-stage-*')))
 
     def test_checksum_manifest_cannot_override_fixed_pin(self):
-        (self.nodes / 'SHASUMS256.txt').write_text('e' * 64 + '  node-v24.19.0-linux-x64.tar.xz\n')
+        (self.nodes / 'SHASUMS256.txt').write_text('e' * 64 + '  node-v24.22.1-linux-x64.tar.xz\n')
         with self.assertRaisesRegex(ValueError, 'Pinned official archive checksum mismatch'):
             self.build()
         self.assertFalse(self.server.exists())

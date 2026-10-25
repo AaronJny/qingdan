@@ -521,9 +521,9 @@ def main(argv=None):
     download = f'https://github.com/{repository}/releases/download/{tag}'
     notes = '\n'.join([f'# 青单 / Qingdan {tag}', '', status, '',
                        '## 更新 / What’s new',
-                       '- 快速添加的日期语言提示移到输入框外下方，移除顶部看似可输入却无法操作的区域。 / Move date-language guidance below the quick-entry field, outside its border, removing the misleading inactive input area.',
-                       '- 点击输入框留白或左侧加号即可聚焦输入，并显示清晰焦点边框。 / Click anywhere in the field or the leading plus to start typing, with a clear focus border.',
-                       '- 产品说明支持中英文切换，英文说明配有英文界面截图。 / The product guide is available in English and Chinese, with English interface screenshots for the English guide.',
+                       '- 服务端运行时升级到 Node.js 24.22.1，修复 Brotli 解码安全漏洞；Docker 部署使用固定的修补版镜像。 / Update the server runtime to Node.js 24.22.1 to fix the Brotli decoder vulnerability, and pin Docker deployments to the patched image.',
+                       '- 日历任务使用柔和的不同配色，更容易区分；同一任务跨日期、调整时长或选中时保持一致。 / Distinguish calendar tasks with soft colors that stay consistent across dates, resizing and selection.',
+                       '- 浅色与深色主题均提供对应配色，桌面、网页和 Android 同步支持。 / Matching light and dark palettes are available on desktop, web and Android.',
                        '', '## 下载 / Downloads',
                        f'- macOS Apple Silicon：[DMG]({download}/Qingdan-{version}-mac-arm64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-arm64.zip)',
                        f'- macOS Intel：[DMG]({download}/Qingdan-{version}-mac-x64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-x64.zip)',

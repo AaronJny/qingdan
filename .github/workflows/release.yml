@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: '24.19.0'
+  NODE_VERSION: '24.22.1'
 
 jobs:
   metadata:
@@ -70,8 +70,8 @@ jobs:
       - name: 下载并验证官方固定运行时
         run: |
           mkdir -p release-build/node-archives
-          for file in SHASUMS256.txt node-v24.19.0-linux-x64.tar.xz node-v24.19.0-darwin-arm64.tar.xz; do
-            curl --fail --location --proto '=https' --tlsv1.2 --retry 3 "https://nodejs.org/dist/v24.19.0/$file" -o "release-build/node-archives/$file"
+          for file in SHASUMS256.txt node-v24.22.1-linux-x64.tar.xz node-v24.22.1-darwin-arm64.tar.xz; do
+            curl --fail --location --proto '=https' --tlsv1.2 --retry 3 "https://nodejs.org/dist/v24.22.1/$file" -o "release-build/node-archives/$file"
           done
           python3 server-packaging/assemble.py --app release-build/app --nodes release-build/node-archives --output release-build/qingdan-server
       - name: 生成 ZIP 并独立解压验收

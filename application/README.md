@@ -4,7 +4,7 @@
 
 ## 本机使用
 
-需要 Node.js 24。在 `application/` 目录运行：
+需要 Node.js 24.22.1 或更新的 24.x 安全版本。在 `application/` 目录运行：
 
 ```sh
 npm ci

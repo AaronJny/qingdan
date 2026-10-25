@@ -2,7 +2,7 @@
 
 本文面向桌面端开发和发行维护。安装与使用见 [桌面端说明](../README.md)。
 
-需要 Node.js 24.19.0、Python 3、Electron 44.6.0 和 electron-builder 26.15.3。内置后端由同仓库 `application/` 源码生成。
+需要 Node.js 24.22.1、Python 3、Electron 44.6.0 和 electron-builder 26.15.3。内置后端由同仓库 `application/` 源码生成。
 
 ```sh
 cd application
