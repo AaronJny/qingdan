@@ -64,6 +64,8 @@ QINGDAN_AGENT_DESCRIPTOR = "<private-credential-file-path-from-settings>"
 
 请保护此文件，不要上传、提交到源码仓库或分享其内容。使用青单显示的准确程序路径和凭据路径。macOS 的命令指向应用包内部的可执行文件，而非 `.app` 文件夹；Windows 指向 `Qingdan.exe`。`--mcp` 进程仅运行 stdio 适配器，不会再打开图形窗口，但仍需要已经运行的桌面中转服务。
 
+Linux 桌面及 MCP 进程需要系统支持 Electron 沙箱。Ubuntu 24.04 的用户命名空间策略可能阻止 AppImage 启动，解压也不能消除该限制。请保留沙箱保护；此版本不会自动调整系统安全策略。
+
 ### Windows 备用方式
 
 首版尚未验证 Windows 凭据文件的 ACL，因此使用明确的环境变量配置：
@@ -78,6 +80,7 @@ args = ["--mcp"]
 [mcp_servers.qingdan.env]
 QINGDAN_AGENT_ENDPOINT = "http://127.0.0.1:<port-from-settings>/tools"
 QINGDAN_AGENT_TOKEN = "<your-one-time-token>"
+ELECTRON_NO_ATTACH_CONSOLE = "1"
 ```
 
 #### OpenCode · opencode.json / opencode.jsonc
@@ -93,7 +96,8 @@ QINGDAN_AGENT_TOKEN = "<your-one-time-token>"
       ],
       "environment": {
         "QINGDAN_AGENT_ENDPOINT": "http://127.0.0.1:<port-from-settings>/tools",
-        "QINGDAN_AGENT_TOKEN": "<your-one-time-token>"
+        "QINGDAN_AGENT_TOKEN": "<your-one-time-token>",
+        "ELECTRON_NO_ATTACH_CONSOLE": "1"
       },
       "enabled": true
     }

@@ -7,6 +7,7 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync, rmSync, chmodSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { Client } from '@modelcontextprotocol/client';
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
 import { createGatewayInvoker, parseGatewayEndpoint } from './gateway.ts';
@@ -99,6 +100,45 @@ test('bad startup emits no stdout or secrets and exits nonzero', async () => {
   child.stderr.on('data', chunk => { stderr += chunk; });
   const [code] = await once(child, 'close');
   assert.equal(code, 1); assert.equal(stdout, ''); assert(!stderr.includes(token));
+});
+
+test('official clients work with the immutable Windows Electron stdin EOF shim', async () => {
+  let calls = 0;
+  const gateway = await mockGateway(async (req, res) => {
+    assert.equal(req.headers.authorization, `Bearer ${token}`);
+    let body = ''; for await (const chunk of req) body += chunk;
+    assert.deepEqual(JSON.parse(body), { name: 'list_lists', arguments: {} });
+    calls++;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ result: { lists: [{ id: 'fictional-windows-list' }] } }));
+  });
+  const entry = pathToFileURL(join(process.cwd(), process.env.QINGDAN_TEST_BUILT_MCP === '1' ? 'dist/server/mcp.mjs' : 'mcp/main.ts')).href;
+  const shim = `
+    import { Readable } from 'node:stream';
+    const fakeStdin = Readable.from([]);
+    Object.defineProperty(process, 'platform', { value: 'win32' });
+    Object.defineProperty(process.versions, 'electron', { value: 'synthetic-test' });
+    Object.defineProperty(process, 'stdin', { configurable: false, get: () => fakeStdin });
+    const { mcpInput } = await import(${JSON.stringify(entry)});
+    if (!mcpInput || mcpInput === fakeStdin) throw new Error('Used the Windows EOF shim');
+    mcpInput.once('end', () => process.exit(process.exitCode || 0));
+  `;
+  try {
+    for (const era of ['legacy', 'modern'] as const) {
+      const transport = new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', '--input-type=module', '-e', shim],
+        cwd: process.cwd(), env: { ...process.env as Record<string, string>, QINGDAN_AGENT_DESCRIPTOR: '', QINGDAN_AGENT_ENDPOINT: gateway.endpoint, QINGDAN_AGENT_TOKEN: token }, stderr: 'pipe' });
+      let stderr = ''; transport.stderr?.on('data', chunk => { stderr += chunk; });
+      const client = new Client({ name: 'qingdan-windows-stdin-test', version: '1.0.0' }, { versionNegotiation: { mode: era === 'legacy' ? 'legacy' : { pin: '2026-07-28' } } });
+      try {
+        await client.connect(transport, { timeout: 10000 });
+        assert.equal(client.getProtocolEra(), era);
+        assert.equal((await client.listTools()).tools.length, 6);
+        assert.deepEqual((await client.callTool({ name: 'list_lists', arguments: {} })).structuredContent, { result: { lists: [{ id: 'fictional-windows-list' }] } });
+        assert(!stderr.includes(token));
+      } finally { await client.close(); }
+    }
+    assert.equal(calls, 2);
+  } finally { gateway.server.closeAllConnections(); gateway.server.close(); }
 });
 
  test('gateway surfaces only stable error codes, rejects malformed or oversized success', async () => {

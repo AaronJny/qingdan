@@ -187,5 +187,7 @@ test('Client snippets escape paths and keep Windows credentials as placeholders'
   assert.deepEqual(openCode.command, [settings.mcpCommand, '--mcp']);
   assert.equal(openCode.environment.QINGDAN_AGENT_TOKEN, '<access-token>');
   assert.equal(openCode.environment.QINGDAN_AGENT_ENDPOINT, settings.endpoint);
+  assert.equal(openCode.environment.ELECTRON_NO_ATTACH_CONSOLE, '1');
+  assert.ok(codex.includes('ELECTRON_NO_ATTACH_CONSOLE = "1"'));
   assert.equal(openCode.type, 'local');
 });

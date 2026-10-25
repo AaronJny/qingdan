@@ -53,7 +53,9 @@ function fixture(t, options = {}) {
       return options.reservePort ? options.reservePort(preferred, signal) : preferred || nextPort++;
     },
     parentEnv: { HOME: '/home/owner', LANG: 'en_US.UTF-8', API_KEY: 'secret', NODE_OPTIONS: '--inspect', PUBLIC_URL: 'https://foreign.invalid' },
-    startupTimeoutMs: 200, shutdownTimeoutMs: 20, killTimeoutMs: 20,
+    // Successful asynchronous fixtures must tolerate shared-runner scheduling.
+    // Timeout-specific cases below supply their own short deadline explicitly.
+    startupTimeoutMs: 5000, shutdownTimeoutMs: 20, killTimeoutMs: 20,
     ...options.manager,
   });
   return { manager, userData, children, reservations, forks };

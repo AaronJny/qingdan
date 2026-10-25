@@ -9,6 +9,9 @@ export function agentClientConfig(settings: AgentAccessSettings, client: 'codex'
   const command = settings.mcpCommand || 'node';
   const args = settings.mcpCommand ? settings.mcpArgs || ['--mcp'] : ['/absolute/path/to/qingdan/application/dist/server/mcp.mjs'];
   const env: Record<string, string> = settings.descriptorPath ? { QINGDAN_AGENT_DESCRIPTOR: settings.descriptorPath } : { QINGDAN_AGENT_ENDPOINT: settings.endpoint || '<endpoint-from-settings>', QINGDAN_AGENT_TOKEN: '<access-token>' };
+  // Keep Electron's Windows GUI launcher attached to the MCP client's pipes,
+  // rather than replacing them with the parent's interactive console.
+  if (settings.mcpCommand && /\.exe$/i.test(settings.mcpCommand)) env.ELECTRON_NO_ATTACH_CONSOLE = '1';
   if (client === 'opencode') return JSON.stringify({ mcp: { qingdan: { type: 'local', command: [command, ...args], environment: env, enabled: true } } }, null, 2);
   return ['[mcp_servers.qingdan]', 'command = ' + JSON.stringify(command), 'args = ' + JSON.stringify(args), '', '[mcp_servers.qingdan.env]', ...Object.entries(env).map(([key, value]) => key + ' = ' + JSON.stringify(value))].join('\n');
 }

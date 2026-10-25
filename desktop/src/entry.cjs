@@ -7,12 +7,17 @@ if (process.argv.includes('--mcp')) {
   const index = process.argv.indexOf('--mcp');
   process.argv = [process.execPath, 'qingdan-mcp', ...process.argv.slice(index + 1)];
   // No BrowserWindow, profile selection, account login or grant creation occurs here.
-  const stop = () => app.exit(process.exitCode || 0);
-  process.stdin.once('end', stop);
+  let stopped = false;
+  const stop = () => { if (!stopped) { stopped = true; app.exit(process.exitCode || 0); } };
   process.once('SIGINT', stop);
   process.once('SIGTERM', stop);
   import(pathToFileURL(path.join(__dirname, '../backend/dist/server/mcp.mjs')).href)
-    .then(() => { if (process.exitCode) app.exit(process.exitCode); })
+    .then(({ mcpInput }) => {
+      if (process.exitCode || !mcpInput) { process.exitCode ||= 1; stop(); return; }
+      mcpInput.once('end', stop);
+      mcpInput.once('close', stop);
+      if (mcpInput.readableEnded || mcpInput.destroyed) stop();
+    })
     .catch(() => { process.stderr.write('Qingdan MCP adapter is unavailable. Reinstall a complete desktop build.\n'); app.exit(1); });
 } else {
   require('./main.cjs');

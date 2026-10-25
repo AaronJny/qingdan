@@ -28,7 +28,7 @@ function parseArgs(args) {
   return { arch, executable: path.resolve(values['--executable'] || executable), report: values['--report'] ? path.resolve(values['--report']) : undefined };
 }
 
-function fixtureEnvironment(fixture, endpoint, token, inherited) {
+function fixtureEnvironment(fixture, endpoint, token, inherited, platform = process.platform) {
   const env = { ...inherited };
   for (const key of Object.keys(env)) if (/^(?:QINGDAN_|ELECTRON_|NODE_|HTTP_PROXY$|HTTPS_PROXY$|ALL_PROXY$)/i.test(key)) delete env[key];
   Object.assign(env, {
@@ -38,6 +38,9 @@ function fixtureEnvironment(fixture, endpoint, token, inherited) {
     TMPDIR: path.join(fixture, 'tmp'), TMP: path.join(fixture, 'tmp'), TEMP: path.join(fixture, 'tmp'),
     QINGDAN_AGENT_ENDPOINT: endpoint, QINGDAN_AGENT_TOKEN: token,
   });
+  // Electron routes Windows GUI binaries to a console before application code.
+  // Preserve the MCP client's pipes, without enabling Node mode or changing fuses.
+  if (platform === 'win32') env.ELECTRON_NO_ATTACH_CONSOLE = '1';
   for (const key of ['APPDATA', 'LOCALAPPDATA', 'XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'XDG_DATA_HOME', 'TMPDIR']) fs.mkdirSync(env[key], { recursive: true });
   return env;
 }
@@ -133,7 +136,9 @@ async function runSmoke(options) {
         report.eras.push({ era, negotiated: true, sixToolsListed: true, toolCallPassed: true, eofExitCode: 0, secretAbsentFromStderr: true });
       } catch (error) {
         const diagnostic = stderr.replaceAll(token, '[redacted]').slice(-4000);
-        throw new Error(`${era} packaged MCP failed: ${String(error.message).replaceAll(token, '[redacted]')}${diagnostic ? `\n${diagnostic}` : ''}`);
+        const child = activeChild || transport._process;
+        const status = child ? ` (exit=${child.exitCode ?? 'pending'}, signal=${child.signalCode ?? 'none'}, pid=${child.pid ?? 'unavailable'})` : ' (session process unavailable)';
+        throw new Error(`${era} packaged MCP failed${status}: ${String(error.message).replaceAll(token, '[redacted]')}${diagnostic ? `\n${diagnostic}` : ''}`);
       } finally {
         if (activeChild && activeChild.exitCode === null && activeChild.signalCode === null) activeChild.kill('SIGKILL');
         await bounded(client.close(), 'Official client cleanup', 5000);

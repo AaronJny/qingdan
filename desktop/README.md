@@ -10,6 +10,8 @@
 - **Windows**：支持 x64。完整解压 ZIP 后运行 `Qingdan.exe`，所有文件应保留在同一目录。
 - **Linux**：支持 x64 图形桌面。为 AppImage 添加可执行权限后运行，需要系统支持 Electron 沙箱。不支持 FUSE 时，在空目录执行 `./Qingdan-版本-linux-x64.AppImage --appimage-extract`，再运行 `./squashfs-root/AppRun`。
 
+Ubuntu 24.04 等限制未安装应用使用用户命名空间的系统，可能阻止 AppImage 及其 MCP 进程启动；解压不能消除该限制。请保留系统沙箱保护，不使用禁用沙箱的启动参数。此版本未提供自动调整系统安全策略的安装器。
+
 macOS 版本尚无 Developer ID 签名或 Apple 公证，Windows 版本尚无发布者签名，系统可能阻止运行。遇到安全警告时，请先核实下载来源，保留系统安全设置。
 
 ## 本机与私服

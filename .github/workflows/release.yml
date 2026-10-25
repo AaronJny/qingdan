@@ -198,7 +198,10 @@ jobs:
   package-linux:
     name: Linux x64 客户端 AppImage
     needs: [metadata, verify]
-    runs-on: ubuntu-24.04
+    # Keep Chromium's normal unprivileged namespace sandbox for unpacked apps.
+    # Ubuntu 24.04 restricts it with AppArmor; do not disable that host policy.
+    # This supported runner retires 2027-04-17; revisit Linux packaging before then.
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

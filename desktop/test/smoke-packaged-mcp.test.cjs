@@ -14,7 +14,6 @@ test('packaged MCP smoke selects native product and rejects malformed options', 
   assert(options.executable.includes(path.join('desktop', 'dist')));
   for (const args of [['--arch', 'ia32'], ['--report'], ['--unknown', 'x'], ['--arch', 'x64', '--arch', 'x64']]) assert.throws(() => parseArgs(args));
 });
-
 test('packaged smoke uses synthetic profile directories and excludes inherited configuration', () => {
   const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'qingdan-mcp-env-test-'));
   try {
@@ -33,6 +32,19 @@ test('packaged smoke uses synthetic profile directories and excludes inherited c
 
 test('bounded phase rejects a stalled operation', async () => {
   await assert.rejects(bounded(new Promise(() => {}), 'synthetic stall', 10), /synthetic stall timed out/);
+});
+
+test('Windows smoke explicitly preserves client pipes without inheriting Electron overrides', () => {
+  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'qingdan-mcp-win-env-test-'));
+  try {
+    for (const platform of ['win32', 'linux', 'darwin']) {
+      const env = fixtureEnvironment(fixture, 'http://127.0.0.1:1234/tools', 'synthetic-only', {
+        ELECTRON_NO_ATTACH_CONSOLE: 'untrusted-value', ELECTRON_RUN_AS_NODE: '1', ELECTRON_NO_SANDBOX: '1',
+      }, platform);
+      assert.equal(env.ELECTRON_NO_ATTACH_CONSOLE, platform === 'win32' ? '1' : undefined);
+      assert.equal(env.ELECTRON_RUN_AS_NODE, undefined); assert.equal(env.ELECTRON_NO_SANDBOX, undefined);
+    }
+  } finally { fs.rmSync(fixture, { recursive: true, force: true }); }
 });
 
 test('EOF gate waits for a successful exit without sending termination signals', async () => {
@@ -58,6 +70,10 @@ test('every native desktop release gates artifact upload on packaged MCP smoke',
     const gate = section.indexOf('node scripts/smoke-packaged-mcp.cjs');
     assert(gate > section.indexOf(verification) && section.indexOf(verification) >= 0, `${job} must verify packaging first`);
     assert(gate < section.indexOf('actions/upload-artifact@'), `${job} must pass before upload`);
-    if (job === 'package-linux') assert(section.includes('xvfb-run --auto-servernum node scripts/smoke-packaged-mcp.cjs'));
+    if (job === 'package-linux') {
+      assert(section.includes('xvfb-run --auto-servernum node scripts/smoke-packaged-mcp.cjs'));
+      assert(section.includes('runs-on: ubuntu-22.04'));
+      assert(!/--no-sandbox|sudo\s|chmod\s+4755|sysctl|CHROME_DEVEL_SANDBOX/.test(section));
+    }
   }
 });

@@ -64,6 +64,8 @@ The private file contains the current loopback endpoint and token. It is created
 
 Keep the file private; do not upload it, commit it to source control or share its contents. Use the exact executable and credential paths shown by Qingdan. On macOS the command points to the executable inside the app bundle, not the `.app` folder; on Windows it points to `Qingdan.exe`. The `--mcp` process runs the stdio adapter without opening another GUI, but it still needs the already-running desktop gateway.
 
+On Linux, the desktop and its MCP process require working Electron sandbox support. Ubuntu 24.04 may block an unpacked AppImage under its user-namespace policy; extracting it does not remove that restriction. Keep sandbox protection enabled. This version does not automatically change system security policy.
+
 ### Windows fallback
 
 The initial implementation does not yet verify Windows credential-file ACLs, so it uses explicit environment variables instead:
@@ -78,6 +80,7 @@ args = ["--mcp"]
 [mcp_servers.qingdan.env]
 QINGDAN_AGENT_ENDPOINT = "http://127.0.0.1:<port-from-settings>/tools"
 QINGDAN_AGENT_TOKEN = "<your-one-time-token>"
+ELECTRON_NO_ATTACH_CONSOLE = "1"
 ```
 
 #### OpenCode · opencode.json / opencode.jsonc
@@ -93,7 +96,8 @@ QINGDAN_AGENT_TOKEN = "<your-one-time-token>"
       ],
       "environment": {
         "QINGDAN_AGENT_ENDPOINT": "http://127.0.0.1:<port-from-settings>/tools",
-        "QINGDAN_AGENT_TOKEN": "<your-one-time-token>"
+        "QINGDAN_AGENT_TOKEN": "<your-one-time-token>",
+        "ELECTRON_NO_ATTACH_CONSOLE": "1"
       },
       "enabled": true
     }
