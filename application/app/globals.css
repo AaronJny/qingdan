@@ -142,3 +142,10 @@
 :root[data-theme=dark] .calendar-event.task-colored{background:var(--task-dark-surface);border-left-color:var(--task-dark-edge)}
 .calendar-event.task-colored time{color:inherit}
 .calendar-event.task-colored.done .calendar-event-main>span{color:inherit;opacity:.75}
+
+.agent-access-panel fieldset { border: 1px solid var(--border, #d6d8dc); border-radius: 10px; padding: 12px; margin: 16px 0; }
+.agent-access-panel fieldset label { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0; }
+.agent-access-panel fieldset input[type="checkbox"] { width: auto; flex-shrink: 0; margin-top: 4px; }
+.agent-config { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; padding: 12px; border: 1px solid var(--border, #d6d8dc); border-radius: 8px; }
+.agent-token { margin-top: 16px; padding: 12px; border: 1px solid var(--border, #d6d8dc); border-radius: 8px; }
+.agent-token input { width: 100%; font-family: monospace; }

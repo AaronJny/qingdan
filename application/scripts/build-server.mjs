@@ -6,6 +6,7 @@ export function buildServer(outdir = 'dist/server') {
   return build({
     entryPoints: {
       main: 'server/main.ts',
+      mcp: 'mcp/main.ts',
       users: 'scripts/users.ts',
       'calendar-worker': 'lib/calendar-ics-worker.ts',
     },

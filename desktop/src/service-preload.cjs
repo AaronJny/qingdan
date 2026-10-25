@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('qingdanDesktop', Object.freeze({
     ipcRenderer.on('qingdan-desktop:language-changed', receive);
     return () => ipcRenderer.removeListener('qingdan-desktop:language-changed', receive);
   },
+  getAgentAccess: accountId => ipcRenderer.invoke('qingdan-desktop:get-agent-access', accountId),
+  saveAgentAccess: (accountId, settings) => ipcRenderer.invoke('qingdan-desktop:save-agent-access', accountId, settings),
   getConnection: () => ipcRenderer.invoke('qingdan-desktop:connection'),
   openConnectionSettings: () => ipcRenderer.invoke('qingdan-desktop:open-settings'),
   forgetReminders: (accountId, ids) => ipcRenderer.invoke('qingdan-desktop:forget-reminders', accountId, ids),

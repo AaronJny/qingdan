@@ -32,8 +32,8 @@ function verifyBackend(root, expectedVersion) {
   assert(validateLocalInfo({ app: 'qingdan', version: pkg.version, mode: 'local' }), 'Backend is outside the desktop 1.x compatibility range.');
   assert.match(manifest.source_snapshot_sha256, /^[a-f0-9]{64}$/);
   assert.equal(dependencies.source_snapshot_sha256, manifest.source_snapshot_sha256);
-  for (const key of ['test', 'test:ui', 'test:server', 'typecheck', 'build']) assert(manifest.checks?.[key], `Missing source check: ${key}`);
-  for (const required of ['dist/server/main.mjs', 'dist/server/users.mjs', 'dist/server/calendar-worker.mjs', 'dist/client/index.html', 'dist/client/offline-shell.html', 'dist/client/offline-shell-manifest.json', 'dist/client/qingdan-offline-worker.js', 'drizzle/meta/_journal.json']) assert(fs.statSync(path.join(root, required)).isFile(), `Missing runtime input: ${required}`);
+  for (const key of ['test', 'test:ui', 'test:server', 'test:mcp', 'test:mcp:built', 'typecheck', 'build']) assert(manifest.checks?.[key], `Missing source check: ${key}`);
+  for (const required of ['dist/server/main.mjs', 'dist/server/mcp.mjs', 'dist/server/users.mjs', 'dist/server/calendar-worker.mjs', 'dist/client/index.html', 'dist/client/offline-shell.html', 'dist/client/offline-shell-manifest.json', 'dist/client/qingdan-offline-worker.js', 'drizzle/meta/_journal.json']) assert(fs.statSync(path.join(root, required)).isFile(), `Missing runtime input: ${required}`);
   assert(files(path.join(root, 'drizzle')).some(name => name.endsWith('.sql')), 'No migrations.');
   const actual = files(root).filter(name => !name.startsWith('node_modules/') && name !== 'RUNTIME-MANIFEST.json');
   assert.deepEqual(Object.keys(manifest.files_sha256).sort(), actual.sort(), 'Runtime manifest file coverage differs.');

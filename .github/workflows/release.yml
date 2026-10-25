@@ -136,6 +136,7 @@ jobs:
           node scripts/smoke-local-session.cjs --report "${{ runner.temp }}/local-session-${{ matrix.arch }}.json"
           node scripts/package.cjs mac --${{ matrix.arch }} --dmg --zip
           node scripts/verify-desktop-archives.cjs mac --arch ${{ matrix.arch }}
+          node scripts/smoke-packaged-mcp.cjs --arch ${{ matrix.arch }} --report "${{ runner.temp }}/packaged-mcp-${{ matrix.arch }}.json"
           # Load the final packaged native binding with stock Electron; never weaken product fuses.
           node scripts/smoke-packaged-recovery.cjs --arch ${{ matrix.arch }} --report "${{ runner.temp }}/packaged-recovery-${{ matrix.arch }}.json"
           python3 ../.github/release/attach-native-smoke.py --arch ${{ matrix.arch }} --package dist/verified-mac-${{ matrix.arch }}.json --local-session "${{ runner.temp }}/local-session-${{ matrix.arch }}.json" --native-binding "${{ runner.temp }}/packaged-recovery-${{ matrix.arch }}.json"
@@ -182,6 +183,7 @@ jobs:
           npm ci
           node scripts/package.cjs win --x64 --zip
           node scripts/verify-desktop-archives.cjs win
+          node scripts/smoke-packaged-mcp.cjs --arch x64 --report "${{ runner.temp }}/packaged-mcp-windows.json"
           mkdir -p release
           cp dist/*.zip release/
           cp dist/verified-win-x64.json dist/verified-win-x64-archives.json ../backend-verification-windows.json docs/WINDOWS-START-HERE.txt release/
@@ -224,6 +226,7 @@ jobs:
         run: |
           npm ci
           node scripts/package.cjs linux --x64 --appimage
+          xvfb-run --auto-servernum node scripts/smoke-packaged-mcp.cjs --arch x64 --report "${{ runner.temp }}/packaged-mcp-linux.json"
           mkdir -p release
           cp dist/*.AppImage dist/verified-linux-x64.json dist/verified-linux-appimage-x64.json ../backend-verification-linux.json docs/LINUX-START-HERE.txt release/
           (cd release && sha256sum *.AppImage > SHA256SUMS-linux.txt)

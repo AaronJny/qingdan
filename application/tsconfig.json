@@ -40,7 +40,8 @@
     "server/**/*.ts",
     "scripts/**/*.ts",
     "offline/**/*.tsx",
-    "tests/**/*.tsx"
+    "tests/**/*.tsx",
+    "mcp/**/*.ts"
   ],
   "exclude": [
     "node_modules",

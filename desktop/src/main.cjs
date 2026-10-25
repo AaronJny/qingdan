@@ -13,6 +13,7 @@ const { probeServer, probeLocalPrincipal } = require('./server-info.cjs');
 const { LocalBusinessStore } = require('./local-business-store.cjs');
 const { handleLocalBusiness } = require('./local-business-ipc.cjs');
 const { createBackendManager } = require('./backend-manager.cjs');
+const { AgentGateway } = require('./agent-gateway.cjs');
 app.enableSandbox();
 protocol.registerSchemesAsPrivileged([{ scheme: SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } }]);
 const defaults = validateDefaults(JSON.parse(fs.readFileSync(path.join(__dirname, 'defaults.json'), 'utf8')));
@@ -31,6 +32,10 @@ const openedBusinessPrincipals = new Set();
 let quitting = false; let switching = false; let externalDialog = false;
 const pendingCloses = new Map(); let saveTimer; let status = 'connecting'; let lastWindowClosed = false;
 const sessions = new Map(); const connectionAttempts = new WeakMap(); let serverInfo = null; let connectionError = '';
+const agentGateway = new AgentGateway({ profile, mcpCommand: app.isPackaged ? process.execPath : null, selected: () => {
+  const selected = sessions.get(current.partition);
+  return { connection: current, fetch: selected?.fetch.bind(selected), available: !quitting && !switching && status === 'connected' && ownedLocalAvailable() };
+} });
 function show(window) { if (!window || window.isDestroyed()) return; if (window.isMinimized()) window.restore(); window.show(); window.focus(); }
 function response(body, contentType = 'text/html; charset=utf-8', code = 200) { return new Response(body, { status: code, headers: { 'content-type': contentType, 'content-security-policy': CSP, 'x-content-type-options': 'nosniff' } }); }
 function serviceSession(connection) {
@@ -45,6 +50,15 @@ function serviceSession(connection) {
       if (isLocalUiUrl(request.url, 'ui.css')) return response(css, 'text/css; charset=utf-8');
       if (isLocalUiUrl(request.url, 'status.js')) return response(fs.readFileSync(path.join(__dirname, 'status.js')), 'text/javascript; charset=utf-8');
       return response('Not found', 'text/plain', 404);
+    });
+    // Cookie changes invalidate the grant even when the replacement account has
+    // the same id. Nothing automatically rebinds access after a new login.
+    value.cookies?.on('changed', (_event, cookie) => {
+      if (current.partition === connection.partition && ['qingdan_session', '__Host-qingdan_session'].includes(cookie.name)) agentGateway.revoke();
+    });
+    value.webRequest.onBeforeSendHeaders?.((details, callback) => {
+      if (current.partition === connection.partition && isServiceUrl(details.url, connection) && ['/api/auth/login', '/api/auth/logout'].includes(new URL(details.url).pathname)) agentGateway.revoke();
+      callback({ requestHeaders: details.requestHeaders });
     });
     sessions.set(connection.partition,value);
   }
@@ -71,11 +85,13 @@ function loadTrusted(window, connection, url) {
   }).finally(() => clearTimeout(timer));
 }
 function showStatus(window = mainWindow) {
+  agentGateway.revoke();
   status = 'disconnected';
   if (window && !window.isDestroyed()) void window.loadURL(`${UI_ORIGIN}/status`).catch(() => {});
 }
 async function connectWindow(window, connection) {
   if (!window || window.isDestroyed() || quitting || connection !== current) return;
+  agentGateway.revoke();
   const attempt = (connectionAttempts.get(window) || 0) + 1; connectionAttempts.set(window, attempt);
   const active = () => !window.isDestroyed() && !quitting && connection === current && connectionAttempts.get(window) === attempt;
   status = 'connecting'; connectionError = '';
@@ -186,6 +202,7 @@ async function openConfiguredConnection(fromSwitch = false) {
   const selected = stored; const generation = ++openingGeneration;
   const active = () => !quitting && stored === selected && openingGeneration === generation;
   openingPromise = (async () => {
+    agentGateway.revoke();
     const url = selected.mode === 'builtin' ? await backend.ensureLocal() : selected.serverUrl;
     if (!fromSwitch && switchDecision) await switchDecision.promise;
     if (!active()) return null;
@@ -226,6 +243,7 @@ async function switchConnection(raw, requester) {
       if (result.response !== 0) return { ok: false, error: t("desktop.switch.canceled.your.current.connection.is.unchanged") };
     }
     // A declined or dismissed confirmation must not invalidate an earlier reconnect.
+    agentGateway.revoke();
     openingGeneration++; releaseDecision();
     await closeForSwitch(popupWindow); if (!active()) throw new Error(t("desktop.connection.canceled.your.current.connection.is.unchanged"));
     await closeForSwitch(mainWindow); if (!active()) throw new Error(t("desktop.connection.canceled.your.current.connection.is.unchanged"));
@@ -291,11 +309,13 @@ else {
   app.on('activate', () => { if (quitting || switching) return; if (mainWindow) show(mainWindow); else void openConfiguredConnection(); });
   app.on('window-all-closed', () => { lastWindowClosed = true; if (process.platform !== 'darwin' && !switching) app.quit(); });
   app.on('before-quit', () => {
+    agentGateway.revoke();
     quitting = true; clearTimeout(saveTimer); persistWindow();
     for (const pending of pendingCloses.values()) pending.reject(new Error(t("desktop.the.app.is.closing")));
     pendingCloses.clear();
   });
   app.on('will-quit', event => {
+    void agentGateway.close();
     if (exitAfterShutdown || !backend) return;
     event.preventDefault(); quitting = true; openingGeneration++;
     if (!shutdownPromise) shutdownPromise = backend.stop().catch(() => {}).finally(() => { exitAfterShutdown = true; app.exit(0); });
@@ -305,6 +325,8 @@ else {
   app.on('login', (event, _contents, _details, _auth, callback) => { event.preventDefault(); callback(); });
   void app.whenReady().then(() => {
     initializeLanguage(languageFile, app.getLocale?.() || 'zh-CN');
+    // Stale descriptors never restore grants; only explicit settings can enable.
+    try { agentGateway.cleanupStaleDescriptors(); } catch { console.warn('Stale Agent configuration cleanup could not be verified.'); }
     backend = createBackendManager({ utilityProcess, userData: profile, backendRoot: path.join(__dirname, '../backend'), bootstrapPath: path.join(__dirname, 'backend-bootstrap.cjs') });
     backend.on('failure', () => { if (stored.mode === 'builtin' && !quitting && !switching) { connectionError = t("desktop.the.local.service.stopped.please.reconnect.your"); if (mainWindow) showStatus(mainWindow); } });
     const local = session.fromPartition('qingdan-standalone-local-ui'); installLocalSession(local);
@@ -318,6 +340,17 @@ else {
     });
     ipcMain.on('qingdan-local-business',(event,request)=>{
       event.returnValue = handleLocalBusiness(event,request,{connection:current,backend,windows:[mainWindow,popupWindow],store:localBusinessStore,quitting,expectedSession:sessions.get(current.partition)});
+    });
+    const agentSender = event => {
+      if (quitting || switching || !trustedServiceSender(event, mainWindow?.webContents, current) || !isServiceUrl(event.senderFrame?.url, current) || event.sender.session !== sessions.get(current.partition)) throw new Error('Untrusted Agent settings sender');
+    };
+    ipcMain.handle('qingdan-desktop:get-agent-access', async (event, accountId) => {
+      agentSender(event); const result = await agentGateway.get(accountId); agentSender(event); return result;
+    });
+    ipcMain.handle('qingdan-desktop:save-agent-access', async (event, accountId, input) => {
+      agentSender(event); const result = await agentGateway.save(accountId, input);
+      try { agentSender(event); } catch (error) { agentGateway.revoke(); throw error; }
+      return result;
     });
     ipcMain.handle('qingdan-desktop:get-language', event => {
       if (quitting || (!trustedServiceSender(event, mainWindow?.webContents, current) && !trustedSettingsSender(event, settingsWindow?.webContents))) throw new Error('Untrusted language sender');

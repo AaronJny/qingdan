@@ -51,7 +51,7 @@ def prepare(source, output):
     evidence = json.loads((src / 'tests/standalone-evidence.json').read_text())
     package = json.loads((src / 'package.json').read_text())
     require(re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?', package['version']), 'A concrete release version is required')
-    require(all(evidence.get('checks', {}).get(key) for key in ['test', 'test:ui', 'test:server', 'typecheck', 'build']), 'Run the complete source check first')
+    require(all(evidence.get('checks', {}).get(key) for key in ['test', 'test:ui', 'test:server', 'test:mcp', 'test:mcp:built', 'typecheck', 'build']), 'Run the complete source check first')
     require(evidence.get('sha256'), 'A verified source snapshot is required')
     require(source_inventory(src) == evidence['sha256'], 'Source inventory differs from the complete checked snapshot')
     snapshot = hashlib.sha256(json.dumps(evidence['sha256'], sort_keys=True, separators=(',', ':')).encode()).hexdigest()
@@ -63,7 +63,7 @@ def prepare(source, output):
         if file.is_file():
             artifacts[file.relative_to(src).as_posix()] = digest(file)
     require(artifacts and artifacts == evidence.get('artifact_sha256'), 'Build outputs differ from the verified source check')
-    require(all((src / name).is_file() for name in ['dist/server/main.mjs', 'dist/server/users.mjs', 'dist/client/index.html']), 'Build the source first')
+    require(all((src / name).is_file() for name in ['dist/server/main.mjs', 'dist/server/mcp.mjs', 'dist/server/users.mjs', 'dist/client/index.html']), 'Build the source first')
     for directory in ['dist', 'drizzle']:
         for file in (src / directory).rglob('*'):
             require(not file.is_symlink() and (file.is_file() or file.is_dir()), f'Non-regular runtime input: {file}')

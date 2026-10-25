@@ -84,7 +84,7 @@ def verify_structure(root):
     require(actual == inventory, 'Extracted file inventory differs from SERVER-MANIFEST.json')
     required = set(ENTRYPOINTS) | {'launcher/launch-server.mjs', '先读我.txt',
                'app/package.json', 'app/package-lock.json', 'app/RUNTIME-MANIFEST.json',
-               'app/dist/client/index.html', 'app/dist/server/main.mjs', 'app/dist/server/users.mjs', 'app/dist/server/calendar-worker.mjs',
+               'app/dist/client/index.html', 'app/dist/server/main.mjs', 'app/dist/server/mcp.mjs', 'app/dist/server/users.mjs', 'app/dist/server/calendar-worker.mjs',
                'runtime/SHASUMS256.txt', 'runtime/NODE-RUNTIMES.json'}
     required |= {f'runtime/{arch}/{name}' for arch in ARCHIVE_SHA256 for name in ('node', 'LICENSE')}
     require(required <= set(inventory), 'Missing server launch/runtime/application payload')

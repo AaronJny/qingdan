@@ -19,7 +19,7 @@ BINARY_SHA256 = {
     'darwin-arm64': '6f32069480ec14d52b6d7b1f3c7124cfbbc46203abf5ddf5c65b127435f3f329',
 }
 LICENSE_SHA256 = '5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace'
-CHECKS = ('test', 'test:ui', 'test:server', 'typecheck', 'build')
+CHECKS = ('test', 'test:ui', 'test:server', 'test:mcp', 'test:mcp:built', 'typecheck', 'build')
 ENTRYPOINTS = ('start.sh', 'start.command', 'stop.sh', 'stop.command',
                'start-accounts.sh', 'start-accounts.command', 'init-admin.sh', 'init-admin.command')
 
@@ -105,7 +105,7 @@ def validate_application(app):
     require(all(manifest.get('checks', {}).get(key) for key in CHECKS), 'Complete source-check evidence is required')
     verify_file_map(app, manifest.get('files_sha256'), exclude=('RUNTIME-MANIFEST.json', 'node_modules/'),
                     allow_dependency_links=True)
-    for name in ('dist/server/main.mjs', 'dist/server/users.mjs', 'dist/server/calendar-worker.mjs', 'dist/client/index.html', 'package-lock.json'):
+    for name in ('dist/server/main.mjs', 'dist/server/mcp.mjs', 'dist/server/users.mjs', 'dist/server/calendar-worker.mjs', 'dist/client/index.html', 'package-lock.json'):
         require(name in manifest['files_sha256'], f'Missing required verified application file: {name}')
     require(any(re.fullmatch(r'drizzle/\d{4}_[A-Za-z0-9_-]+\.sql', name) for name in manifest['files_sha256']),
             'Verified database migrations are required')

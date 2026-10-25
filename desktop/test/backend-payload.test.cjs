@@ -12,7 +12,7 @@ function fixture(t) {
   const snapshot = 'a'.repeat(64), content = {
     'package.json': JSON.stringify({ name: 'synthetic', version: '1.1.0' }),
     'package-lock.json': JSON.stringify({ version: '1.1.0', packages: { '': { version: '1.1.0' }, 'node_modules/synthetic': { version: '1.0.0', integrity: 'sha512-fixture' } } }),
-    'dist/server/main.mjs': '// fixture', 'dist/server/users.mjs': '// fixture', 'dist/server/calendar-worker.mjs': '// fixture', 'dist/client/index.html': '<html>',
+    'dist/server/main.mjs': '// fixture', 'dist/server/mcp.mjs': '// fixture', 'dist/server/users.mjs': '// fixture', 'dist/server/calendar-worker.mjs': '// fixture', 'dist/client/index.html': '<html>',
     'dist/client/offline-shell.html': '<html>', 'dist/client/offline-shell-manifest.json': '{}', 'dist/client/qingdan-offline-worker.js': '// fixture',
     'drizzle/meta/_journal.json': '{}', 'drizzle/0000_fixture.sql': '-- fixture',
     'node_modules/synthetic/package.json': JSON.stringify({ name: 'synthetic', version: '1.0.0' }), 'node_modules/synthetic/index.js': '// fixture',
@@ -21,12 +21,25 @@ function fixture(t) {
   const dependencyFiles = Object.fromEntries(Object.entries(content).filter(([name]) => name.startsWith('node_modules/synthetic/')).map(([name, bytes]) => [name.slice('node_modules/synthetic/'.length), sha(bytes)]));
   const dependencies = { source_snapshot_sha256: snapshot, packages: [{ name: 'synthetic', location: 'node_modules/synthetic', version: '1.0.0', integrity: 'sha512-fixture', files_sha256: dependencyFiles }] };
   content['dependency-manifest.json'] = JSON.stringify(dependencies); fs.writeFileSync(path.join(root, 'dependency-manifest.json'), content['dependency-manifest.json']);
-  const manifest = { version: '1.1.0', source_snapshot_sha256: snapshot, checks: { test: 1, 'test:ui': 1, 'test:server': 1, typecheck: true, build: true }, files_sha256: Object.fromEntries(Object.entries(content).filter(([name]) => !name.startsWith('node_modules/')).map(([name, bytes]) => [name, sha(bytes)])) };
+  const manifest = { version: '1.1.0', source_snapshot_sha256: snapshot, checks: { test: 1, 'test:ui': 1, 'test:server': 1, 'test:mcp': 1, 'test:mcp:built': 1, typecheck: true, build: true }, files_sha256: Object.fromEntries(Object.entries(content).filter(([name]) => !name.startsWith('node_modules/')).map(([name, bytes]) => [name, sha(bytes)])) };
   fs.writeFileSync(path.join(root, 'RUNTIME-MANIFEST.json'), JSON.stringify(manifest));
   return root;
 }
 test('complete current payload reports exact runtime/dependency inputs', t => {
   const result = verifyBackend(fixture(t), '1.1.0'); assert.equal(result.version, '1.1.0'); assert.equal(result.dependencyFiles, 2);
+});
+test('missing MCP entry is rejected even with a matching runtime inventory', t => {
+  const root = fixture(t), file = path.join(root, 'RUNTIME-MANIFEST.json');
+  const manifest = JSON.parse(fs.readFileSync(file));
+  fs.rmSync(path.join(root, 'dist/server/mcp.mjs')); delete manifest.files_sha256['dist/server/mcp.mjs'];
+  fs.writeFileSync(file, JSON.stringify(manifest));
+  assert.throws(() => verifyBackend(root), /mcp\.mjs/);
+});
+for (const check of ['test:mcp', 'test:mcp:built']) test(`missing ${check} evidence is rejected`, t => {
+  const root = fixture(t), file = path.join(root, 'RUNTIME-MANIFEST.json');
+  const manifest = JSON.parse(fs.readFileSync(file)); delete manifest.checks[check];
+  fs.writeFileSync(file, JSON.stringify(manifest));
+  assert.throws(() => verifyBackend(root), new RegExp('Missing source check: ' + check));
 });
 test('old version, edited dependency and extra hidden runtime files are rejected', t => {
   const root = fixture(t); assert.throws(() => verifyBackend(root, '1.0.1'));

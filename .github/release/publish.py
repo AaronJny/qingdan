@@ -521,9 +521,10 @@ def main(argv=None):
     download = f'https://github.com/{repository}/releases/download/{tag}'
     notes = '\n'.join([f'# 青单 / Qingdan {tag}', '', status, '',
                        '## 更新 / What’s new',
-                       '- 服务端运行时升级到 Node.js 24.22.1，修复 Brotli 解码安全漏洞；Docker 部署使用固定的修补版镜像。 / Update the server runtime to Node.js 24.22.1 to fix the Brotli decoder vulnerability, and pin Docker deployments to the patched image.',
-                       '- 日历任务使用柔和的不同配色，更容易区分；同一任务跨日期、调整时长或选中时保持一致。 / Distinguish calendar tasks with soft colors that stay consistent across dates, resizing and selection.',
-                       '- 浅色与深色主题均提供对应配色，桌面、网页和 Android 同步支持。 / Matching light and dark palettes are available on desktop, web and Android.',
+                       '- Connect MCP-compatible agents through the running desktop app to selected local or private-server task lists. / 通过正在运行的桌面客户端，将 MCP Agent 接入选定的本地或私服任务清单。',
+                       '- Access stays off until you enable it. Read-only is the default; task changes need separate permission, and you can revoke access at any time. / 默认关闭接入，开启后默认只读；修改任务需单独授权，可随时撤销。',
+                       '- Search, read, create, edit and complete tasks with conflict checks and safe retries. / 支持搜索、读取、创建、修改和完成任务，包含冲突检查与安全重试。',
+                       f'- [Agent setup guide](https://github.com/{repository}/blob/{commit}/docs/AGENT-ACCESS.md) · [中文接入说明](https://github.com/{repository}/blob/{commit}/docs/AGENT-ACCESS.zh-CN.md). Update both desktop and private server to this version. Android does not host the MCP gateway. / 桌面与私服均需升级；Android 不提供 MCP 中转。',
                        '', '## 下载 / Downloads',
                        f'- macOS Apple Silicon：[DMG]({download}/Qingdan-{version}-mac-arm64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-arm64.zip)',
                        f'- macOS Intel：[DMG]({download}/Qingdan-{version}-mac-x64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-x64.zip)',

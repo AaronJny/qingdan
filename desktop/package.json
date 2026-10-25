@@ -1,9 +1,9 @@
 {
   "name": "qingdan-desktop-bundled",
   "productName": "Qingdan",
-  "version": "1.3.6",
+  "version": "1.3.7",
   "private": true,
-  "main": "src/main.cjs",
+  "main": "src/entry.cjs",
   "author": "Independent Qingdan project",
   "description": "Qingdan desktop with automatic embedded local backend and optional private server",
   "license": "AGPL-3.0-only",

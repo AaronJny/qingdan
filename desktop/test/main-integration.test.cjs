@@ -118,7 +118,7 @@ async function harness({ platform = 'darwin', runtimePath = path, initialSelecti
       selected.beforeRequest?.({ url, resourceType: 'xhr' }, result => { cancelled = result.cancel; });
       if (cancelled) throw new Error('Mock request blocked by production service policy');
       if (probeFailure) return new Response('{}', { status: 503, headers: { 'content-type': 'application/json' } });
-      return new Response(JSON.stringify(url.endsWith('/api/auth/me')?{mode:'local',user:{userId:principal}}:{ app: 'qingdan', version: '1.0.0', mode: 'local' }), { headers: { 'content-type': 'application/json' } });
+      return new Response(JSON.stringify(url.endsWith('/api/auth/me')?{mode:'local',user:{userId:principal},csrfToken:'a'.repeat(64)}:{ app: 'qingdan', version: '1.0.0', mode: 'local' }), { headers: { 'content-type': 'application/json' } });
     };
     return selected;
   }
@@ -191,6 +191,7 @@ async function harness({ platform = 'darwin', runtimePath = path, initialSelecti
       if (name === 'electron') return electron;
       if (name === 'node:fs') return memoryFs;
       if (name === 'node:path') return runtimePath;
+      if (name === 'node:http') return { createServer() { throw new Error('Real listener forbidden in main harness'); } };
       if (['node:net', 'node:http', 'node:https', 'node:child_process'].includes(name)) throw new Error(`Real IO module forbidden: ${name}`);
       if (name === './local-business-store.cjs') return {LocalBusinessStore:class {
         constructor({principalId}){if(failLocalStore)throw Error('Mock local storage read failure');this.principalId=principalId;}
@@ -537,4 +538,22 @@ test('all nine language preferences retain trusted frame binding and remote/loca
   assert.throws(()=>h.call('qingdan-desktop:set-language',{...valid,sender:settings.webContents},locale),/Untrusted/);
  }
  assert.ok(!main.options.webPreferences.partition.startsWith('persist:'));
+});
+
+
+test('Agent access bridge is main-frame/session bound and default-off without creating a listener', async () => {
+  const h = await harness(); const main = h.liveMain()[0];
+  const accountId = 'local:12345678-1234-4234-8234-123456789abc';
+  const result = await h.call('qingdan-desktop:get-agent-access', h.event(main), accountId);
+  assert.equal(result.enabled, false); assert.equal(result.tokenConfigured, false); assert.equal(result.endpoint, null); assert.equal(result.sessionOnly, true);
+  assert.equal(result.accountId, accountId); assert.equal(result.token, undefined);
+  const settings = h.openSettings();
+  const badEvents = [h.event(settings), { ...h.event(main), senderFrame: { url: main.lastUrl } }, { ...h.event(main), sender: {} }];
+  for (const event of badEvents) {
+    await assert.rejects(h.call('qingdan-desktop:get-agent-access', event, accountId), /Untrusted/);
+    await assert.rejects(h.call('qingdan-desktop:save-agent-access', event, accountId, { enabled: true, writeEnabled: true, listIds: ['list-a'], rotateToken: true }), /Untrusted/);
+  }
+  await assert.rejects(h.call('qingdan-desktop:get-agent-access', h.event(main), 'another-account'), /account changed/);
+  main.webContents.mainFrame.url = statusUrl;
+  await assert.rejects(h.call('qingdan-desktop:get-agent-access', h.event(main), accountId), /Untrusted/);
 });

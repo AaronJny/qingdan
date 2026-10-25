@@ -23,6 +23,10 @@ The interface supports Simplified Chinese, Traditional Chinese, English, Japanes
 
 The language setting applies only to the current device or browser. Tasks and notes keep their original text. Quick-entry date commands support Simplified Chinese and English; you can also use the date picker.
 
+## Agent access
+
+Connect an MCP-compatible agent through the desktop app to selected local or private-server lists. Access is off by default, list-scoped and session-only. See the [Agent access guide](docs/AGENT-ACCESS.md) for setup. Requires v1.3.7 or later on both the desktop app and the connected private server.
+
 ## Screenshots
 
 ### Task workspace

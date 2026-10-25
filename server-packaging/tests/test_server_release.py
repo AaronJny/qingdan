@@ -90,6 +90,7 @@ class ServerReleaseTests(unittest.TestCase):
         self.put('dependency-manifest.json', json.dumps({'source_snapshot_sha256': self.snapshot,
                  'application_lock_sha256': 'b' * 64, 'external_imports': ['@fixture/direct'], 'packages': records}))
         self.put('dist/server/main.mjs', '// synthetic main')
+        self.put('dist/server/mcp.mjs', '// synthetic MCP entry; structural fixture only')
         self.put('dist/server/users.mjs', '// synthetic users')
         self.put('dist/server/calendar-worker.mjs', '// synthetic calendar worker; structural fixture only')
         self.put('dist/client/index.html', '<html><body>Fixture</body></html>')
@@ -147,6 +148,56 @@ class ServerReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'required verified application file'):
             self.build()
         self.assertFalse(self.server.exists())
+
+    def test_missing_mcp_entry_rejected_even_with_updated_inventory(self):
+        (self.app / 'dist/server/mcp.mjs').unlink()
+        self.refresh_manifest()
+        with self.assertRaisesRegex(ValueError, 'required verified application file'):
+            self.build()
+        self.assertFalse(self.server.exists())
+
+    def test_missing_mcp_source_checks_rejected(self):
+        path = self.app / 'RUNTIME-MANIFEST.json'
+        original = path.read_text()
+        for check in ('test:mcp', 'test:mcp:built'):
+            with self.subTest(check=check):
+                manifest = json.loads(original)
+                del manifest['checks'][check]
+                path.write_text(json.dumps(manifest))
+                with self.assertRaisesRegex(ValueError, 'Complete source-check'):
+                    self.build()
+                self.assertFalse(self.server.exists())
+
+    def test_extracted_mcp_entry_required_even_with_updated_inventories(self):
+        self.build()
+        (self.server / 'app/dist/server/mcp.mjs').unlink()
+        app_path = self.server / 'app/RUNTIME-MANIFEST.json'
+        app_manifest = json.loads(app_path.read_text())
+        del app_manifest['files_sha256']['dist/server/mcp.mjs']
+        app_path.write_text(json.dumps(app_manifest))
+        path = self.server / 'SERVER-MANIFEST.json'
+        manifest = json.loads(path.read_text())
+        del manifest['files_sha256']['app/dist/server/mcp.mjs']
+        manifest['files_sha256']['app/RUNTIME-MANIFEST.json'] = contract.digest(app_path)
+        path.write_text(json.dumps(manifest))
+        with self.assertRaisesRegex(ValueError, 'Missing server launch/runtime/application payload'):
+            verifier.verify_structure(self.server)
+
+    def test_extracted_mcp_checks_required_even_with_updated_inventory(self):
+        self.build()
+        app_path = self.server / 'app/RUNTIME-MANIFEST.json'
+        original = app_path.read_text()
+        path = self.server / 'SERVER-MANIFEST.json'
+        manifest = json.loads(path.read_text())
+        for check in ('test:mcp', 'test:mcp:built'):
+            with self.subTest(check=check):
+                app_manifest = json.loads(original)
+                del app_manifest['checks'][check]
+                app_path.write_text(json.dumps(app_manifest))
+                manifest['files_sha256']['app/RUNTIME-MANIFEST.json'] = contract.digest(app_path)
+                path.write_text(json.dumps(manifest))
+                with self.assertRaisesRegex(ValueError, 'Incomplete source-check evidence'):
+                    verifier.verify_structure(self.server)
 
     def test_unlisted_app_file_rejected(self):
         self.put('dist/client/unverified.js', 'unverified')

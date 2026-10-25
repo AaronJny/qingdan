@@ -21,7 +21,7 @@ class PrepareRuntimeTests(unittest.TestCase):
             'package-lock.json': '{}', 'README.md': 'Fixture', 'AUTH.md': 'Fixture',
             'LICENSE': 'Synthetic project license fixture.\n',
             'docs/LICENSING.md': 'Synthetic project source-delivery guidance.\n',
-            'VERIFICATION.md': 'Fixture', 'dist/server/main.mjs': '// fixture',
+            'VERIFICATION.md': 'Fixture', 'dist/server/main.mjs': '// fixture', 'dist/server/mcp.mjs': '// fixture',
             'docs/THIRD-PARTY-NOTICES.md': 'Fixture source acquisition: https://registry.npmjs.org/ical.js/-/ical.js-2.2.1.tgz\n[License](licenses/ical.js-MPL-2.0.txt)\n',
             'docs/licenses/ical.js-MPL-2.0.txt': 'Mozilla Public License Version 2.0\nSynthetic retained license fixture.\n',
             'dist/server/users.mjs': '// fixture', 'dist/client/index.html': '<main>Fixture</main>',
@@ -35,7 +35,7 @@ class PrepareRuntimeTests(unittest.TestCase):
         self.write_evidence()
 
     def write_evidence(self, omit=None):
-        checks = {'test': 1, 'test:ui': 1, 'test:server': 1, 'typecheck': True, 'build': True}
+        checks = {'test': 1, 'test:ui': 1, 'test:server': 1, 'test:mcp': 1, 'test:mcp:built': 1, 'typecheck': True, 'build': True}
         if omit: checks.pop(omit)
         hashes = {path.relative_to(self.source).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
                   for path in self.source.rglob('*') if path.is_file() and 'dist' not in path.relative_to(self.source).parts and path.relative_to(self.source).as_posix() != 'tests/standalone-evidence.json'}
@@ -53,6 +53,7 @@ class PrepareRuntimeTests(unittest.TestCase):
         self.assertNotIn('source_commit', manifest)
         self.assertTrue(all('\\' not in name for name in manifest['files_sha256']))
         self.assertIn('dist/server/main.mjs', manifest['files_sha256'])
+        self.assertIn('dist/server/mcp.mjs', manifest['files_sha256'])
         for name, digest in manifest['files_sha256'].items():
             self.assertEqual(hashlib.sha256((self.output / name).read_bytes()).hexdigest(), digest)
 
@@ -91,8 +92,18 @@ class PrepareRuntimeTests(unittest.TestCase):
         self.assertFalse(self.output.exists())
 
     def test_missing_required_check_is_rejected(self):
-        self.write_evidence(omit='test:server')
-        self.assertNotEqual(self.run_prepare().returncode, 0)
+        for check in ('test:server', 'test:mcp', 'test:mcp:built'):
+            with self.subTest(check=check):
+                self.write_evidence(omit=check)
+                self.assertNotEqual(self.run_prepare().returncode, 0)
+                self.assertFalse(self.output.exists())
+
+    def test_missing_mcp_entry_rejected_even_with_updated_evidence(self):
+        (self.source / 'dist/server/mcp.mjs').unlink()
+        self.write_evidence()
+        result = self.run_prepare()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Build the source first', result.stderr)
         self.assertFalse(self.output.exists())
 
     def test_changed_build_artifact_is_rejected(self):
