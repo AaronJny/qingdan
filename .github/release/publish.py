@@ -447,6 +447,30 @@ def draft_plan(release, files, legacy, version):
     return renames, replacements, missing
 
 
+def superseded_draft_plan(release, authorization, files, commit, run_id, tag, complete, tag_exists):
+    """One explicit unpublished snapshot replacement; normal publication stays immutable."""
+    require(complete and not tag_exists, 'Draft replacement requires all targets and no existing tag')
+    require(authorization.get('newSourceCommit') == commit and authorization.get('newSourceRunId') == int(run_id),
+            'Draft replacement must pin the verified new source and run')
+    require(type(authorization.get('releaseId')) is int and authorization['releaseId'] == release.get('id')
+            and release.get('draft') is True and release.get('tag_name') == tag
+            and release.get('target_commitish') == authorization.get('oldSourceCommit')
+            and re.fullmatch(r'[0-9a-f]{40}', authorization.get('oldSourceCommit', ''))
+            and authorization['oldSourceCommit'] != commit, 'Unpublished draft identity differs from explicit request')
+    expected = authorization.get('assets')
+    actual = [{key: asset.get(key) for key in ('id', 'name', 'size', 'digest')} for asset in release['assets']]
+    require(isinstance(expected, list) and expected and actual == expected,
+            'Unpublished draft asset snapshot changed; re-review before replacing')
+    names = [asset['name'] for asset in actual]
+    candidates = {path.name for path in files}
+    require(len(names) == len(set(names)) and set(names).issubset(candidates)
+            and 'RELEASE-MANIFEST.json' in names, 'Draft snapshot contains unexpected generated assets')
+    require(all(type(a['id']) is int and a['id'] > 0 and type(a['size']) is int and a['size'] > 0
+                and isinstance(a['digest'], str) and re.fullmatch(r'sha256:[0-9a-f]{64}', a['digest'])
+                for a in actual), 'Draft snapshot lacks exact asset integrity metadata')
+    return [], sorted(names), sorted(candidates - set(names))
+
+
 def verify_remote_inventory(release, files, commit):
     require(release.get('target_commitish') == commit, 'Release source differs from verified source commit')
     actual = release['assets']
@@ -542,10 +566,18 @@ def main(argv=None):
         verify_remote_inventory(old, files, commit)
         print(json.dumps({'url': old['html_url'], 'draft': False, 'alreadyPublished': True}))
         return
-    if old:
-        require(old.get('target_commitish') == commit, 'Existing draft belongs to a different verified source')
-        renames, replacements, missing = draft_plan(old, files, legacy, version)
+    replacement_authorization = None
     tag_text = gh('api', f'repos/{repository}/git/ref/tags/{tag}', optional=True)
+    if old:
+        if old.get('target_commitish') != commit and args.source_commit is not None:
+            repair_request = json.loads(Path('.github/release/repair-request.json').read_text())
+            authorization = repair_request.get('supersededDraft', {})
+            replacement_authorization = authorization
+            renames, replacements, missing = superseded_draft_plan(
+                old, authorization, files, commit, source_run, tag, complete, bool(tag_text))
+        else:
+            require(old.get('target_commitish') == commit, 'Existing draft belongs to a different verified source')
+            renames, replacements, missing = draft_plan(old, files, legacy, version)
     if tag_text:
         tag_object = json.loads(tag_text)['object']
         seen = set()
@@ -555,6 +587,12 @@ def main(argv=None):
             tag_object = json.loads(gh('api', tag_object['url']))['object']
         require(tag_object['sha'] == commit, 'Existing tag points at a different source; do not move released identities automatically')
     if old:
+        if replacement_authorization is not None:
+            # Re-read immediately before any write; a concurrent edit invalidates approval.
+            current_draft = remote_release(repository, tag)
+            current_tag = gh('api', f'repos/{repository}/git/ref/tags/{tag}', optional=True)
+            superseded_draft_plan(current_draft, replacement_authorization, files, commit,
+                                  source_run, tag, complete, bool(current_tag))
         for asset_id, name in renames:
             gh('api', '--method', 'PATCH', f'repos/{repository}/releases/assets/{asset_id}', '-f', f'name={name}')
         gh('release', 'edit', tag, '--repo', repository, '--draft', '--target', commit,

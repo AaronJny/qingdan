@@ -1,5 +1,187 @@
 {
-  "runId": 37925251290,
-  "sourceCommit": "fc24b9cb6d26ba2489b53565cf8416d2d3587927",
-  "attempt": 1
+  "runId": 40194972935,
+  "sourceCommit": "0d5e320924a33cde6bc02e275aa5ec0b32fcb959",
+  "attempt": 1,
+  "supersededDraft": {
+    "releaseId": 423402487,
+    "oldSourceCommit": "ba0ce47e5aa2d78ef4cf5720542e77f5d25d5d9b",
+    "newSourceCommit": "0d5e320924a33cde6bc02e275aa5ec0b32fcb959",
+    "newSourceRunId": 40194972935,
+    "assets": [
+      {
+        "id": 675045220,
+        "name": "backend-verification-linux.json",
+        "size": 1456,
+        "digest": "sha256:67c9d0ea85685c12ea1858b6b94ca3475eb3749233f627e8b79356f2ca737ad3"
+      },
+      {
+        "id": 675045222,
+        "name": "backend-verification-macos-arm64.json",
+        "size": 1486,
+        "digest": "sha256:9b56f94d26340b96d6a1cf822436b7e699f2b3119e06c5444a580682da23b06a"
+      },
+      {
+        "id": 675045226,
+        "name": "backend-verification-macos-x64.json",
+        "size": 1484,
+        "digest": "sha256:3192877ba7c856027b0fdfc41f47579a13600a2239d71a2891fa029351e0d594"
+      },
+      {
+        "id": 675045227,
+        "name": "backend-verification-windows.json",
+        "size": 1456,
+        "digest": "sha256:2e77eb46b98ddfd1a6255d01bd720e4a5bfa0e3736c38e1eb3b52ddaf6ba504c"
+      },
+      {
+        "id": 675044992,
+        "name": "LINUX-START-HERE.txt",
+        "size": 1066,
+        "digest": "sha256:cde79ba932697888fc886dfeec41edde9e6296a5f774aac109d9887821770975"
+      },
+      {
+        "id": 675044989,
+        "name": "MAC-START-HERE.txt",
+        "size": 990,
+        "digest": "sha256:7f6d13bc65a1ba8b4bd0e4c2f8b19f8370f3344f5f94722b90c37754ce1429b2"
+      },
+      {
+        "id": 675044990,
+        "name": "Qingdan-1.3.9-linux-x64.AppImage",
+        "size": 122499689,
+        "digest": "sha256:6dfa540be3c8df76201ac1b623ac208506638c75d041783e54700f470efccb3e"
+      },
+      {
+        "id": 675044993,
+        "name": "Qingdan-1.3.9-mac-arm64.dmg",
+        "size": 135728355,
+        "digest": "sha256:d02432593f1858638c66b3df9b8f2fa925a7532ad84481d956c670e81f8986d1"
+      },
+      {
+        "id": 675044994,
+        "name": "Qingdan-1.3.9-mac-arm64.zip",
+        "size": 135742386,
+        "digest": "sha256:4df3f3251d585a56c6c62497d38e8365309d177465e299dcd0836898aa7df90c"
+      },
+      {
+        "id": 675045014,
+        "name": "Qingdan-1.3.9-mac-x64.dmg",
+        "size": 141292359,
+        "digest": "sha256:1671a768b3d3522987bde84edd984714164f9bd607750bf08d584a614c0b1566"
+      },
+      {
+        "id": 675045013,
+        "name": "Qingdan-1.3.9-mac-x64.zip",
+        "size": 141325310,
+        "digest": "sha256:19d6cc8453f70d08b7d55581de02cc215d46bc9916d1b255ed882edced0261b2"
+      },
+      {
+        "id": 675045157,
+        "name": "Qingdan-1.3.9-win-x64.zip",
+        "size": 158833529,
+        "digest": "sha256:7512a0e8258106dabdb535ed19bc2b9e722b548b127da53624d6bdf5c03afd39"
+      },
+      {
+        "id": 675045237,
+        "name": "qingdan-server-v1.3.9.sha256",
+        "size": 92,
+        "digest": "sha256:d0fa104bd643adf2aa7066f753934543e80c01860423303516535e1f602279d4"
+      },
+      {
+        "id": 675045240,
+        "name": "qingdan-server-v1.3.9.verification.json",
+        "size": 2229,
+        "digest": "sha256:b2e5de7ac10544b548ddb64057bfc41ec23299f4a711708bdaa0d3d627f5209a"
+      },
+      {
+        "id": 675045243,
+        "name": "qingdan-server-v1.3.9.zip",
+        "size": 91934745,
+        "digest": "sha256:9f53a8b17a9a8b60a3dcab115a30a6a70cd5dfe88c1b13ca58dfcbe19f1fc799"
+      },
+      {
+        "id": 675045280,
+        "name": "RELEASE-MANIFEST.json",
+        "size": 5777,
+        "digest": "sha256:b5bc185d44593a8ea1c639774272666aebc79ca3bb14997e7341d0a74a1a8715"
+      },
+      {
+        "id": 675045183,
+        "name": "SHA256SUMS-linux.txt",
+        "size": 99,
+        "digest": "sha256:d2fa2f9a78e94d0a8785af81d42109a4ec0822ce683ebb3483a642684f59bd74"
+      },
+      {
+        "id": 675045201,
+        "name": "SHA256SUMS-macos-arm64.txt",
+        "size": 188,
+        "digest": "sha256:863d74297fefe40d4892c048574e6503702e914d7726af2187864f15e35df2b4"
+      },
+      {
+        "id": 675045207,
+        "name": "SHA256SUMS-macos-x64.txt",
+        "size": 184,
+        "digest": "sha256:b2e86d2b306e4397449e9ed7d133c3e7c5eebd6396cfe2a603ebdc42a7480e3c"
+      },
+      {
+        "id": 675045213,
+        "name": "SHA256SUMS-windows.txt",
+        "size": 92,
+        "digest": "sha256:32829654449a03f36acc7875c9edfb42f70de371d692fbd709cd77e39f303c73"
+      },
+      {
+        "id": 675045248,
+        "name": "verified-linux-appimage-x64.json",
+        "size": 23153,
+        "digest": "sha256:9892aa035b0edd1042ebb86576bbb619f3bd861455f358225134c32517764cf2"
+      },
+      {
+        "id": 675045252,
+        "name": "verified-linux-x64.json",
+        "size": 4083,
+        "digest": "sha256:671ba2f959cfb46de8ca3b4af0b05faf0b88d052a8b907a20c3173637c287e67"
+      },
+      {
+        "id": 675045250,
+        "name": "verified-mac-arm64-archives.json",
+        "size": 35170,
+        "digest": "sha256:3e5d569ceb0b429e04bd96f42fbe2af48d39b247a8d885ed61e1257dafdd8aea"
+      },
+      {
+        "id": 675045262,
+        "name": "verified-mac-arm64.json",
+        "size": 15921,
+        "digest": "sha256:dc1e7a9399e75932a1d3c7d6a0e8d29c2564c17c949a8761ac6e140220dea85f"
+      },
+      {
+        "id": 675045266,
+        "name": "verified-mac-x64-archives.json",
+        "size": 34961,
+        "digest": "sha256:c61ed7b8cf1e781d3cb39801bd08c8e8be61ebeb839e66af6b7237b4c054774c"
+      },
+      {
+        "id": 675045264,
+        "name": "verified-mac-x64.json",
+        "size": 15864,
+        "digest": "sha256:49471ce3416801079101971f3d3580198a8f5425fab1f744901191ed782cd1bc"
+      },
+      {
+        "id": 675045277,
+        "name": "verified-win-x64-archives.json",
+        "size": 7280,
+        "digest": "sha256:a2c5b33d2a12ecb1324060591b9d398fa54603a692ff0c5ce0e829ed6cc42670"
+      },
+      {
+        "id": 675045279,
+        "name": "verified-win-x64.json",
+        "size": 4083,
+        "digest": "sha256:44eab48b1245b796d6e238d80c2e64bc1d0e9144020ebf0011f05b7bf36ebfd9"
+      },
+      {
+        "id": 675045216,
+        "name": "WINDOWS-START-HERE.txt",
+        "size": 873,
+        "digest": "sha256:ea68ce3bb39f20537ce39424027db0dc19b5ee4148e53f064bf70649f5b286c4"
+      }
+    ]
+  }
 }
