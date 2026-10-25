@@ -1,6 +1,6 @@
 import type {CSSProperties} from 'react';
 
-// Presentation only: identity, not title, list, order or date, determines the tone.
+// Presentation only: identity supplies a stable seed; layout may resolve collisions.
 // Paired surfaces keep small calendar labels readable in both themes.
 export const calendarTaskPalette = [
   ['#e9effb', '#5279b5', '#2b3950', '#94b6eb'],
@@ -19,7 +19,7 @@ export function calendarTaskColorIndex(id: string): number {
   return (hash >>> 0) % calendarTaskPalette.length;
 }
 
-export function calendarTaskColor(id: string): CSSProperties {
-  const [surface, edge, darkSurface, darkEdge] = calendarTaskPalette[calendarTaskColorIndex(id)];
+export function calendarTaskColor(id: string, assignedIndex = calendarTaskColorIndex(id)): CSSProperties {
+  const [surface, edge, darkSurface, darkEdge] = calendarTaskPalette[assignedIndex];
   return {'--task-surface': surface, '--task-edge': edge, '--task-dark-surface': darkSurface, '--task-dark-edge': darkEdge} as CSSProperties;
 }

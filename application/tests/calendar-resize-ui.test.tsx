@@ -260,3 +260,24 @@ test('task tones differ within one list and survive week wraps, resize and selec
     assert.ok(bars().every(bar=>bar.style.getPropertyValue('--task-surface')===tone));
   }finally{await f.close()}
 });
+
+
+test('adjacent hash-colliding tasks resolve colors in rendered month and retain source continuity/navigation',async()=>{
+  const {calendarTaskColorIndex}=await import('../lib/calendar-task-color');
+  const ids=Array.from({length:100},(_,i)=>'synthetic-adjacent-'+i).filter(id=>calendarTaskColorIndex(id)===0).slice(0,3);
+  const f=await mount([
+    {...task({title:'Synthetic span',startDate:'2026-10-16',dueDate:'2026-10-21'}),id:ids[0]},
+    {...task({title:'Synthetic below',startDate:'2026-10-17',dueDate:'2026-10-18'}),id:ids[1]},
+    {...task({title:'Synthetic beside',startDate:'2026-10-22',dueDate:'2026-10-23'}),id:ids[2]},
+  ]);
+  try{
+    const bars=(id:string)=>[...f.host.querySelectorAll<HTMLElement>(`[data-calendar-task="${id}"]`)];
+    const tone=(id:string)=>bars(id)[0].style.getPropertyValue('--task-surface');
+    assert.notEqual(tone(ids[0]),tone(ids[1]));assert.notEqual(tone(ids[0]),tone(ids[2]));
+    const before=ids.map(tone);assert.ok(bars(ids[0]).length>1);assert.ok(bars(ids[0]).every(bar=>bar.style.getPropertyValue('--task-surface')===before[0]));
+    const date=f.host.querySelector<HTMLInputElement>('.calendar-jump-date')!;
+    const jump=async(value:string)=>{await act(async()=>{Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value')!.set!.call(date,value);date.dispatchEvent(new window.Event('input',{bubbles:true}));});await settle();};
+    await jump('2026-12-19');await jump('2026-10-19');assert.deepEqual(ids.map(tone),before);
+    assert.ok(f.tasks.every(t=>t.data.color===undefined));
+  }finally{await f.close()}
+});
