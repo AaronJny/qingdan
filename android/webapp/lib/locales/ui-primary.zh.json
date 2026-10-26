@@ -542,7 +542,7 @@
   "workspace.year": "年",
   "workspace.month": "月",
   "workspace.goToCalendarDate": "日历定位日期",
-  "workspace.repeatPreview": "重复预览",
+  "workspace.repeatPreview": "显示后续重复任务",
   "workspace.timeScaleZoom": "时间刻度缩放",
   "workspace.compact": "紧凑",
   "workspace.standard": "标准",

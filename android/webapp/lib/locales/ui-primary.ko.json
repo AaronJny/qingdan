@@ -542,7 +542,7 @@
   "workspace.year": "년",
   "workspace.month": "월",
   "workspace.goToCalendarDate": "캘린더 날짜로 이동",
-  "workspace.repeatPreview": "반복 미리보기",
+  "workspace.repeatPreview": "이후 반복 작업 표시",
   "workspace.timeScaleZoom": "시간 눈금 확대/축소",
   "workspace.compact": "좁게",
   "workspace.standard": "보통",

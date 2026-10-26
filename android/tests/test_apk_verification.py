@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 spec = importlib.util.spec_from_file_location("verify_apk", ROOT / "scripts/verify-apk.py")
 verifier = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(verifier)
-IDENTITY = {"application_id": "cn.qingdan.android", "version_name": "0.3.8", "version_code": 14, "min_sdk": 26, "target_sdk": 36}
+IDENTITY = {"application_id": "cn.qingdan.android", "version_name": "0.3.9", "version_code": 15, "min_sdk": 26, "target_sdk": 36}
 BADGING = f"""package: name='cn.qingdan.android' versionCode='{IDENTITY["version_code"]}' versionName='{IDENTITY["version_name"]}' platformBuildVersionName='16'
 sdkVersion:'26'
 targetSdkVersion:'36'

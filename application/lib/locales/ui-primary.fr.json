@@ -542,7 +542,7 @@
   "workspace.year": "Année",
   "workspace.month": "Mois",
   "workspace.goToCalendarDate": "Aller à une date du calendrier",
-  "workspace.repeatPreview": "Aperçu de la récurrence",
+  "workspace.repeatPreview": "Afficher les prochaines répétitions",
   "workspace.timeScaleZoom": "Zoom de l’échelle temporelle",
   "workspace.compact": "Compact",
   "workspace.standard": "Standard",

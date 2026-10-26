@@ -542,7 +542,7 @@
   "workspace.year": "Year",
   "workspace.month": "Month",
   "workspace.goToCalendarDate": "Go to calendar date",
-  "workspace.repeatPreview": "Repeat preview",
+  "workspace.repeatPreview": "Show future repeats",
   "workspace.timeScaleZoom": "Time scale zoom",
   "workspace.compact": "Compact",
   "workspace.standard": "Standard",

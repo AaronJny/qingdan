@@ -545,9 +545,9 @@ def main(argv=None):
     download = f'https://github.com/{repository}/releases/download/{tag}'
     notes = '\n'.join([f'# 青单 / Qingdan {tag}', '', status, '',
                        '## 更新 / What’s new',
-                       '- Neighboring calendar tasks now prefer different colors, making tasks easier to distinguish. / 日历中上下、左右相邻的不同任务优先使用不同颜色，更容易区分。',
-                       '- Each task keeps the same color across days and week rows. / 同一任务跨天、跨周的片段保持同色。',
-                       '- When the layout changes, only nearby color conflicts are adjusted where possible. / 布局变化时，尽量只调整附近发生冲突的任务颜色。',
+                       '- Future repeating tasks now appear in the timeline view. / 时间线现在可以显示后续重复任务。',
+                       '- Repeat previews keep the correct multi-day and overnight duration, including at the edge of the visible date range. / 重复预览保持正确的跨日和跨夜跨度，显示范围边缘的安排也不会遗漏。',
+                       '- Renamed the calendar option to “Show future repeats” to make its purpose clearer. / 日历开关改为“显示后续重复任务”，含义更清楚。',
                        '', '## 下载 / Downloads',
                        f'- macOS Apple Silicon：[DMG]({download}/Qingdan-{version}-mac-arm64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-arm64.zip)',
                        f'- macOS Intel：[DMG]({download}/Qingdan-{version}-mac-x64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-x64.zip)',
