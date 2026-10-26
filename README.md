@@ -60,16 +60,16 @@ View daily goals, this week's check-ins, streaks, and completion over the past 3
 
 ## Download and install
 
-Visit [Releases](https://github.com/AaronJny/qingdan/releases/latest) to download the version for your platform. The current release is [v1.3.9](https://github.com/AaronJny/qingdan/releases/tag/v1.3.9), with desktop, server, and Android builds.
+Visit [Releases](https://github.com/AaronJny/qingdan/releases/latest) to download the version for your platform. The current release is [v1.3.10](https://github.com/AaronJny/qingdan/releases/tag/v1.3.10), with desktop, server, and Android builds.
 
 | Platform | Download | Instructions and requirements |
 | --- | --- | --- |
-| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.3.9/Qingdan-1.3.9-mac-arm64.dmg) | macOS 13 or later. Quit the previous version normally, then drag the app into Applications. |
-| macOS · Intel | [x64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.3.9/Qingdan-1.3.9-mac-x64.dmg) | macOS 13 or later. Drag the app into Applications. |
-| Windows · x64 | [Portable ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.3.9/Qingdan-1.3.9-win-x64.zip) | Extract the entire archive and run `Qingdan.exe`. Do not copy just the EXE. |
-| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.3.9/Qingdan-1.3.9-linux-x64.AppImage) | Make the file executable before running it. See the [desktop guide](desktop/README.md) for system requirements and launching without FUSE. |
-| Self-hosted server / web app | [ZIP with bundled runtimes](https://github.com/AaronJny/qingdan/releases/download/v1.3.9/qingdan-server-v1.3.9.zip) | Includes Linux x64 and macOS arm64 runtimes and launch scripts. No separate Node.js or npm installation is needed. |
-| Android | [0.3.8 APK](https://github.com/AaronJny/qingdan/releases/download/v1.3.9/Qingdan-0.3.8-android.apk) | Android 8.0 or later, with an up-to-date system WebView. See the [Android guide](android/README.md) for installation and signing details. |
+| macOS · Apple Silicon | [arm64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.3.10/Qingdan-1.3.10-mac-arm64.dmg) | macOS 13 or later. Quit the previous version normally, then drag the app into Applications. |
+| macOS · Intel | [x64 DMG](https://github.com/AaronJny/qingdan/releases/download/v1.3.10/Qingdan-1.3.10-mac-x64.dmg) | macOS 13 or later. Drag the app into Applications. |
+| Windows · x64 | [Portable ZIP](https://github.com/AaronJny/qingdan/releases/download/v1.3.10/Qingdan-1.3.10-win-x64.zip) | Extract the entire archive and run `Qingdan.exe`. Do not copy just the EXE. |
+| Linux · x64 | [AppImage](https://github.com/AaronJny/qingdan/releases/download/v1.3.10/Qingdan-1.3.10-linux-x64.AppImage) | Make the file executable before running it. See the [desktop guide](desktop/README.md) for system requirements and launching without FUSE. |
+| Self-hosted server / web app | [ZIP with bundled runtimes](https://github.com/AaronJny/qingdan/releases/download/v1.3.10/qingdan-server-v1.3.10.zip) | Includes Linux x64 and macOS arm64 runtimes and launch scripts. No separate Node.js or npm installation is needed. |
+| Android | [0.3.9 APK](https://github.com/AaronJny/qingdan/releases/download/v1.3.10/Qingdan-0.3.9-android.apk) | Android 8.0 or later, with an up-to-date system WebView. See the [Android guide](android/README.md) for installation and signing details. |
 
 ### Known platform limitations
 
