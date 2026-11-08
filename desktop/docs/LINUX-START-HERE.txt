@@ -1,6 +1,10 @@
 青单 · Linux x64
 
 安装
+Ubuntu 24.04 x86-64 请优先选择同版本 .deb，详见 LINUX-DEB-START-HERE.txt。
+AppImage 的挂载/解压路径无法套用该固定路径策略，解压不能解除 Ubuntu 24 的限制。
+
+其他兼容 Linux 系统：
 下载 Qingdan-版本-linux-x64.AppImage，在文件属性中允许作为程序执行，再打开。也可以运行：
 chmod +x ./Qingdan-版本-linux-x64.AppImage
 

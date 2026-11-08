@@ -3,16 +3,19 @@
 import argparse
 import hashlib
 import json
+import io
+import lzma
 import os
 import re
 import subprocess
+import tarfile
 import unicodedata
 import zipfile
 from pathlib import Path
 
 
 MAC_ARCHES = ('arm64', 'x64')
-PLATFORMS = ['macos-arm64', 'macos-x64', 'windows', 'server', 'linux', 'android']
+PLATFORMS = ['macos-arm64', 'macos-x64', 'windows', 'server', 'linux', 'linux-deb', 'android']
 FUSES = {'RunAsNode': False, 'EnableCookieEncryption': True,
          'EnableNodeOptionsEnvironmentVariable': False, 'EnableNodeCliInspectArguments': False,
          'EnableEmbeddedAsarIntegrityValidation': True, 'OnlyLoadAppFromAsar': True,
@@ -63,6 +66,8 @@ def candidate_names(version, android_version, android_ready):
         f'Qingdan-{version}-linux-x64.AppImage', 'verified-linux-x64.json',
         'verified-linux-appimage-x64.json', 'backend-verification-linux.json',
         'LINUX-START-HERE.txt', 'SHA256SUMS-linux.txt',
+        f'Qingdan-{version}-linux-amd64.deb', 'verified-linux-deb-amd64.json',
+        'verified-linux-deb-native-amd64.json', 'SHA256SUMS-linux-deb.txt', 'LINUX-DEB-START-HERE.txt',
         f'qingdan-server-v{version}.zip', f'qingdan-server-v{version}.sha256',
         f'qingdan-server-v{version}.verification.json',
     }
@@ -164,6 +169,7 @@ def collect(root, version, android_version, android_ready):
         require(report.get('manifest', {}).get('application_id') == 'cn.qingdan.android' and report.get('manifest', {}).get('version_name') == android_version, 'Android package identity/version differs')
     require({p.name for p in files} == candidate_names(version, android_version, android_ready), 'Local release asset inventory differs from exact candidate set')
     verify_macos_references(root, version)
+    verify_linux_deb_references(root, version)
     return expected, files
 
 
@@ -172,7 +178,8 @@ def expected_deliverables(version, android_version, android_ready=True):
     expected = {f'macos-{arch}': f'Qingdan-{version}-mac-{arch}.dmg' for arch in MAC_ARCHES}
     expected.update({'windows': f'Qingdan-{version}-win-x64.zip',
                      'server': f'qingdan-server-v{version}.zip',
-                     'linux': f'Qingdan-{version}-linux-x64.AppImage'})
+                     'linux': f'Qingdan-{version}-linux-x64.AppImage',
+                     'linux-deb': f'Qingdan-{version}-linux-amd64.deb'})
     if android_ready:
         expected['android'] = f'Qingdan-{android_version}-android.apk'
     return expected
@@ -381,8 +388,165 @@ def verify_macos_references(root, version):
         require(all(actual[name] == digest(root / name) for name in expected), 'Mac checksum differs')
 
 
+def verify_deb_archive(path, version):
+    """Read bounded Debian metadata without extracting or running package scripts."""
+    with path.open('rb') as stream:
+        require(stream.read(8) == b'!<arch>\n', 'Linux DEB lacks Debian ar archive header')
+        for name in ('debian-binary', 'control.tar.xz', 'data.tar.xz'):
+            header = stream.read(60)
+            require(len(header) == 60 and header[:16].rstrip(b' /') == name.encode()
+                    and header[58:] == b'`\n' and header[48:58].strip().isdigit(),
+                    'Linux DEB archive member inventory differs')
+            size = int(header[48:58])
+            require(size > 0 and stream.tell() + size + size % 2 <= path.stat().st_size,
+                    'Linux DEB archive member is truncated')
+            if name == 'debian-binary':
+                require(size == 4 and stream.read(size) == b'2.0\n', 'Linux DEB format version differs')
+            elif name == 'control.tar.xz':
+                require(size <= 1024 * 1024, 'Linux DEB control archive exceeds bound')
+                decoder = lzma.LZMADecompressor()
+                control_tar = decoder.decompress(stream.read(size), max_length=1024 * 1024)
+                require(decoder.eof and not decoder.unused_data, 'Linux DEB control archive exceeds bound or has trailing data')
+                with tarfile.open(fileobj=io.BytesIO(control_tar), mode='r:') as archive:
+                    entries = [entry for entry in archive if entry.name in ('control', './control')]
+                    require(len(entries) == 1 and entries[0].isfile() and 0 < entries[0].size < 65536,
+                            'Linux DEB control metadata missing or duplicated')
+                    control = archive.extractfile(entries[0]).read().decode('utf-8')
+                for field, value in (('Package', 'qingdan'), ('Version', version), ('Architecture', 'amd64')):
+                    require(re.findall(r'^' + field + r': (.+)$', control, re.MULTILINE) == [value],
+                            'Linux DEB package identity/version differs')
+            else:
+                require(size >= 6 and stream.read(6) == b'\xfd7zXZ\x00', 'Linux DEB data archive is not XZ')
+                stream.seek(size - 6, 1)
+            if size % 2:
+                require(stream.read(1) == b'\n', 'Linux DEB archive padding differs')
+        require(not stream.read(1), 'Linux DEB has unexpected extra members')
+
+
+def positive_int(value):
+    return type(value) is int and value > 0
+
+
+def verify_linux_deb_native(report, version, record):
+    require(isinstance(report, dict) and report.get('schema') == 'qingdan-linux-deb-native-v1'
+            and report.get('version') == version and report.get('architecture') == 'amd64'
+            and report.get('archive') == record['name']
+            and type(report.get('archiveBytes')) is int and report['archiveBytes'] == record['bytes']
+            and report.get('archiveSha256') == record['sha256'] and 'error' not in report,
+            'Linux DEB native evidence is for different package bytes or version')
+    lifecycle = report.get('lifecycle')
+    require(isinstance(lifecycle, dict) and all(lifecycle.get(key) is True for key in
+                ('install', 'samePayloadVersionUpgrade', 'reinstall', 'remove', 'purge',
+                 'userDataPreserved', 'globalUsernsPolicyUnchanged'))
+            and lifecycle.get('historicalDataMigrationTested') is False
+            and all(type(lifecycle.get(key)) is int and lifecycle[key] == 0
+                    for key in ('guiExitStatus', 'mcpExitStatus')) and 'error' not in lifecycle,
+            'Linux DEB installed lifecycle evidence did not pass')
+    gui = report.get('gui')
+    require(isinstance(gui, dict) and gui.get('schema') == 'qingdan-installed-linux-gui-smoke-v1'
+            and gui.get('passed') is True and gui.get('nativeGuiStartupPassed') is True
+            and gui.get('executable') == '/usr/bin/qingdan'
+            and gui.get('productExecutable') == '/usr/lib/qingdan/qingdan' and 'error' not in gui,
+            'Linux DEB installed GUI startup did not pass')
+    require(all(gui.get(key) is False for key in
+                ('fullFunctionalUiTested', 'windowContentInspected', 'mcpTested', 'productInstrumentationUsed',
+                 'debuggingProtocolUsed', 'hostSecurityChanged', 'realUserProfileAccessed')),
+            'Linux DEB GUI safety or acceptance scope differs')
+    host = gui.get('host')
+    require(isinstance(host, dict) and host.get('id') == 'ubuntu' and host.get('version') == '24.04'
+            and host.get('arch') == 'x64' and positive_int(host.get('uid'))
+            and host.get('appArmorEnabled') is True and host.get('restrictedUnprivilegedUserns') is True,
+            'Linux DEB smoke requires restricted Ubuntu 24.04 as an ordinary user')
+    window = gui.get('window')
+    require(positive_int(gui.get('productPid')) and isinstance(window, dict)
+            and window.get('pid') == gui['productPid'] and window.get('mapState') == 'IsViewable'
+            and isinstance(window.get('wmClass'), str) and '"qingdan"' in window['wmClass'].lower()
+            and all(type(window.get(key)) is int and window[key] >= 100 for key in ('width', 'height')),
+            'Linux DEB mapped product window evidence missing')
+    baseline, renderers = gui.get('launcherNamespaces'), gui.get('renderers')
+    require(isinstance(baseline, dict) and isinstance(renderers, list) and renderers,
+            'Linux DEB renderer sandbox evidence missing')
+    pids = set()
+    def namespace(value):
+        return isinstance(value, str) and re.fullmatch(r'user:\[[0-9]+\]', value) is not None
+    def uid_map(value):
+        return (isinstance(value, list) and 0 < len(value) <= 340
+                and all(isinstance(row, list) and len(row) == 3
+                        and all(type(item) is int and item >= 0 for item in row) and row[2] > 0 for row in value))
+    for renderer in renderers:
+        require(isinstance(renderer, dict) and positive_int(renderer.get('pid'))
+                and renderer['pid'] not in pids and renderer['pid'] != gui['productPid']
+                and type(renderer.get('seccomp')) is int and renderer['seccomp'] == 2
+                and type(renderer.get('noNewPrivs')) is int and renderer['noNewPrivs'] == 1
+                and renderer.get('hostUids') == [host['uid']] * 4
+                and all(type(uid) is int for uid in renderer['hostUids']),
+                'Linux DEB renderer seccomp or user identity evidence differs')
+        pids.add(renderer['pid'])
+        if namespace(renderer.get('userNamespace')) and namespace(baseline.get('userNamespace')):
+            require(renderer['userNamespace'] != baseline['userNamespace']
+                    and renderer.get('userNamespaceProof') == 'distinct namespace identifiers',
+                    'Linux DEB renderer has no distinct user namespace')
+        else:
+            require(uid_map(renderer.get('uidMap')) and uid_map(baseline.get('uidMap'))
+                    and renderer['uidMap'] != baseline['uidMap']
+                    and all(row[2] < 4294967295 for row in renderer['uidMap'])
+                    and renderer.get('userNamespaceProof') == 'distinct readable UID maps (namespace identifier unavailable)',
+                    'Linux DEB renderer has no distinct user namespace')
+    observation = gui.get('lastStartupObservation', {})
+    require(isinstance(observation, dict) and observation.get('window') == window
+            and isinstance(observation.get('provenRendererPids'), list)
+            and len(observation['provenRendererPids']) == len(pids)
+            and all(positive_int(pid) for pid in observation['provenRendererPids'])
+            and set(observation['provenRendererPids']) == pids and observation.get('rendererErrors') == [],
+            'Linux DEB stable startup observation differs')
+    cleanup = gui.get('cleanup', {})
+    require(isinstance(cleanup, dict) and cleanup.get('completed') is True
+            and cleanup.get('syntheticDirectoriesRemoved') is True,
+            'Linux DEB GUI smoke cleanup did not complete')
+    mcp = report.get('mcp')
+    require(isinstance(mcp, dict) and mcp.get('schema') == 'qingdan-packaged-mcp-smoke-v1'
+            and mcp.get('platform') == 'linux' and mcp.get('arch') == 'x64'
+            and all(mcp.get(key) is True for key in ('passed', 'productExecutableLaunched',
+                                                    'syntheticLoopbackGateway', 'isolatedUserDirectories'))
+            and all(mcp.get(key) is False for key in ('nativeGuiTested', 'realGrantCreated'))
+            and 'error' not in mcp, 'Linux DEB installed MCP smoke did not pass')
+    eras = mcp.get('eras')
+    require(isinstance(eras, list) and len(eras) == 2
+            and all(isinstance(era, dict) for era in eras)
+            and [era.get('era') for era in eras] == ['legacy', 'modern'],
+            'Linux DEB MCP must test both protocol eras')
+    for era in eras:
+        require(all(era.get(key) is True for key in
+                    ('negotiated', 'sixToolsListed', 'toolCallPassed', 'secretAbsentFromStderr'))
+                and type(era.get('eofExitCode')) is int and era['eofExitCode'] == 0 and 'error' not in era,
+                'Linux DEB MCP protocol smoke did not pass')
+
+
+def verify_linux_deb_references(root, version):
+    path = root / f'Qingdan-{version}-linux-amd64.deb'
+    verify_deb_archive(path, version)
+    record = file_record(path)
+    static = json.loads((root / 'verified-linux-deb-amd64.json').read_text())
+    require(isinstance(static, dict) and static.get('schema') == 'qingdan-linux-deb-v1'
+            and static.get('package') == 'qingdan' and static.get('version') == version
+            and static.get('architecture') == 'amd64' and static.get('archiveSha256') == record['sha256']
+            and static.get('applicationPath') == '/usr/lib/qingdan/qingdan'
+            and static.get('scopedAppArmorPolicy') == '/etc/apparmor.d/app.qingdan.desktop'
+            and all(static.get(key) is True for key in ('exactPayloadAndControlVerified', 'rootOwnedNonWritableFiles'))
+            and all(static.get(key) is False for key in ('setuidOrSetgidFiles', 'installTested',
+                                                       'upgradeTested', 'uninstallTested', 'nativeGuiTested'))
+            and 'error' not in static, 'Linux DEB static package verification differs')
+    native = json.loads((root / 'verified-linux-deb-native-amd64.json').read_text())
+    verify_linux_deb_native(native, version, record)
+    lines = (root / 'SHA256SUMS-linux-deb.txt').read_text().splitlines()
+    require(len(lines) == 1 and re.fullmatch(r'([0-9a-f]{64}) [ *]' + re.escape(path.name), lines[0])
+            and lines[0][:64] == record['sha256'], 'Linux DEB checksum inventory or digest differs')
+
+
 LIMITATIONS = ['macOS has no Developer ID signature or Apple notarization.', 'Windows executable is unsigned.',
-              'Desktop GUI acceptance and Android physical-device acceptance are not established by archive/backend checks.',
+              'Linux DEB GUI evidence covers X11 startup and observed sandbox isolation, not full task UI or Wayland/compositor/GPU acceptance.',
+              'Linux DEB upgrade evidence uses the same application payload at a lower package version; historical data migrations are not tested.',
+              'Other desktop GUI acceptance and Android physical-device acceptance are not established by archive/backend checks.',
               'Android client uses independent application 1.0.1 business-code baseline.']
 
 
@@ -545,15 +709,17 @@ def main(argv=None):
     download = f'https://github.com/{repository}/releases/download/{tag}'
     notes = '\n'.join([f'# 青单 / Qingdan {tag}', '', status, '',
                        '## 更新 / What’s new',
-                       '- Future repeating tasks now appear in the timeline view. / 时间线现在可以显示后续重复任务。',
-                       '- Repeat previews keep the correct multi-day and overnight duration, including at the edge of the visible date range. / 重复预览保持正确的跨日和跨夜跨度，显示范围边缘的安排也不会遗漏。',
-                       '- Renamed the calendar option to “Show future repeats” to make its purpose clearer. / 日历开关改为“显示后续重复任务”，含义更清楚。',
+                       '- 新增 Ubuntu 24.04 x64 的 DEB 安装包，验证安装、升级、重装、卸载和清除。 / Added an Ubuntu 24.04 x64 DEB with verified install, upgrade, reinstall, remove and purge flows.',
+                       '- 仅为青单安装限定路径的 AppArmor 策略，不关闭系统用户命名空间限制，不启用 SUID 或禁用 Chromium 沙箱。 / Installs a Qingdan-only AppArmor policy without disabling system user-namespace restrictions, enabling SUID, or disabling the Chromium sandbox.',
+                       '- 已验证普通用户的 X11 窗口启动、观察到的渲染器沙箱隔离与两代 MCP 协议。 / Verified ordinary-user X11 window startup, observed renderer sandbox isolation and both MCP protocol eras.',
+                       '- 验证不等于完整界面功能验收，尚未验证 Wayland、真实桌面合成器/GPU 或历史版本数据迁移；升级测试使用相同应用内容的低版本测试包。 / This does not establish full UI acceptance, Wayland, real compositor/GPU behavior or historical data migration; upgrade testing uses a lower-version package with the same application payload.',
                        '', '## 下载 / Downloads',
                        f'- macOS Apple Silicon：[DMG]({download}/Qingdan-{version}-mac-arm64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-arm64.zip)',
                        f'- macOS Intel：[DMG]({download}/Qingdan-{version}-mac-x64.dmg) · [ZIP]({download}/Qingdan-{version}-mac-x64.zip)',
                        '- Mac 安装包尚无 Developer ID 签名或 Apple 公证，系统可能阻止运行。遇到安全警告时，请核实下载来源并保留系统安全设置。 / Mac packages lack Developer ID signing and Apple notarization and may be blocked. If you see a security warning, verify the download source and keep system security protections enabled.',
                        f'- Windows x64：[ZIP]({download}/Qingdan-{version}-win-x64.zip)，完整解压后运行 Qingdan.exe。此版本尚无发布者签名。 / Extract the entire archive and run Qingdan.exe. This build has no publisher signature.',
-                       f'- Linux x64：[AppImage]({download}/Qingdan-{version}-linux-x64.AppImage)',
+                       f'- Ubuntu 24.04 x64：[DEB]({download}/Qingdan-{version}-linux-amd64.deb) · [安装说明 / Install guide]({download}/LINUX-DEB-START-HERE.txt) · [SHA256]({download}/SHA256SUMS-linux-deb.txt)',
+                       f'- 其他 Linux x64 / Other Linux x64：[AppImage]({download}/Qingdan-{version}-linux-x64.AppImage)。仍受发行版的 FUSE 和用户命名空间策略限制。 / Subject to the distribution’s FUSE and user-namespace policy.',
                        f'- 服务端 / Server：[ZIP]({download}/qingdan-server-v{version}.zip)，支持 Linux x64 / macOS arm64，内置运行环境与启动脚本。 / Supports Linux x64 and macOS arm64, with bundled runtimes and start scripts.',
                        (f'- Android {android_version}：[APK]({download}/Qingdan-{android_version}-android.apk)。更新前请导出完整备份，覆盖升级须签名一致。 / Export a full backup before updating; upgrades require the same signing identity.'
                         if complete else f'- Android {android_version}：等待发布签名。 / Awaiting release signing.'),

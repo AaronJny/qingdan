@@ -1,11 +1,19 @@
 name: Ubuntu 24 installed package validation
 
-# This dedicated test branch is pushed only with explicit approval to install
-# the Qingdan-scoped policy on a disposable runner. Other branches need the
-# workflow_dispatch opt-in. No publishing or global policy changes occur.
+# The dedicated test branch and release caller are explicitly approved to
+# install/remove only the Qingdan policy on a disposable runner. Other callers
+# must opt in. This workflow never publishes or changes global host policy.
 on:
   push:
     branches: ['fix/ubuntu24-install']
+  workflow_call:
+    inputs:
+      approve-scoped-policy-install:
+        type: boolean
+        required: true
+      release-mode:
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       approve-scoped-policy-install:
@@ -19,6 +27,7 @@ permissions:
 
 jobs:
   installed-package:
+    name: 已安装 Debian 包
     if: (github.event_name == 'push' && github.ref == 'refs/heads/fix/ubuntu24-install') || inputs.approve-scoped-policy-install
     runs-on: ubuntu-24.04
     steps:
@@ -46,13 +55,20 @@ jobs:
           cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns > validation/userns-policy-before.txt
           sudo apt-get update
           sudo apt-get install -y xvfb xauth x11-utils
-      - name: Check current source and build the unpublished candidate
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: inputs.release-mode
+        with:
+          name: verified-application
+          path: application
+      - name: Check current source and build the candidate
         env:
+          RELEASE_MODE: ${{ inputs.release-mode || false }}
           ELECTRON_CACHE: ${{ runner.temp }}/electron-cache
           ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder-cache
         run: |
           npm ci --prefix application
-          npm run check --prefix application
+          # Release mode consumes the unchanged snapshot from the full check.
+          if [ "$RELEASE_MODE" != true ]; then npm run check --prefix application; fi
           npm ci --prefix desktop
           node desktop/scripts/prepare-backend.cjs
           node desktop/scripts/package.cjs linux --x64 --deb
@@ -107,8 +123,22 @@ jobs:
         run: |
           # Remove only this test's package, never alter any other policy.
           if [ -f validation/test-owned-installation ] && dpkg-query -W qingdan >/dev/null 2>&1; then sudo apt-get purge -y qingdan; fi
+      - name: Bind successful native evidence to the exact Debian release bytes
+        if: success() && inputs.release-mode
+        run: |
+          node .github/release/assemble-debian-evidence.cjs
+          mkdir -p desktop/release-deb
+          cp desktop/dist/Qingdan-*-linux-amd64.deb desktop/dist/verified-linux-deb-amd64.json validation/verified-linux-deb-native-amd64.json desktop/docs/LINUX-DEB-START-HERE.txt desktop/release-deb/
+          (cd desktop/release-deb && sha256sum *.deb > SHA256SUMS-linux-deb.txt)
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: always()
+        if: success() && inputs.release-mode
+        with:
+          retention-days: 1
+          name: linux-deb-${{ github.sha }}
+          if-no-files-found: error
+          path: desktop/release-deb/*
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always() && !inputs.release-mode
         with:
           retention-days: 1
           name: ubuntu24-install-validation

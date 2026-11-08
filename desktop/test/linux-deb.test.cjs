@@ -29,9 +29,11 @@ test('DEB is root-owned with exact payload and no privileged files; input bundle
   fs.appendFileSync(path.join(stage, 'etc/apparmor.d/app.qingdan.desktop'), '# modified\n');
   assert.throws(() => verifyDeb(archive, stage), /payload\/control bytes differ/);
 });
-test('DEB staging refuses unsafe links, privileged modes and invalid versions', t => {
+test('DEB staging refuses invalid versions before reading package inputs', () => {
+  assert.throws(() => stageDeb('/missing', '/missing-stage', '1.0\nMalicious: yes'), /stable numeric version/);
+});
+test('DEB staging refuses unsafe links and privileged modes', { skip: process.platform !== 'linux' }, t => {
   const root = temp(t), app = bundle(root), stage = path.join(root, 'stage');
-  assert.throws(() => stageDeb(app, stage, '1.0\nMalicious: yes'));
   fs.symlinkSync('/etc/passwd', path.join(app, 'outside')); assert.throws(() => stageDeb(app, stage, '1.3.10'), /Unsafe symlink/);
   fs.unlinkSync(path.join(app, 'outside'));
   fs.chmodSync(path.join(app, 'chrome-sandbox'), 0o4755);
@@ -44,6 +46,11 @@ test('DEB policy grants userns to one fixed executable and preserves administrat
   for (const name of ['postinst', 'postrm']) {
     const script = fs.readFileSync(path.join(ROOT, 'packaging/linux', name), 'utf8');
     assert(!/chmod|sysctl|--no-sandbox|\bcp\b|\brm\b|QingdanDesktop/.test(script.replace(/^\s*#.*$/gm, '')));
+  }
+});
+test('DEB maintenance scripts have valid POSIX shell syntax', { skip: process.platform !== 'linux' }, () => {
+  for (const name of ['postinst', 'postrm']) {
+    const script = fs.readFileSync(path.join(ROOT, 'packaging/linux', name), 'utf8');
     assert.equal(spawnSync('/bin/sh', ['-n'], { input: script }).status, 0);
   }
 });
@@ -65,13 +72,13 @@ function lifecycle(t, name, action, { enabled = 'Y', loaded = true, parserExit =
   const result = spawnSync('/bin/sh', [file, action, '1.3.9'], { encoding: 'utf8', input: '', env: { ...process.env, PATH: `${bin}:/usr/bin:/bin` } });
   return { ...result, calls: fs.existsSync(log) ? fs.readFileSync(log, 'utf8') : '' };
 }
-test('install and upgrade configure replace the scoped policy and propagate load failures', t => {
+test('install and upgrade configure replace the scoped policy and propagate load failures', { skip: process.platform !== 'linux' }, t => {
   const configured = lifecycle(t, 'postinst', 'configure'); assert.equal(configured.status, 0);
   assert.match(configured.calls, /^--replace --skip-read-cache \/etc\/apparmor.d\/app.qingdan.desktop/m);
   assert.equal(lifecycle(t, 'postinst', 'configure', { parserExit: 9 }).status, 9);
   assert.equal(lifecycle(t, 'postinst', 'configure', { enabled: 'N' }).calls, '');
 });
-test('remove and purge unload only our loaded profile, while upgrade/rollback do not unload it', t => {
+test('remove and purge unload only our loaded profile, while upgrade/rollback do not unload it', { skip: process.platform !== 'linux' }, t => {
   for (const action of ['remove', 'purge']) {
     const removed = lifecycle(t, 'postrm', action); assert.equal(removed.status, 0);
     assert.equal(removed.calls, '--remove\nprofile app.qingdan.desktop {}\n');
@@ -88,7 +95,7 @@ test('DEB package arguments reject wrong platforms, architecture and conflicting
   }
 });
 
-test('configure refuses an unsafe installation before loading the scoped policy', t => {
+test('configure refuses an unsafe installation before loading the scoped policy', { skip: process.platform !== 'linux' }, t => {
   for (const options of [{ owner: 1001 }, { mode: '777' }, { mode: '775' }, { mode: '4755' }, { symlink: true }]) {
     const result = lifecycle(t, 'postinst', 'configure', options);
     assert.notEqual(result.status, 0); assert.equal(result.calls, '');

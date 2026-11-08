@@ -58,7 +58,7 @@ function stageDeb(unpacked, stage, version) {
   fs.mkdirSync(path.join(stage, 'usr/bin'), { recursive: true });
   fs.symlinkSync('../lib/qingdan/AppRun', path.join(stage, 'usr/bin/qingdan'));
   const installedSize = Math.ceil([...application.values()].reduce((sum, file) => sum + (file.bytes || 0), 0) / 1024);
-  write(stage, 'DEBIAN/control', `Package: ${PACKAGE}\nVersion: ${version}\nSection: utils\nPriority: optional\nArchitecture: amd64\nMaintainer: Independent Qingdan project\nHomepage: https://github.com/AaronJny/qingdan\nInstalled-Size: ${installedSize}\nDepends: ${dependencies.join(', ')}\nDescription: Qingdan local-first tasks and calendar\n Sandboxed desktop application with an embedded local backend.\n Ubuntu 24.04 and newer with AppArmor 4.\n`);
+  write(stage, 'DEBIAN/control', `Package: ${PACKAGE}\nVersion: ${version}\nSection: utils\nPriority: optional\nArchitecture: amd64\nMaintainer: Independent Qingdan project\nHomepage: https://github.com/AaronJny/qingdan\nInstalled-Size: ${installedSize}\nDepends: ${dependencies.join(', ')}\nDescription: Qingdan local-first tasks and calendar\n Sandboxed desktop application with an embedded local backend.\n Ubuntu 24.04 with AppArmor 4.\n`);
   normalizeModes(stage);
   return stage;
 }

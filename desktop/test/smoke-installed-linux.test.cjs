@@ -45,7 +45,10 @@ test('GUI smoke isolates all writable profile locations and excludes credentials
   assert.equal(env.DBUS_SESSION_BUS_ADDRESS, `unix:path=${fixture}/no-session-bus`);
   for (const key of ['XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'XDG_DATA_HOME', 'XDG_STATE_HOME', 'XDG_RUNTIME_DIR', 'TMPDIR']) {
     assert(env[key].startsWith(fixture + path.sep));
-    assert(fs.statSync(env[key]).isDirectory()); assert.equal(fs.statSync(env[key]).mode & 0o777, 0o700);
+    assert(fs.statSync(env[key]).isDirectory());
+    // Windows does not implement POSIX chmod bits. Keep all path/environment
+    // assertions there and verify owner-only directory modes on Unix hosts.
+    if (process.platform !== 'win32') assert.equal(fs.statSync(env[key]).mode & 0o777, 0o700);
   }
   for (const key of ['QINGDAN_AGENT_TOKEN', 'NODE_OPTIONS', 'ELECTRON_RUN_AS_NODE', 'ELECTRON_NO_SANDBOX', 'CHROME_DEVEL_SANDBOX', 'LD_PRELOAD', 'LD_LIBRARY_PATH', 'HTTPS_PROXY', 'WAYLAND_DISPLAY']) assert.equal(env[key], undefined, key);
   assert.equal(source.HOME, '/real', 'The caller environment is not mutated.');

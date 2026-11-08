@@ -123,7 +123,7 @@ def allowed_names(commit):
 
 
 class CurrentReleasePolicy:
-    """Only the explicit current six-target inventory. No historical fallback."""
+    """Only the explicit current seven-target inventory. No historical fallback."""
     def inventory(self, receipt, repository, run_id, commit):
         version, android_version = receipt['version'], receipt['androidVersion']
         return (PLATFORMS, expected_deliverables(version, android_version),

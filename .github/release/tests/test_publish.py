@@ -1,8 +1,11 @@
 import copy
 import importlib.util
 import json
+import io
+import lzma
 import os
 import tempfile
+import tarfile
 import unittest
 import zipfile
 from pathlib import Path
@@ -49,6 +52,60 @@ def packaged_recovery_evidence(arch, package):
             'bindingSha256': 'f' * 64}
 
 
+def deb_fixture(root, control_version='1.2.1'):
+    """Small real Debian ar/control envelopes; no package scripts are executed."""
+    def tar_xz(name, value):
+        stream = io.BytesIO()
+        with tarfile.open(fileobj=stream, mode='w') as archive:
+            entry = tarfile.TarInfo(name)
+            entry.size = len(value)
+            archive.addfile(entry, io.BytesIO(value))
+        return lzma.compress(stream.getvalue(), preset=0)
+    def member(name, value):
+        header = f'{name:<16}{0:<12}{0:<6}{0:<6}{"100644":<8}{len(value):<10}`\n'.encode()
+        return header + value + (b'\n' if len(value) % 2 else b'')
+    path = root / 'Qingdan-1.2.1-linux-amd64.deb'
+    control = f'Package: qingdan\nVersion: {control_version}\nArchitecture: amd64\n'.encode()
+    path.write_bytes(b'!<arch>\n' + member('debian-binary', b'2.0\n')
+                     + member('control.tar.xz', tar_xz('./control', control))
+                     + member('data.tar.xz', tar_xz('./payload', os.urandom(2048))))
+    record = publish.file_record(path)
+    static = {'schema': 'qingdan-linux-deb-v1', 'package': 'qingdan', 'version': '1.2.1',
+              'architecture': 'amd64', 'archiveSha256': record['sha256'],
+              'applicationPath': '/usr/lib/qingdan/qingdan', 'exactPayloadAndControlVerified': True,
+              'rootOwnedNonWritableFiles': True, 'setuidOrSetgidFiles': False,
+              'scopedAppArmorPolicy': '/etc/apparmor.d/app.qingdan.desktop',
+              'installTested': False, 'upgradeTested': False, 'uninstallTested': False, 'nativeGuiTested': False}
+    window = {'pid': 50, 'mapState': 'IsViewable', 'wmClass': '"qingdan", "qingdan"', 'width': 1280, 'height': 840}
+    native = {'schema': 'qingdan-linux-deb-native-v1', 'version': '1.2.1', 'architecture': 'amd64',
+              'archive': record['name'], 'archiveBytes': record['bytes'], 'archiveSha256': record['sha256'],
+              'lifecycle': {**{key: True for key in ('install', 'samePayloadVersionUpgrade', 'reinstall',
+                            'remove', 'purge', 'userDataPreserved', 'globalUsernsPolicyUnchanged')},
+                            'historicalDataMigrationTested': False, 'guiExitStatus': 0, 'mcpExitStatus': 0},
+              'gui': {'schema': 'qingdan-installed-linux-gui-smoke-v1', 'passed': True,
+                      'nativeGuiStartupPassed': True, 'executable': '/usr/bin/qingdan',
+                      'productExecutable': '/usr/lib/qingdan/qingdan',
+                      **{key: False for key in ('fullFunctionalUiTested', 'windowContentInspected', 'mcpTested',
+                         'productInstrumentationUsed', 'debuggingProtocolUsed', 'hostSecurityChanged', 'realUserProfileAccessed')},
+                      'host': {'id': 'ubuntu', 'version': '24.04', 'arch': 'x64', 'uid': 1001,
+                               'appArmorEnabled': True, 'restrictedUnprivilegedUserns': True},
+                      'productPid': 50, 'window': window,
+                      'launcherNamespaces': {'userNamespace': 'user:[100]', 'uidMap': [[0, 0, 4294967295]]},
+                      'renderers': [{'pid': 51, 'seccomp': 2, 'noNewPrivs': 1, 'hostUids': [1001] * 4,
+                                     'userNamespaceProof': 'distinct namespace identifiers',
+                                     'userNamespace': 'user:[200]', 'uidMap': [[1001, 1001, 1]]}],
+                      'lastStartupObservation': {'window': window, 'provenRendererPids': [51], 'rendererErrors': []},
+                      'cleanup': {'completed': True, 'syntheticDirectoriesRemoved': True}},
+              'mcp': {'schema': 'qingdan-packaged-mcp-smoke-v1', 'platform': 'linux', 'arch': 'x64',
+                      **{key: True for key in ('passed', 'productExecutableLaunched', 'syntheticLoopbackGateway', 'isolatedUserDirectories')},
+                      'nativeGuiTested': False, 'realGrantCreated': False,
+                      'eras': [{'era': era, 'negotiated': True, 'sixToolsListed': True, 'toolCallPassed': True,
+                                'eofExitCode': 0, 'secretAbsentFromStderr': True} for era in ('legacy', 'modern')]}}
+    for name, report in [('verified-linux-deb-amd64.json', static), ('verified-linux-deb-native-amd64.json', native)]:
+        (root / name).write_text(json.dumps(report))
+    (root / 'SHA256SUMS-linux-deb.txt').write_text(f'{record["sha256"]}  {path.name}\n')
+
+
 class Assets(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -67,6 +124,10 @@ class Assets(unittest.TestCase):
             if not (self.root / name).exists():
                 (self.root / name).write_text('{}' if name.endswith('.json') else 'test evidence')
         self.mac_evidence()
+        self.deb_evidence()
+
+    def deb_evidence(self, control_version="1.2.1"):
+        deb_fixture(self.root, control_version)
 
     def mac_evidence(self):
         for arch in ('arm64', 'x64'):
@@ -121,9 +182,9 @@ class Assets(unittest.TestCase):
         (self.root/name).write_text(json.dumps(value))
     def collect(self,ready=False):
         return publish.collect(self.root,'1.2.1','0.2.1',ready)
-    def test_draft_requires_all_five_non_android_targets(self):
+    def test_draft_requires_all_six_non_android_targets(self):
         expected,files=self.collect()
-        self.assertEqual(set(expected),{'macos-arm64','macos-x64','windows','linux','server'})
+        self.assertEqual(set(expected),{'macos-arm64','macos-x64','windows','linux','linux-deb','server'})
     def test_complete_requires_actual_apk(self):
         with self.assertRaisesRegex(ValueError,'Missing android'):
             self.collect(True)
@@ -171,6 +232,130 @@ class Assets(unittest.TestCase):
         result.stderr='HTTP 403: access denied'
         with patch.object(publish.subprocess,'run',return_value=result), self.assertRaises(RuntimeError):
             publish.gh('fake',optional=True)
+
+
+class LinuxDebEvidence(Assets):
+    def change(self, name, mutate):
+        path = self.root / name
+        report = json.loads(path.read_text())
+        mutate(report)
+        path.write_text(json.dumps(report))
+
+    def test_missing_deb_or_its_evidence_cannot_publish(self):
+        for name in ('Qingdan-1.2.1-linux-amd64.deb', 'verified-linux-deb-amd64.json',
+                     'verified-linux-deb-native-amd64.json', 'SHA256SUMS-linux-deb.txt', 'LINUX-DEB-START-HERE.txt'):
+            with self.subTest(name=name):
+                path = self.root / name
+                before = path.read_bytes()
+                path.unlink()
+                with self.assertRaises(ValueError):
+                    self.collect()
+                path.write_bytes(before)
+
+    def test_ar_metadata_independently_binds_version_and_format(self):
+        self.deb_evidence('1.2.0')
+        with self.assertRaisesRegex(ValueError, 'package identity/version'):
+            self.collect()
+        self.deb_evidence()
+        path = self.root / 'Qingdan-1.2.1-linux-amd64.deb'
+        for invalid in (b'not a Debian archive' * 100, path.read_bytes()[:-10], path.read_bytes() + b'extra'):
+            path.write_bytes(invalid)
+            with self.assertRaisesRegex(ValueError, 'Linux DEB'):
+                self.collect()
+
+    def test_static_evidence_cannot_claim_wrong_bytes_or_unsafe_package(self):
+        for change in (lambda r: r.update(archiveSha256='f' * 64), lambda r: r.update(version='1.2.0'),
+                       lambda r: r.update(architecture='arm64'), lambda r: r.update(rootOwnedNonWritableFiles=False),
+                       lambda r: r.update(setuidOrSetgidFiles=True), lambda r: r.update(exactPayloadAndControlVerified=1),
+                       lambda r: r.update(scopedAppArmorPolicy='/etc/apparmor.d/other'),
+                       lambda r: r.update(nativeGuiTested=True)):
+            with self.subTest(change=change):
+                self.deb_evidence()
+                self.change('verified-linux-deb-amd64.json', change)
+                with self.assertRaisesRegex(ValueError, 'static package'):
+                    self.collect()
+
+    def test_native_evidence_rejects_mismatched_identity_lifecycle_and_scope(self):
+        changes = [lambda r: r.update(version='1.2.0'), lambda r: r.update(archiveSha256='f' * 64),
+                   lambda r: r.update(archive='wrong.deb'), lambda r: r.update(archiveBytes=1),
+                   lambda r: r.update(architecture='arm64'), lambda r: r.pop('gui')]
+        for key in ('install', 'samePayloadVersionUpgrade', 'reinstall', 'remove', 'purge',
+                    'userDataPreserved', 'globalUsernsPolicyUnchanged'):
+            changes.append(lambda r, key=key: r['lifecycle'].update({key: False}))
+        for key in ('guiExitStatus', 'mcpExitStatus'):
+            changes.append(lambda r, key=key: r['lifecycle'].update({key: False}))
+        changes += [lambda r: r['lifecycle'].update(historicalDataMigrationTested=True),
+                    lambda r: r['gui'].update(hostSecurityChanged=True),
+                    lambda r: r['gui'].update(fullFunctionalUiTested=True),
+                    lambda r: r['gui'].update(debuggingProtocolUsed=True),
+                    lambda r: r['gui'].update(productInstrumentationUsed=True),
+                    lambda r: r['gui']['host'].update(uid=0),
+                    lambda r: r['gui']['host'].update(version='22.04'),
+                    lambda r: r['gui']['host'].update(appArmorEnabled=False),
+                    lambda r: r['gui']['host'].update(restrictedUnprivilegedUserns=False),
+                    lambda r: r['gui']['cleanup'].update(completed=False)]
+        for change in changes:
+            with self.subTest(change=change):
+                self.deb_evidence()
+                self.change('verified-linux-deb-native-amd64.json', change)
+                with self.assertRaisesRegex(ValueError, 'Linux DEB'):
+                    self.collect()
+
+    def test_native_gui_requires_actual_window_and_every_renderer_sandbox(self):
+        changes = [lambda r: r['gui'].update(renderers=[]), lambda r: r['gui']['window'].update(mapState='IsUnmapped'),
+                   lambda r: r['gui']['window'].update(pid=49),
+                   lambda r: r['gui']['renderers'][0].update(seccomp=0),
+                   lambda r: r['gui']['renderers'][0].update(noNewPrivs=True),
+                   lambda r: r['gui']['renderers'][0].update(hostUids=[0] * 4),
+                   lambda r: r['gui']['renderers'][0].update(userNamespace='user:[100]'),
+                   lambda r: r['gui']['renderers'][0].update(userNamespaceProof='claimed'),
+                   lambda r: r['gui']['lastStartupObservation'].update(rendererErrors=[{'pid': 52}]),
+                   lambda r: r['gui']['lastStartupObservation'].update(provenRendererPids=[]),
+                   lambda r: r['gui']['renderers'].append(copy.deepcopy(r['gui']['renderers'][0]))]
+        for change in changes:
+            with self.subTest(change=change):
+                self.deb_evidence()
+                self.change('verified-linux-deb-native-amd64.json', change)
+                with self.assertRaisesRegex(ValueError, 'Linux DEB'):
+                    self.collect()
+
+    def test_readable_distinct_uid_map_fallback_preserves_sandbox_requirement(self):
+        def use_map(report):
+            renderer = report['gui']['renderers'][0]
+            renderer.pop('userNamespace')
+            renderer['userNamespaceProof'] = 'distinct readable UID maps (namespace identifier unavailable)'
+        self.change('verified-linux-deb-native-amd64.json', use_map)
+        self.collect()
+        self.change('verified-linux-deb-native-amd64.json',
+                    lambda r: r['gui']['renderers'][0].update(uidMap=[[0, 0, 4294967295]]))
+        with self.assertRaisesRegex(ValueError, 'distinct user namespace'):
+            self.collect()
+
+    def test_native_mcp_requires_both_protocols_and_no_real_account(self):
+        changes = [lambda r: r['mcp'].update(eras=[]), lambda r: r['mcp'].update(realGrantCreated=True),
+                   lambda r: r['mcp'].update(isolatedUserDirectories=False),
+                   lambda r: r['mcp'].update(productExecutableLaunched=False),
+                   lambda r: r['mcp']['eras'][1].update(era='legacy')]
+        for index in (0, 1):
+            for key in ('negotiated', 'sixToolsListed', 'toolCallPassed', 'secretAbsentFromStderr'):
+                changes.append(lambda r, index=index, key=key: r['mcp']['eras'][index].update({key: False}))
+            changes.append(lambda r, index=index: r['mcp']['eras'][index].update(eofExitCode=False))
+        for change in changes:
+            with self.subTest(change=change):
+                self.deb_evidence()
+                self.change('verified-linux-deb-native-amd64.json', change)
+                with self.assertRaisesRegex(ValueError, 'Linux DEB'):
+                    self.collect()
+
+    def test_deb_checksum_must_name_only_exact_archive_and_match_bytes(self):
+        path = self.root / 'SHA256SUMS-linux-deb.txt'
+        good = path.read_text()
+        for text in ('', good + good, good.replace('Qingdan-', 'desktop/dist/Qingdan-'),
+                     'f' * 64 + good[64:], good + 'unexpected\n'):
+            with self.subTest(text=text):
+                path.write_text(text)
+                with self.assertRaisesRegex(ValueError, 'checksum'):
+                    self.collect()
 
 
 class Reconcile(Assets):
@@ -232,7 +417,7 @@ class Reconcile(Assets):
             publish.verify_remote_inventory(release, [path], 'a'*40)
     def test_exact_complete_inventory_count(self):
         self.android()
-        self.assertEqual(len(self.collect(True)[1]), 31)
+        self.assertEqual(len(self.collect(True)[1]), 36)
         (self.root/'unexpected.txt').write_text('unexpected')
         with self.assertRaisesRegex(ValueError, 'exact candidate set'):
             self.collect(True)
@@ -254,6 +439,7 @@ class Reconcile(Assets):
         records = [publish.file_record(path) for path in sorted(self.root.iterdir())]
         expected = {'macos-arm64': '青单-1.2.1-mac-arm64.dmg', 'macos-x64': 'Qingdan-1.2.1-mac-x64.dmg', 'windows': 'Qingdan-1.2.1-win-x64.zip',
                     'server': 'qingdan-server-v1.2.1.zip', 'linux': 'Qingdan-1.2.1-linux-x64.AppImage',
+                    'linux-deb': 'Qingdan-1.2.1-linux-amd64.deb',
                     'android': 'Qingdan-0.2.1-android.apk'}
         legacy_manifest = publish.byte_record('RELEASE-MANIFEST.json', publish.encoded_json(
             publish.manifest_value('1.2.1', source, True, expected, records)))
@@ -301,7 +487,7 @@ class Reconcile(Assets):
             publish.main(['--assets', str(self.root), '--android-result', 'success',
                           '--source-commit', source, '--source-run-id', '100'])
         self.assertFalse(state['draft'])
-        self.assertEqual(len(state['assets']), 32)
+        self.assertEqual(len(state['assets']), 37)
         patches = [call for call in calls if call[:3] == ('api', '--method', 'PATCH')]
         self.assertEqual(len(patches), 2)
         uploads = [call for call in calls if call[:2] == ('release', 'upload')]
@@ -377,17 +563,19 @@ class IntelTargets(Assets):
             'backend-verification-windows.json', 'WINDOWS-START-HERE.txt', 'SHA256SUMS-windows.txt',
             'Qingdan-1.2.1-linux-x64.AppImage', 'verified-linux-x64.json', 'verified-linux-appimage-x64.json',
             'backend-verification-linux.json', 'LINUX-START-HERE.txt', 'SHA256SUMS-linux.txt',
+            'Qingdan-1.2.1-linux-amd64.deb', 'verified-linux-deb-amd64.json',
+            'verified-linux-deb-native-amd64.json', 'SHA256SUMS-linux-deb.txt', 'LINUX-DEB-START-HERE.txt',
             'qingdan-server-v1.2.1.zip', 'qingdan-server-v1.2.1.sha256', 'qingdan-server-v1.2.1.verification.json',
             'Qingdan-0.2.1-android.apk', 'Qingdan-0.2.1-android.apk.verification.json', 'SHA256SUMS-android.txt',
         }
-        self.assertEqual(len(expected), 31)
+        self.assertEqual(len(expected), 36)
         self.assertEqual(publish.candidate_names('1.2.1', '0.2.1', True), expected)
-        self.assertEqual(len(publish.candidate_names('1.2.1', '0.2.1', False)), 28)
+        self.assertEqual(len(publish.candidate_names('1.2.1', '0.2.1', False)), 33)
         self.android()
         deliverables, files = self.collect(True)
         manifest = publish.manifest_value('1.2.1', 'a' * 40, True, deliverables, [])
         self.assertEqual(manifest['requiredPlatforms'],
-                         ['macos-arm64', 'macos-x64', 'windows', 'server', 'linux', 'android'])
+                         ['macos-arm64', 'macos-x64', 'windows', 'server', 'linux', 'linux-deb', 'android'])
         self.assertEqual(set(deliverables), set(manifest['requiredPlatforms']))
         self.assertEqual({path.name for path in files}, expected)
 

@@ -1,0 +1,42 @@
+青单 · Ubuntu 24.04 x86-64 安装包
+Qingdan · Ubuntu 24.04 x86-64 Debian package
+
+安装 / Install
+此包需要 AppArmor 4。安装时会加载只针对 /usr/lib/qingdan/qingdan 的
+AppArmor user namespace 兼容策略；请先由管理员确认。该策略不是额外的
+完整应用隔离。它使 Chromium 能建立自己的沙箱，不关闭全局 AppArmor、
+user namespace 限制或 Electron 沙箱，不启用 setuid 辅助程序。
+
+Requires AppArmor 4. Administrator approval is needed to load the app-specific
+user namespace compatibility policy for /usr/lib/qingdan/qingdan. This is not
+full AppArmor confinement. Global restrictions and Electron sandbox stay enabled.
+
+sudo apt install ./Qingdan-版本-linux-amd64.deb
+
+然后从应用菜单启动青单，或运行 qingdan。无需另装 Node.js。
+Then launch Qingdan from the application menu or run qingdan. No Node.js install is needed.
+
+升级与备份 / Upgrade and backup
+先正常退出应用，备份完整 ${XDG_CONFIG_HOME:-~/.config}/QingdanDesktop
+目录，再使用同一 apt install 命令安装新版。目录可能含有任务及登录信息，
+请妥善保管。升级保留用户数据和管理员对 AppArmor 配置的修改。
+Quit normally and back up that entire directory before installing a newer package.
+The directory may contain private tasks and login information. Keep it secure.
+
+卸载 / Uninstall
+sudo apt remove qingdan
+sudo apt purge qingdan
+remove 保留包配置，purge 删除包配置；两者都保留用户数据目录。
+Both keep user data; purge also removes package configuration.
+
+MCP
+使用 /usr/bin/qingdan --mcp，授权仍需在青单内配置。
+Use /usr/bin/qingdan --mcp after configuring authorization inside Qingdan.
+
+验证范围 / Validation scope
+在 Ubuntu 24.04 一次性环境验证了安装、同 payload 版本升级、重装、卸载、
+普通用户 X11 GUI 启动、渲染沙箱及 MCP。未覆盖完整 GUI 编辑、Wayland、
+实际硬件图形行为、真实用户授权或历史业务数据迁移。
+Verified package lifecycle, ordinary-user X11 GUI startup, renderer sandbox and
+MCP on Ubuntu 24.04. Full GUI editing, Wayland, physical GPU behavior, real user
+grants and historical application-data migration are not covered.

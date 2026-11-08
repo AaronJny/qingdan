@@ -240,6 +240,15 @@ jobs:
           if-no-files-found: error
           path: desktop/release/*
 
+  package-linux-deb:
+    name: Ubuntu 24 安装与沙箱验收
+    needs: [metadata, verify]
+    uses: ./.github/workflows/linux-ubuntu24.yml
+    with:
+      release-mode: true
+      # Explicit release authorization includes this scoped disposable-runner test.
+      approve-scoped-policy-install: true
+
   package-android:
     name: Android 可安装发布 APK
     needs: metadata
@@ -322,10 +331,11 @@ jobs:
       needs.package-server.result == 'success' &&
       needs.package-macos.result == 'success' &&
       needs.package-windows.result == 'success' &&
-      needs.package-linux.result == 'success'
+      needs.package-linux.result == 'success' &&
+      needs.package-linux-deb.result == 'success'
     permissions:
       contents: write
-    needs: [metadata, package-server, package-macos, package-windows, package-linux, package-android]
+    needs: [metadata, package-server, package-macos, package-windows, package-linux, package-linux-deb, package-android]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -334,7 +344,7 @@ jobs:
           pattern: '*-${{ github.sha }}'
           path: release-assets
           merge-multiple: true
-      - name: 精确验收六目标资源并创建正式或草稿 Release
+      - name: 精确验收七目标资源并创建正式或草稿 Release
         env:
           GH_TOKEN: ${{ github.token }}
           ANDROID_RESULT: ${{ needs.package-android.result }}

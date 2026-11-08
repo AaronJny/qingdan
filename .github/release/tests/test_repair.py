@@ -17,11 +17,12 @@ class VerifiedRecovery(unittest.TestCase):
                  '完整检查 / 内置后端原生系统检查 (windows)',
                  '完整检查 / 内置后端原生系统检查 (macos-arm64)', '完整检查 / 内置后端原生系统检查 (macos-x64)',
                  'Android 可安装发布 APK', 'Windows x64', 'macOS arm64', 'macOS x64',
-                 'Linux x64 客户端 AppImage', '独立服务端 Linux 与 macOS 运行时']
+                 'Linux x64 客户端 AppImage', '独立服务端 Linux 与 macOS 运行时',
+                 'Ubuntu 24 安装与沙箱验收 / 已安装 Debian 包']
         self.jobs = [{'name': name, 'conclusion': 'success'} for name in names]
         self.jobs.append({'name': '汇总成品并发布（缺 APK 时仅草稿）', 'conclusion': 'failure'})
         self.artifacts = [{'name': name + '-' + source, 'expired': False, 'workflow_run': {'head_sha': source}}
-                          for name in ('android', 'windows', 'macos-arm64', 'macos-x64', 'linux', 'server')]
+                          for name in ('android', 'windows', 'macos-arm64', 'macos-x64', 'linux', 'linux-deb', 'server')]
         self.comparison = {'status': 'ahead', 'total_commits': 1, 'files': [{'filename': '.github/release/publish.py'}, {'filename': '.github/workflows/release-repair.yml'}]}
 
     def verify(self):
@@ -39,13 +40,50 @@ class VerifiedRecovery(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'All original'):
                     repair.verify_request(self.request, self.run, jobs, self.artifacts, self.comparison)
 
-    def test_six_artifact_set_cannot_substitute_generic_or_cross_arch_mac(self):
-        self.assertEqual(len(self.artifacts), 6)
+    def test_seven_artifact_set_cannot_substitute_generic_or_cross_arch_mac(self):
+        self.assertEqual(len(self.artifacts), 7)
         for name in ('macos', 'macos-arm64'):
             artifacts = copy.deepcopy(self.artifacts)
             next(a for a in artifacts if a['name'].startswith('macos-x64-'))['name'] = name + '-' + self.request['sourceCommit']
-            with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'Exact six'):
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'Exact seven'):
                 repair.verify_request(self.request, self.run, self.jobs, artifacts, self.comparison)
+
+    def test_debian_installed_gate_is_mandatory_and_must_succeed(self):
+        for conclusion in (None, 'failure', 'cancelled', 'skipped', 'timed_out'):
+            jobs = copy.deepcopy(self.jobs)
+            next(job for job in jobs if job['name'] == repair.LINUX_DEB_JOB)['conclusion'] = conclusion
+            with self.subTest(conclusion=conclusion), self.assertRaisesRegex(ValueError, 'All original'):
+                repair.verify_request(self.request, self.run, jobs, self.artifacts, self.comparison)
+        self.jobs = [job for job in self.jobs if job['name'] != repair.LINUX_DEB_JOB]
+        with self.assertRaisesRegex(ValueError, 'All original'):
+            self.verify()
+
+    def test_debian_artifact_cannot_be_missing_expired_or_replaced_by_appimage(self):
+        for change in ('missing', 'expired', 'appimage'):
+            artifacts = copy.deepcopy(self.artifacts)
+            debian = next(item for item in artifacts if item['name'].startswith('linux-deb-'))
+            if change == 'missing':
+                artifacts.remove(debian)
+            elif change == 'expired':
+                debian['expired'] = True
+            else:
+                debian['name'] = 'linux-' + self.request['sourceCommit']
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, 'Exact seven'):
+                repair.verify_request(self.request, self.run, self.jobs, artifacts, self.comparison)
+
+    def test_six_target_legacy_inventory_cannot_weaken_current_release_gate(self):
+        self.jobs = [job for job in self.jobs if job['name'] != repair.LINUX_DEB_JOB]
+        self.artifacts = [item for item in self.artifacts if not item['name'].startswith('linux-deb-')]
+        with self.assertRaisesRegex(ValueError, 'All original'):
+            self.verify()
+
+    def test_reusable_job_names_match_repair_gate(self):
+        workflows = Path(__file__).parents[2] / 'workflows'
+        caller = (workflows / 'release.yml').read_text()
+        callee = (workflows / 'linux-ubuntu24.yml').read_text()
+        self.assertIn('    name: Ubuntu 24 安装与沙箱验收\n', caller)
+        self.assertIn('    name: 已安装 Debian 包\n', callee)
+        self.assertEqual(repair.LINUX_DEB_JOB, 'Ubuntu 24 安装与沙箱验收 / 已安装 Debian 包')
 
     def test_invalid_source_or_request_rejected(self):
         for value in (None, 'main', 'b' * 39, 'x' * 40):
@@ -86,11 +124,11 @@ class VerifiedRecovery(unittest.TestCase):
 
     def test_missing_expired_duplicate_artifacts_rejected(self):
         self.artifacts[0]['expired'] = True
-        with self.assertRaisesRegex(ValueError, 'Exact six'):
+        with self.assertRaisesRegex(ValueError, 'Exact seven'):
             self.verify()
         self.artifacts[0]['expired'] = False
         self.artifacts.append(copy.deepcopy(self.artifacts[0]))
-        with self.assertRaisesRegex(ValueError, 'Exact six'):
+        with self.assertRaisesRegex(ValueError, 'Exact seven'):
             self.verify()
 
     def test_artifact_source_mismatch_rejected(self):
@@ -99,7 +137,8 @@ class VerifiedRecovery(unittest.TestCase):
             self.verify()
 
     def test_application_or_build_workflow_changes_require_rebuild(self):
-        for name in ('application/src/main.ts', 'desktop/scripts/package.cjs', 'android/package.json', '.github/workflows/release.yml'):
+        for name in ('application/src/main.ts', 'desktop/scripts/package.cjs', 'android/package.json',
+                     '.github/workflows/release.yml', '.github/workflows/linux-ubuntu24.yml'):
             self.comparison['files'] = [{'filename': name}]
             with self.assertRaisesRegex(ValueError, 'Application/build workflow changed'):
                 self.verify()

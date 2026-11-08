@@ -244,25 +244,25 @@ class CleanupSafety(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'completed workflow_run'):
                 cleanup.event_identity()
 
-    def test_current_receipt_contains_exactly_32_live_release_assets(self):
+    def test_current_receipt_contains_exactly_37_live_release_assets(self):
         records = cleanup.receipt_records(self.receipt, REPOSITORY, RUN, COMMIT)
-        self.assertEqual(len(records), 32)
-        self.assertEqual(len(self.api.assets), 32)
-        self.assertEqual(len(json.loads(self.receipt['manifestText'])['assets']), 31)
+        self.assertEqual(len(records), 37)
+        self.assertEqual(len(self.api.assets), 37)
+        self.assertEqual(len(json.loads(self.receipt['manifestText'])['assets']), 36)
         self.assertIn('Qingdan-1.2.1-mac-x64.dmg', records)
         self.assertIn('Qingdan-1.2.1-mac-x64.zip', records)
         self.assertEqual(set(cleanup.expected_deliverables('1.2.1', '0.2.1')),
-                         {'macos-arm64', 'macos-x64', 'windows', 'server', 'linux', 'android'})
-        self.assertEqual(len(self.clean()), 12)
-        self.assertEqual(len(self.api.assets), 32)
+                         {'macos-arm64', 'macos-x64', 'windows', 'server', 'linux', 'linux-deb', 'android'})
+        self.assertEqual(len(self.clean()), 13)
+        self.assertEqual(len(self.api.assets), 37)
 
     def test_current_cleanup_allowlist_is_exactly_arch_scoped(self):
         names = {cleanup.RECEIPT_NAME, 'verified-application', 'backend-verification',
                  'backend-verification-native-windows', 'backend-verification-native-macos-arm64',
                  'backend-verification-native-macos-x64', 'windows-' + COMMIT, 'server-' + COMMIT,
-                 'linux-' + COMMIT, 'android-' + COMMIT, 'macos-arm64-' + COMMIT, 'macos-x64-' + COMMIT}
+                 'linux-' + COMMIT, 'linux-deb-' + COMMIT, 'android-' + COMMIT, 'macos-arm64-' + COMMIT, 'macos-x64-' + COMMIT}
         self.assertEqual(cleanup.allowed_names(COMMIT), names)
-        self.assertEqual(len(names), 12)
+        self.assertEqual(len(names), 13)
         for name in ('macos-' + COMMIT, 'backend-verification-native-macos'):
             self.api = FakeAPI(self.receipt)
             self.api.artifacts[-1]['name'] = name
@@ -285,7 +285,7 @@ class CleanupSafety(unittest.TestCase):
             self.api = FakeAPI(self.receipt)
             intel = next(a for a in self.api.assets if a['name'] == 'Qingdan-1.2.1-mac-x64.dmg')
             intel['name'] = name
-            self.assertEqual(len(self.api.assets), 32)
+            self.assertEqual(len(self.api.assets), 37)
             self.reject('inventory')
 
     def test_live_artifact_id_change_cannot_redirect_deletion(self):
@@ -344,7 +344,7 @@ class ReceiptEntryPoints(unittest.TestCase):
         receipt = json.loads(self.output.read_text())
         self.assertEqual(receipt, self.receipt)
         api = FakeAPI(receipt)
-        self.assertEqual(len(cleanup.cleanup(api, receipt, REPOSITORY, RUN, COMMIT)), 12)
+        self.assertEqual(len(cleanup.cleanup(api, receipt, REPOSITORY, RUN, COMMIT)), 13)
 
     def test_draft_or_failed_partial_publisher_result_emits_no_receipt(self):
         for result in [{'url': self.receipt['publisherResult']['url'], 'draft': True}, {}, None]:
@@ -479,7 +479,7 @@ class WorkflowContract(unittest.TestCase):
                 if 'uses: actions/upload-artifact@' in step:
                     count += 1
                     self.assertIn('retention-days: 1\n', step, str(path))
-        self.assertEqual(count, 10)
+        self.assertEqual(count, 11)
 
     def test_ubuntu24_policy_validation_is_explicitly_opt_in_and_read_only_on_github(self):
         workflow = (Path(__file__).parents[2] / 'workflows/linux-ubuntu24.yml').read_text()
@@ -497,6 +497,32 @@ class WorkflowContract(unittest.TestCase):
         self.assertIn('runs-on: ubuntu-24.04', workflow)
         self.assertIn('if [ -f validation/test-owned-installation ] && dpkg-query', workflow)
         self.assertLess(workflow.index('test ! -e \"$file\"'), workflow.index('touch validation/test-owned-installation'))
+
+    def test_debian_release_requires_successful_native_job_and_collision_free_artifacts(self):
+        workflows = Path(__file__).parents[2] / 'workflows'
+        release = (workflows / 'release.yml').read_text()
+        native = (workflows / 'linux-ubuntu24.yml').read_text()
+        job = release.split('  package-linux-deb:')[1].split('  package-android:')[0]
+        self.assertIn('needs: [metadata, verify]', job)
+        self.assertIn('uses: ./.github/workflows/linux-ubuntu24.yml', job)
+        self.assertIn('release-mode: true', job)
+        self.assertIn('approve-scoped-policy-install: true', job)
+        publisher = release.split('  publish:')[1]
+        self.assertIn("needs.package-linux-deb.result == 'success'", publisher)
+        self.assertIn('package-linux, package-linux-deb, package-android]', publisher)
+        self.assertIn('name: 已安装 Debian 包', native)
+        self.assertIn('workflow_call:', native)
+        self.assertIn('name: verified-application', native)
+        self.assertIn('if: inputs.release-mode', native)
+        self.assertIn('if: success() && inputs.release-mode', native)
+        self.assertIn('if: always() && !inputs.release-mode', native)
+        self.assertIn('name: linux-deb-${{ github.sha }}', native)
+        self.assertLess(native.index('test "$mcp_status" -eq 0'), native.index('assemble-debian-evidence.cjs'))
+        staged = native.split('cp desktop/dist/Qingdan-')[1].split('\n')[0]
+        self.assertIn('verified-linux-deb-amd64.json', staged)
+        self.assertIn('verified-linux-deb-native-amd64.json', staged)
+        self.assertNotIn('verified-linux-x64.json', staged)
+        self.assertIn('(cd desktop/release-deb && sha256sum *.deb > SHA256SUMS-linux-deb.txt)', native)
 
     def test_cleanup_only_triggered_after_terminal_success_and_write_scope_is_one_job(self):
         workflows = Path(__file__).parents[2] / 'workflows'

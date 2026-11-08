@@ -8,9 +8,10 @@
 
 - **macOS**：macOS 13 及以上，按处理器选择 Apple Silicon（arm64）或 Intel（x64）版。打开 DMG，将“青单.app”拖入 Applications 后打开。升级前先退出旧版；若仍有旧名 `Qingdan.app`，请移走旧应用，保留数据目录。
 - **Windows**：支持 x64。完整解压 ZIP 后运行 `Qingdan.exe`，所有文件应保留在同一目录。
-- **Linux**：支持 x64 图形桌面。为 AppImage 添加可执行权限后运行，需要系统支持 Electron 沙箱。不支持 FUSE 时，在空目录执行 `./Qingdan-版本-linux-x64.AppImage --appimage-extract`，再运行 `./squashfs-root/AppRun`。
+- **Ubuntu 24.04 x86-64**：推荐 `.deb` 安装包。管理员确认加载仅针对青单的 AppArmor user namespace 策略后，使用 `sudo apt install ./Qingdan-版本-linux-amd64.deb`，再从应用菜单或 `qingdan` 启动。升级前退出并备份数据；卸载 `sudo apt remove qingdan` 或 `sudo apt purge qingdan` 均保留用户数据。详见 [Ubuntu 24 安装与验收](docs/UBUNTU-24-VALIDATION.md)。
+- **其他 Linux x64**：为 AppImage 添加可执行权限后运行，需要系统支持 Electron 沙箱。不支持 FUSE 时，在空目录执行 `./Qingdan-版本-linux-x64.AppImage --appimage-extract`，再运行 `./squashfs-root/AppRun`。
 
-Ubuntu 24.04 等限制未安装应用使用用户命名空间的系统，可能阻止 AppImage 及其 MCP 进程启动；解压不能消除该限制。请保留系统沙箱保护，不使用禁用沙箱的启动参数。此版本未提供自动调整系统安全策略的安装器。
+Ubuntu 24.04 等限制未安装应用使用用户命名空间的系统，可能阻止 AppImage 及其 MCP 进程启动；解压不能消除该限制。请保留系统沙箱保护，不使用禁用沙箱的启动参数。Ubuntu 24 请使用固定安装路径的 `.deb`；它只安装应用级兼容策略，不改变全局限制，也不关闭 Electron 沙箱。
 
 macOS 版本尚无 Developer ID 签名或 Apple 公证，Windows 版本尚无发布者签名，系统可能阻止运行。遇到安全警告时，请先核实下载来源，保留系统安全设置。
 
@@ -55,6 +56,7 @@ npm run check
 - Windows ZIP：`npm run package:win:zip`
 - macOS Apple Silicon DMG 和 ZIP：`npm run package:mac:archives`
 - macOS Intel DMG 和 ZIP：`npm run package:mac:x64:archives`
+- Ubuntu 24 x86-64 Debian 包：`npm run package:linux:deb`
 - Linux x64 AppImage：`npm run package:linux:appimage`
 
 更多构建命令和发布配置见 [构建与发布](docs/BUILD-RELEASE.md)。

@@ -4,9 +4,9 @@
 
 Ubuntu 24.04 的 AppArmor 默认限制未授权应用创建 user namespace。旧版 AppImage 的挂载/解压路径不固定，不能直接套用固定可执行文件策略。把构建 runner 换为 Ubuntu 22 仅绕过构建机上的触发条件，不解决 Ubuntu 24 用户安装。
 
-新增 `npm run package:linux:deb`，生成 `dist/Qingdan-版本-linux-amd64.deb`。它从已验证的 `linux-unpacked` 独立装配，不使用 electron-builder/FPM 的安装脚本，不改写 AppImage 输入。原 AppImage 发布流程保持原状；本次不改版本、发布请求、下载链接或已发布文件。
+新增 `npm run package:linux:deb`，生成 `dist/Qingdan-版本-linux-amd64.deb`。它从已验证的 `linux-unpacked` 独立装配，不使用 electron-builder/FPM 的安装脚本，不改写 AppImage 输入。原 AppImage 保留为其他兼容 Linux 系统的可选包；正式发布同时要求 AppImage 与 Ubuntu 24 `.deb` 两条门禁通过。
 
-**新包仍是候选修复。只有手动 Ubuntu 24 验收成功后，才能称为已验证支持，或把 `.deb` 接入正式发布。** 本地包结构测试和模拟维护脚本不等于实际安装或内核策略验收。
+测试分支的真实 Ubuntu 24.04 验收已经通过：[运行 42484291620](https://github.com/AaronJny/qingdan/actions/runs/42484291620)。正式版本仍须针对最终版本重新运行原生门禁；本地包结构测试和模拟维护脚本不能替代实际安装或内核策略验收。
 
 ## 安装行为与安全边界
 
@@ -18,7 +18,7 @@ Ubuntu 24.04 的 AppArmor 默认限制未授权应用创建 user namespace。旧
 - 卸载只卸载本包命名策略。升级、回滚阶段不卸载新策略。remove 后 conffile 遵循 Debian 规则保留，purge 移除；所有阶段均不删除用户目录 `QingdanDesktop`。
 - 若系统已禁用 AppArmor，不擅自启用它；此时该策略不加载，也不能声称已验证 Ubuntu 24 默认限制情形。若处于容器/chroot、没有内核策略权限，安装配置应明确失败，不能把它当作正常桌面测试。
 
-管理员确认后，在真实 Ubuntu 24.04 x86-64 图形桌面可用 apt 安装或升级候选包：
+管理员确认后，在真实 Ubuntu 24.04 x86-64 图形桌面可用 apt 安装或升级该包：
 
 ```sh
 sudo apt install ./Qingdan-版本-linux-amd64.deb
@@ -29,7 +29,7 @@ qingdan
 
 ## 可重复验证
 
-工作流 `Ubuntu 24 installed package validation` 不发布任何内容。专用测试分支 `fix/ubuntu24-install` 的推送须事先得到安装/卸载 Qingdan 专用 AppArmor 策略的明确批准；本次已获批准。其他分支只接受手动触发，执行者须明确勾选允许在一次性 runner 安装/卸载该策略。它要求 Ubuntu 24.04、AppArmor 启用、`apparmor_restrict_unprivileged_userns=1`，条件不符即失败，不修改全局策略以迁就测试。
+工作流 `Ubuntu 24 installed package validation` 本身不发布内容，也作为正式发布的必需可复用门禁。正式发布调用明确允许在一次性 runner 安装/卸载该专用策略，并使用完整检查生成的同源码快照资源。专用测试分支 `fix/ubuntu24-install` 的推送须事先得到安装/卸载 Qingdan 专用 AppArmor 策略的明确批准；本次已获批准。独立运行的其他分支只接受手动触发，执行者须明确勾选允许在一次性 runner 安装/卸载该策略。它要求 Ubuntu 24.04、AppArmor 启用、`apparmor_restrict_unprivileged_userns=1`，条件不符即失败，不修改全局策略以迁就测试。
 
 验收内容：
 
@@ -45,4 +45,4 @@ qingdan
 
 ### 原生验收发现的安装父目录问题
 
-首次 Ubuntu 24 runner 验收证明了安装、AppArmor 策略加载和包升级；GUI 验收发现 runner 的 `/opt` 可被普通用户写入，因此在启动前拒绝通过。候选安装路径改为系统保护的 `/usr/lib/qingdan`，继续验证所有父目录为 root 所有且不可被普通用户写入，不修改 `/opt` 的权限，也不放宽安全检查。
+首次 Ubuntu 24 runner 验收证明了安装、AppArmor 策略加载和包升级；GUI 验收发现 runner 的 `/opt` 可被普通用户写入，因此在启动前拒绝通过。最终安装路径改为系统保护的 `/usr/lib/qingdan`，继续验证所有父目录为 root 所有且不可被普通用户写入，不修改 `/opt` 的权限，也不放宽安全检查。
