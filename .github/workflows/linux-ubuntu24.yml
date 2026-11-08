@@ -36,7 +36,7 @@ jobs:
           test "$(id -u)" != 0
           test "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns)" = 1
           test "$(cat /sys/module/apparmor/parameters/enabled)" = Y
-          for file in /opt/Qingdan /etc/apparmor.d/app.qingdan.desktop /usr/bin/qingdan /usr/share/applications/qingdan.desktop; do
+          for file in /usr/lib/qingdan /etc/apparmor.d/app.qingdan.desktop /usr/bin/qingdan /usr/share/applications/qingdan.desktop; do
             test ! -e "$file" && test ! -L "$file"
           done
           if dpkg-query -W qingdan >/dev/null 2>&1; then exit 1; fi
@@ -56,6 +56,7 @@ jobs:
           npm ci --prefix desktop
           node desktop/scripts/prepare-backend.cjs
           node desktop/scripts/package.cjs linux --x64 --deb
+          sha256sum desktop/dist/Qingdan-*-linux-amd64.deb > validation/SHA256SUMS-deb.txt
           # Test a real dpkg version upgrade using the SAME application payload.
           # This proves package lifecycle behavior, not historical data migrations.
           node -e 'const p=require("./desktop/scripts/linux-deb.cjs");p.buildDeb("desktop/dist/linux-unpacked","desktop/dist/qingdan-install-baseline.deb","0.0.0")'
@@ -67,8 +68,8 @@ jobs:
           touch validation/test-owned-installation
           sudo apt-get install -y "$PWD/desktop/dist/qingdan-install-baseline.deb"
           test "$(dpkg-query -W -f='${Version}' qingdan)" = 0.0.0
-          test "$(stat -c '%u:%g:%a' /opt/Qingdan/qingdan)" = 0:0:755
-          test "$(stat -c '%u:%g:%a' /opt/Qingdan/chrome-sandbox)" = 0:0:755
+          test "$(stat -c '%u:%g:%a' /usr/lib/qingdan/qingdan)" = 0:0:755
+          test "$(stat -c '%u:%g:%a' /usr/lib/qingdan/chrome-sandbox)" = 0:0:755
           sudo grep '^app.qingdan.desktop (unconfined)' /sys/kernel/security/apparmor/profiles
           mkdir -p "$HOME/.config/QingdanDesktop"
           printf 'synthetic install-test data\n' > "$HOME/.config/QingdanDesktop/install-test-marker"
@@ -78,14 +79,18 @@ jobs:
           test "$(dpkg-query -W -f='${Version}' qingdan)" = "$(node -p 'require("./desktop/package.json").version')"
           grep -q 'Synthetic administrator comment' /etc/apparmor.d/app.qingdan.desktop
           test -f "$HOME/.config/QingdanDesktop/install-test-marker"
-          test -z "$(find /opt/Qingdan -perm /6000 -print)"
-          test -z "$(find /opt/Qingdan -not -type l -perm /0022 -print)"
-          xvfb-run --auto-servernum node desktop/scripts/smoke-installed-linux.cjs --executable /usr/bin/qingdan --report "$PWD/validation/installed-gui.json"
-          xvfb-run --auto-servernum node desktop/scripts/smoke-packaged-mcp.cjs --executable /usr/bin/qingdan --arch x64 --report "$PWD/validation/installed-mcp.json"
+          test -z "$(find /usr/lib/qingdan -perm /6000 -print)"
+          test -z "$(find /usr/lib/qingdan -not -type l -perm /0022 -print)"
+          # Exercise independent flows even if one fails; always finish package
+          # lifecycle checks and record their evidence before failing this job.
+          gui_status=0
+          mcp_status=0
+          xvfb-run --auto-servernum node desktop/scripts/smoke-installed-linux.cjs --executable /usr/bin/qingdan --report "$PWD/validation/installed-gui.json" || gui_status=$?
+          xvfb-run --auto-servernum node desktop/scripts/smoke-packaged-mcp.cjs --executable /usr/bin/qingdan --arch x64 --report "$PWD/validation/installed-mcp.json" || mcp_status=$?
           sudo apt-get install -y --reinstall "$candidate"
           test -f "$HOME/.config/QingdanDesktop/install-test-marker"
           sudo apt-get remove -y qingdan
-          test ! -e /opt/Qingdan/qingdan
+          test ! -e /usr/lib/qingdan/qingdan
           test ! -e /usr/bin/qingdan
           test ! -e /usr/share/applications/qingdan.desktop
           if sudo grep -q '^app.qingdan.desktop (' /sys/kernel/security/apparmor/profiles; then exit 1; fi
@@ -94,7 +99,9 @@ jobs:
           test ! -e /etc/apparmor.d/app.qingdan.desktop
           test -f "$HOME/.config/QingdanDesktop/install-test-marker"
           cmp validation/userns-policy-before.txt /proc/sys/kernel/apparmor_restrict_unprivileged_userns
-          printf '{"install":true,"samePayloadVersionUpgrade":true,"reinstall":true,"remove":true,"purge":true,"userDataPreserved":true,"globalUsernsPolicyUnchanged":true,"historicalDataMigrationTested":false}\n' > validation/lifecycle.json
+          printf '{"install":true,"samePayloadVersionUpgrade":true,"reinstall":true,"remove":true,"purge":true,"userDataPreserved":true,"globalUsernsPolicyUnchanged":true,"historicalDataMigrationTested":false,"guiExitStatus":%s,"mcpExitStatus":%s}\n' "$gui_status" "$mcp_status" > validation/lifecycle.json
+          test "$gui_status" -eq 0
+          test "$mcp_status" -eq 0
       - name: Best-effort cleanup after a failed test
         if: always()
         run: |
@@ -110,3 +117,4 @@ jobs:
             validation/
             desktop/dist/verified-linux-x64.json
             desktop/dist/verified-linux-deb-amd64.json
+            desktop/dist/Qingdan-*-linux-amd64.deb

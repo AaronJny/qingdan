@@ -4,6 +4,20 @@ set -eu
 profile=/etc/apparmor.d/app.qingdan.desktop
 case "${1:-}" in
   configure)
+    # A path-scoped userns grant must not cover an executable that an ordinary
+    # user can replace through a writable ancestor. Refuse, never fix host modes.
+    for target in /usr /usr/lib /usr/lib/qingdan /usr/lib/qingdan/qingdan; do
+      if [ -L "$target" ] || [ "$(stat -c %u -- "$target")" != 0 ]; then
+        echo "Unsafe Qingdan installation ownership: $target" >&2
+        exit 1
+      fi
+      permissions=$(stat -c %a -- "$target")
+      if [ "$((0$permissions & 06022))" -ne 0 ]; then
+        echo "Unsafe Qingdan installation permissions: $target" >&2
+        exit 1
+      fi
+    done
+    test -f /usr/lib/qingdan/qingdan
     # No user-namespace sysctl changes and no setuid helper fallback.
     # Do not silently succeed if an enabled AppArmor kernel rejects the policy.
     if [ -r /sys/module/apparmor/parameters/enabled ] &&

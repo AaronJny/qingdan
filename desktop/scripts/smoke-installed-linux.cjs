@@ -8,7 +8,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawn, spawnSync } = require('node:child_process');
 
-const EXECUTABLE = '/opt/Qingdan/qingdan';
+const EXECUTABLE = '/usr/lib/qingdan/qingdan';
 const PREFIX = 'qingdan-installed-linux-smoke-';
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 function parseArgs(args) {
@@ -56,7 +56,7 @@ function assertHost({ platform, arch, uid, euid, osRelease, appArmorEnabled, res
   return { id: release.ID, version: release.VERSION_ID, arch, uid, appArmorEnabled: true, restrictedUnprivilegedUserns: true };
 }
 function assertInstalledFiles(executable) {
-  for (const file of ['/opt', '/opt/Qingdan', EXECUTABLE, '/opt/Qingdan/AppRun', '/opt/Qingdan/chrome-sandbox', '/opt/Qingdan/resources', '/opt/Qingdan/resources/app.asar']) {
+  for (const file of ['/usr', '/usr/lib', '/usr/bin', '/usr/lib/qingdan', EXECUTABLE, '/usr/lib/qingdan/AppRun', '/usr/lib/qingdan/chrome-sandbox', '/usr/lib/qingdan/resources', '/usr/lib/qingdan/resources/app.asar']) {
     const stat = fs.lstatSync(file);
     assert(!stat.isSymbolicLink(), `Installed path must not be a symlink: ${file}`);
     assert.equal(stat.uid, 0, `Installed path must be root owned: ${file}`);
@@ -67,7 +67,7 @@ function assertInstalledFiles(executable) {
   }
   if (executable === '/usr/bin/qingdan') {
     assert(fs.lstatSync(executable).isSymbolicLink(), 'The packaged command must be its expected symlink.');
-    assert.equal(fs.realpathSync(executable), '/opt/Qingdan/AppRun', 'The packaged command must resolve to the sandbox-preserving launcher.');
+    assert.equal(fs.realpathSync(executable), '/usr/lib/qingdan/AppRun', 'The packaged command must resolve to the sandbox-preserving launcher.');
   }
 }
 
@@ -97,6 +97,21 @@ function parseUidMap(text) {
     assert(row.every(value => Number.isSafeInteger(value) && value >= 0) && row[2] > 0, 'Invalid user namespace extent.');
     return row;
   });
+}
+function isRendererCommandLine(text) {
+  if (typeof text !== 'string' || !text || text.length > 128 * 1024) return false;
+  // Chromium's SetProcessTitleFromCommandLine flattens Linux argv into one
+  // space-separated title. Accept that kernel-visible form as well as ordinary
+  // NUL-separated argv. Identification still requires ancestry from our child;
+  // the separate /proc checks, not this title, establish sandbox evidence.
+  // https://chromium.googlesource.com/chromium/src/+/HEAD/base/process/set_process_title.cc
+  const entries = text.replace(/\0+$/u, '').split('\0');
+  let args;
+  if (entries[0] === EXECUTABLE) args = entries.slice(1);
+  else if (entries.length === 1 && entries[0].startsWith(`${EXECUTABLE} `)) args = entries[0].slice(EXECUTABLE.length + 1).split(' ').filter(Boolean);
+  else return false;
+  const types = args.filter(arg => arg.startsWith('--type='));
+  return types.length === 1 && types[0] === '--type=renderer';
 }
 function descendants(records, rootPid) {
   const selected = new Set([rootPid]); let changed = true;
@@ -143,6 +158,15 @@ function proveRenderer({ pid, status, namespaces }, baseline, uid) {
     throw Error(`Renderer ${pid}: user namespace evidence is unavailable (${JSON.stringify(namespaces)}). No sandbox pass can be claimed.`);
   }
   return { pid, seccomp: 2, noNewPrivs: 1, hostUids: uids, userNamespaceProof, ...namespaces };
+}
+function assessStartupSample({ window, renderers, rendererErrors }, stableSince, now) {
+  // A renderer's process title can appear before sandbox initialization finishes.
+  // Any incomplete/failed proof resets stability; it can never be counted as a
+  // pass alongside a different, already sandboxed renderer.
+  const complete = Boolean(window) && renderers.length > 0 && rendererErrors.length === 0;
+  const since = complete ? stableSince || now : 0;
+  return { stableSince: since, ready: complete && now - since >= 2000,
+    observation: `viewable product window=${Boolean(window)}, proven renderers=${renderers.length}, pending renderer proofs=${rendererErrors.length}${rendererErrors.length ? `: ${rendererErrors.map(item => `${item.pid}: ${item.message}`).join('; ').slice(0, 2000)}` : ''}` };
 }
 
 function windowIds(tree) {
@@ -258,25 +282,27 @@ async function runSmoke(options) {
       const snapshot = processSnapshot();
       const records = descendants(snapshot, child.pid);
       for (const item of snapshot) if (item.session === child.pid || records.includes(item)) observed.set(item.pid, item);
-      const renderers = [];
+      const renderers = [], rendererErrors = [];
       for (const item of records) {
+        let rendererIdentified = false;
         try {
-          const argv = fs.readFileSync(`/proc/${item.pid}/cmdline`, 'utf8').split('\0');
-          if (argv[0] !== EXECUTABLE || !argv.includes('--type=renderer')) continue;
+          const cmdline = fs.readFileSync(`/proc/${item.pid}/cmdline`, 'utf8');
+          if (!isRendererCommandLine(cmdline)) continue;
+          rendererIdentified = true;
           const status = parseStatus(fs.readFileSync(`/proc/${item.pid}/status`, 'utf8'));
           renderers.push(proveRenderer({ pid: item.pid, status, namespaces: namespaceEvidence(item.pid) }, baseline, report.host.uid));
-        } catch (error) { if (!['ENOENT', 'ESRCH'].includes(error.code)) throw error; }
-      }
-      if (window && renderers.length) {
-        stableSince ||= Date.now();
-        if (Date.now() - stableSince >= 2000) {
-          report.window = window; report.renderers = renderers;
-          report.nativeGuiStartupPassed = true; break;
+        } catch (error) {
+          if (['ENOENT', 'ESRCH'].includes(error.code)) continue;
+          if (!rendererIdentified) throw error;
+          rendererErrors.push({ pid: item.pid, code: error.code || 'RENDERER_PROOF_PENDING', message: error.message });
         }
-        lastObservation = 'Window and sandboxed renderers observed; waiting for stable startup.';
-      } else {
-        stableSince = 0;
-        lastObservation = `viewable product window=${Boolean(window)}, proven renderers=${renderers.length}`;
+      }
+      const sample = assessStartupSample({ window, renderers, rendererErrors }, stableSince, Date.now());
+      stableSince = sample.stableSince; lastObservation = sample.observation;
+      report.lastStartupObservation = { window, provenRendererPids: renderers.map(item => item.pid), rendererErrors };
+      if (sample.ready) {
+        report.window = window; report.renderers = renderers;
+        report.nativeGuiStartupPassed = true; break;
       }
       await delay(200);
     }
@@ -305,7 +331,7 @@ async function runSmoke(options) {
   return report;
 }
 
-module.exports = { EXECUTABLE, parseArgs, fixtureEnvironment, parseOsRelease, assertHost, parseProcStat, parseStatus, parseUidMap, descendants, namespaceEvidence, proveRenderer, windowIds, parseWindow, stopOwnedGroup, runSmoke };
+module.exports = { EXECUTABLE, parseArgs, fixtureEnvironment, parseOsRelease, assertHost, parseProcStat, parseStatus, parseUidMap, isRendererCommandLine, descendants, namespaceEvidence, proveRenderer, assessStartupSample, windowIds, parseWindow, stopOwnedGroup, runSmoke };
 if (require.main === module) {
   Promise.resolve().then(() => runSmoke(parseArgs(process.argv.slice(2)))).then(report => {
     console.log(JSON.stringify(report, null, 2)); if (!report.passed) process.exitCode = 1;

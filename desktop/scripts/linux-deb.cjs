@@ -11,7 +11,7 @@ const { tree, verifyElfX64 } = require('./verify-linux-appimage.cjs');
 const ROOT = path.resolve(__dirname, '..');
 const POLICY = 'etc/apparmor.d/app.qingdan.desktop';
 const PACKAGE = 'qingdan';
-const APP = 'opt/Qingdan';
+const APP = 'usr/lib/qingdan';
 const dependencies = [
   'apparmor (>= 4.0)', 'libgtk-3-0t64 | libgtk-3-0', 'libnss3', 'libnspr4',
   'libasound2t64 | libasound2', 'libatk1.0-0t64 | libatk1.0-0',
@@ -47,7 +47,7 @@ function stageDeb(unpacked, stage, version) {
   verifyElfX64(path.join(unpacked, 'qingdan'));
   for (const name of ['AppRun', 'chrome-sandbox', 'resources/app.asar', 'LICENSE.electron.txt', 'LICENSES.chromium.html']) assert(application.has(name), `Missing ${name}`);
   assert.equal(fs.readFileSync(path.join(unpacked, 'AppRun'), 'utf8'), require('./linux-launcher.cjs'));
-  fs.mkdirSync(path.join(stage, 'opt'), { recursive: true });
+  fs.mkdirSync(path.dirname(path.join(stage, APP)), { recursive: true });
   fs.cpSync(unpacked, path.join(stage, APP), { recursive: true, verbatimSymlinks: true });
   for (const name of ['postinst', 'postrm']) write(stage, `DEBIAN/${name}`, fs.readFileSync(path.join(ROOT, 'packaging/linux', name)), 0o755);
   write(stage, POLICY, fs.readFileSync(path.join(ROOT, 'packaging/linux/app.qingdan.desktop')));
@@ -56,7 +56,7 @@ function stageDeb(unpacked, stage, version) {
   write(stage, 'usr/share/icons/hicolor/1024x1024/apps/qingdan.png', fs.readFileSync(path.join(ROOT, 'build/icon.png')));
   write(stage, 'usr/share/doc/qingdan/copyright', fs.readFileSync(path.join(ROOT, '../LICENSE')));
   fs.mkdirSync(path.join(stage, 'usr/bin'), { recursive: true });
-  fs.symlinkSync('../../opt/Qingdan/AppRun', path.join(stage, 'usr/bin/qingdan'));
+  fs.symlinkSync('../lib/qingdan/AppRun', path.join(stage, 'usr/bin/qingdan'));
   const installedSize = Math.ceil([...application.values()].reduce((sum, file) => sum + (file.bytes || 0), 0) / 1024);
   write(stage, 'DEBIAN/control', `Package: ${PACKAGE}\nVersion: ${version}\nSection: utils\nPriority: optional\nArchitecture: amd64\nMaintainer: Independent Qingdan project\nHomepage: https://github.com/AaronJny/qingdan\nInstalled-Size: ${installedSize}\nDepends: ${dependencies.join(', ')}\nDescription: Qingdan local-first tasks and calendar\n Sandboxed desktop application with an embedded local backend.\n Ubuntu 24.04 and newer with AppArmor 4.\n`);
   normalizeModes(stage);
@@ -76,10 +76,10 @@ function verifyDeb(archive, stage, reportFile) {
     }
     const control = run('dpkg-deb', ['--field', archive]);
     assert.match(control, /^Package: qingdan$/m); assert.match(control, /^Architecture: amd64$/m);
-    assert.equal(fs.readlinkSync(path.join(extracted, 'usr/bin/qingdan')), '../../opt/Qingdan/AppRun');
+    assert.equal(fs.readlinkSync(path.join(extracted, 'usr/bin/qingdan')), '../lib/qingdan/AppRun');
     const report = {
       schema: 'qingdan-linux-deb-v1', package: PACKAGE, version: /^Version: (.+)$/m.exec(control)?.[1], architecture: 'amd64',
-      archiveSha256: hash(archive), applicationPath: '/opt/Qingdan/qingdan',
+      archiveSha256: hash(archive), applicationPath: '/usr/lib/qingdan/qingdan',
       exactPayloadAndControlVerified: true, rootOwnedNonWritableFiles: true, setuidOrSetgidFiles: false,
       scopedAppArmorPolicy: '/etc/apparmor.d/app.qingdan.desktop',
       installTested: false, upgradeTested: false, uninstallTested: false, nativeGuiTested: false,

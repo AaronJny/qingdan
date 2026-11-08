@@ -14,13 +14,13 @@ test('Linux desktop identity matches the installed entry and strict GUI window c
   assert.equal(require('../builder.config.cjs').linux.executableName, 'qingdan');
   const entry = fs.readFileSync(path.join(__dirname, '../packaging/linux', metadata.desktopName), 'utf8');
   assert.match(entry, /^StartupWMClass=qingdan$/mu);
-  assert.match(entry, /^Exec=\/opt\/Qingdan\/AppRun %U$/mu);
+  assert.match(entry, /^Exec=\/usr\/lib\/qingdan\/AppRun %U$/mu);
   const properties = `_NET_WM_PID(CARDINAL) = 100\nWM_CLASS(STRING) = "${metadata.desktopName.slice(0, -8)}", "Qingdan"\n`;
   assert(smoke.parseWindow('0x400003', properties, 'Width: 960\nHeight: 760\nMap State: IsViewable\n', 100));
 });
 
 test('installed GUI smoke only accepts its fixed product and bounded runtime options', () => {
-  assert.equal(smoke.EXECUTABLE, '/opt/Qingdan/qingdan');
+  assert.equal(smoke.EXECUTABLE, '/usr/lib/qingdan/qingdan');
   assert.equal(smoke.parseArgs([]).timeoutMs, 45000);
   assert.equal(smoke.parseArgs(['--executable', '/usr/bin/qingdan']).executable, '/usr/bin/qingdan');
   assert.equal(smoke.parseArgs(['--timeout-ms', '5000', '--report', 'out.json']).report, path.resolve('out.json'));
@@ -80,6 +80,32 @@ test('status and user namespace mappings are parsed strictly', () => {
   for (const value of ['', '0 0', '0 0 0', '-1 0 1', '0 nope 1', '0 0 9007199254740992']) assert.throws(() => smoke.parseUidMap(value));
 });
 
+test('renderer identification accepts Chromium flattened process titles and ordinary argv', () => {
+  const binary = smoke.EXECUTABLE;
+  for (const command of [
+    `${binary}\0--type=renderer\0--lang=en-US\0`,
+    `${binary}\0--lang=en-US\0--type=renderer\0\0`,
+    `${binary} --type=renderer --lang=en-US\0`,
+    `${binary} --lang=en-US --type=renderer`,
+    `${binary}  --type=renderer  --user-data-dir=/tmp/synthetic fixture\0\0`,
+  ]) assert.equal(smoke.isRendererCommandLine(command), true, JSON.stringify(command));
+});
+test('renderer identification rejects other binaries, substring lookalikes and conflicting process types', () => {
+  const binary = smoke.EXECUTABLE;
+  for (const command of [
+    '', null, binary, `${binary}\0`,
+    `/tmp/qingdan --type=renderer\0`, `${binary}.other --type=renderer\0`,
+    `${binary}/other --type=renderer\0`, `prefix ${binary} --type=renderer\0`,
+    `${binary} --type=renderer-extra\0`, `${binary}\0--type=renderer-extra\0`,
+    `${binary} --type=utility --note=--type=renderer\0`,
+    `${binary}\0--note=--type=renderer\0`, `${binary}\0--note=some --type=renderer\0`,
+    `${binary} --type=renderer --type=utility\0`, `${binary}\0--type=renderer\0--type=utility\0`,
+    `${binary} --type=renderer --type=renderer\0`,
+    `${binary}\t--type=renderer\0`, `${binary} --type=renderer\n--lang=en-US\0`,
+    `${binary} --type=renderer\0unexpected-second-entry\0`,
+  ]) assert.equal(smoke.isRendererCommandLine(command), false, JSON.stringify(command));
+});
+
 const baseline = { userNamespace: 'user:[4026531837]', uidMap: [[0, 0, 4294967295]] };
 const renderer = { pid: 42, status: { Seccomp: '2', NoNewPrivs: '1', Uid: '1000\t1000\t1000\t1000' }, namespaces: { userNamespace: 'user:[4026533000]', uidMap: [[0, 1000, 1]] } };
 test('renderer proof requires kernel-observed filtering, no-new-privileges, identity, and a distinct namespace', () => {
@@ -97,6 +123,34 @@ test('restricted namespace-link access uses explicit UID-map evidence, never a s
   assert.throws(() => smoke.proveRenderer({ ...renderer, namespaces: { userNamespaceUnavailable: 'EACCES', uidMapUnavailable: 'EACCES' } }, baseline, 1000), /evidence is unavailable/);
   assert.throws(() => smoke.proveRenderer({ ...renderer, namespaces: { uidMap: baseline.uidMap } }, baseline, 1000), /UID map matches/);
   assert.throws(() => smoke.proveRenderer({ ...renderer, namespaces: { uidMap: [[1, 1, 4294967295]] } }, baseline, 1000), /unrestricted UID map/);
+});
+
+test('pending renderer sandbox initialization resets the full stable-startup period', () => {
+  const good = { window: { id: '0x400003' }, renderers: [{ pid: 42 }], rendererErrors: [] };
+  let sample = smoke.assessStartupSample(good, 0, 1000);
+  assert.equal(sample.stableSince, 1000); assert.equal(sample.ready, false);
+  sample = smoke.assessStartupSample(good, sample.stableSince, 2999);
+  assert.equal(sample.ready, false);
+  const pending = { ...good, rendererErrors: [{ pid: 43, message: 'seccomp filtering was not observed' }] };
+  sample = smoke.assessStartupSample(pending, sample.stableSince, 3000);
+  assert.equal(sample.ready, false); assert.equal(sample.stableSince, 0);
+  assert.match(sample.observation, /43: seccomp filtering was not observed/);
+  sample = smoke.assessStartupSample(good, sample.stableSince, 3200);
+  assert.equal(sample.ready, false); assert.equal(sample.stableSince, 3200);
+  assert.equal(smoke.assessStartupSample(good, sample.stableSince, 5199).ready, false);
+  assert.equal(smoke.assessStartupSample(good, sample.stableSince, 5200).ready, true);
+});
+test('no window, no renderer or any failed renderer can never satisfy startup stability', () => {
+  const good = { window: { id: '0x400003' }, renderers: [{ pid: 42 }, { pid: 43 }], rendererErrors: [] };
+  for (const sample of [
+    { ...good, window: null }, { ...good, renderers: [] },
+    { ...good, rendererErrors: [{ pid: 44, message: 'user namespace evidence is unavailable' }] },
+    { ...good, rendererErrors: [{ pid: 42, message: 'Seccomp=0' }, { pid: 43, message: 'NoNewPrivs=0' }] },
+  ]) {
+    const result = smoke.assessStartupSample(sample, 1000, 50000);
+    assert.equal(result.ready, false); assert.equal(result.stableSince, 0);
+  }
+  assert.equal(smoke.assessStartupSample(good, 1000, 50000).ready, true);
 });
 
 test('X11 parser only accepts a mapped product-class window owned by this launched PID', () => {

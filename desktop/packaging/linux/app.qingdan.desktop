@@ -4,6 +4,6 @@ include <tunables/global>
 # Ubuntu 24.04 restricts user namespaces even for otherwise unconfined apps.
 # Grant only the fixed, root-owned installed executable that capability.
 # Chromium still provides the renderer sandbox. This is not a confinement profile.
-profile app.qingdan.desktop /opt/Qingdan/qingdan flags=(unconfined) {
+profile app.qingdan.desktop /usr/lib/qingdan/qingdan flags=(unconfined) {
   userns,
 }

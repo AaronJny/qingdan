@@ -10,8 +10,8 @@ Ubuntu 24.04 的 AppArmor 默认限制未授权应用创建 user namespace。旧
 
 ## 安装行为与安全边界
 
-- 程序固定安装在 root 所有、普通用户不可写的 `/opt/Qingdan`，命令为 `/usr/bin/qingdan`，菜单入口为 `qingdan.desktop`。
-- `/etc/apparmor.d/app.qingdan.desktop` 只匹配 `/opt/Qingdan/qingdan`。`flags=(unconfined)` 是 Ubuntu 的 userns 兼容模式，并非额外的完整应用访问控制；它仅为这条固定可执行文件路径明确允许 user namespace，让 Chromium 建立自己的渲染进程沙箱。
+- 程序固定安装在 root 所有、普通用户不可写的 `/usr/lib/qingdan`，命令为 `/usr/bin/qingdan`，菜单入口为 `qingdan.desktop`。
+- `/etc/apparmor.d/app.qingdan.desktop` 只匹配 `/usr/lib/qingdan/qingdan`。`flags=(unconfined)` 是 Ubuntu 的 userns 兼容模式，并非额外的完整应用访问控制；它仅为这条固定可执行文件路径明确允许 user namespace，让 Chromium 建立自己的渲染进程沙箱。
 - **安装会加载上述应用级安全策略，需要管理员明确同意。** 不修改全局 sysctl/AppArmor 设置，不关闭 Electron 沙箱，不设置 `chrome-sandbox` 的 4755 权限。包要求 AppArmor 4，因此不把该 `.deb` 宣称为 Ubuntu 22 安装包。
 - 安装脚本直接重新编译策略，不主动写入 AppArmor 二进制缓存。系统 AppArmor 服务以后可能生成自身缓存；purge 不清理系统缓存，也不将缓存残留当作策略仍在运行。
 - 策略是 dpkg conffile，升级保留管理员修改；真正的策略加载失败会导致安装配置失败，不静默降级。
@@ -42,3 +42,7 @@ qingdan
 资料：
 - Ubuntu 24.04 user namespace 限制：https://discourse.ubuntu.com/t/ubuntu-24-04-lts-noble-numbat-release-notes/39890
 - AppArmor user namespace 设计：https://discourse.ubuntu.com/t/spec-unprivileged-user-namespace-restrictions-via-apparmor-in-ubuntu-23-10/37626
+
+### 原生验收发现的安装父目录问题
+
+首次 Ubuntu 24 runner 验收证明了安装、AppArmor 策略加载和包升级；GUI 验收发现 runner 的 `/opt` 可被普通用户写入，因此在启动前拒绝通过。候选安装路径改为系统保护的 `/usr/lib/qingdan`，继续验证所有父目录为 root 所有且不可被普通用户写入，不修改 `/opt` 的权限，也不放宽安全检查。
