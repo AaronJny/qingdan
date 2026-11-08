@@ -42,7 +42,7 @@ test('GUI smoke isolates all writable profile locations and excludes credentials
   assert.equal(env.HOME, fixture); assert.equal(env.USERPROFILE, fixture);
   assert.equal(env.DISPLAY, ':77'); assert.equal(env.XAUTHORITY, source.XAUTHORITY);
   assert.equal(env.PATH, '/usr/bin:/bin'); assert.equal(env.XDG_SESSION_TYPE, 'x11');
-  assert.equal(env.DBUS_SESSION_BUS_ADDRESS, `unix:path=${fixture}/no-session-bus`);
+  assert.equal(env.DBUS_SESSION_BUS_ADDRESS, `unix:path=${path.join(fixture, 'no-session-bus')}`);
   for (const key of ['XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'XDG_DATA_HOME', 'XDG_STATE_HOME', 'XDG_RUNTIME_DIR', 'TMPDIR']) {
     assert(env[key].startsWith(fixture + path.sep));
     assert(fs.statSync(env[key]).isDirectory());
