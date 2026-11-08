@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Qingdan
+Name[zh_CN]=青单
+Name[zh]=青单
+Name[zh_TW]=青單
+Comment=Local-first tasks and calendar
+Exec=/opt/Qingdan/AppRun %U
+TryExec=/opt/Qingdan/qingdan
+Terminal=false
+Type=Application
+Icon=qingdan
+Categories=Office;
+StartupWMClass=qingdan

@@ -29,7 +29,7 @@ const sourceFiles = require('./packaged-source.cjs').verifyPackagedSources(root,
 const sourcePackage = JSON.parse(fs.readFileSync(path.join(root, 'package.json')));
 const packagedPackage = JSON.parse(extract('package.json'));
 // electron-builder removes build-only scripts/dependencies from the production package.
-for (const key of ['name','productName','version','main','author','description','license','engines']) assert.deepEqual(packagedPackage[key], sourcePackage[key], 'package ' + key);
+for (const key of ['name','productName','desktopName','version','main','author','description','license','engines']) assert.deepEqual(packagedPackage[key], sourcePackage[key], 'package ' + key);
 assert(!packagedPackage.devDependencies && !packagedPackage.scripts, 'build-only metadata must not ship');
 same('backend/RUNTIME-MANIFEST.json'); same('backend/dependency-manifest.json');
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'backend/RUNTIME-MANIFEST.json')));

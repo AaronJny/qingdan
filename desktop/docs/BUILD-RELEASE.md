@@ -26,6 +26,7 @@ node scripts/package.cjs win --x64 --zip
 node scripts/package.cjs mac --arm64 --dmg --zip
 node scripts/package.cjs mac --x64 --dmg --zip
 node scripts/package.cjs linux --x64 --appimage
+node scripts/package.cjs linux --x64 --deb # Ubuntu 24 候选安装包，独立验收后才可发布
 node scripts/package.cjs linux --x64 --dir
 ```
 
@@ -65,3 +66,7 @@ package.cjs 生成 Qingdan-版本-linux-x64.AppImage 后自动调用 verify-linu
 - 解出已核验的实际 ASAR 后端，用构建机普通 Node 24 在合成数据目录测试版本握手、在线及离线资源、迁移、日历 worker、建任务与正常重启持久性
 
 结果写入 dist/verified-linux-appimage-x64.json，明确记录 electronUtilityProcessTested=false、nativeGuiTested=false。此流程验证 AppImage 结构及归档后端，不代表 Linux 窗口、Electron utilityProcess、图形菜单、桌面通知、X11/Wayland 或发行版兼容性已实机验收。
+
+## Ubuntu 24 候选 Debian 包
+
+固定安装路径、应用级 AppArmor 策略、维护脚本与手动验收流程见 [Ubuntu 24 安装包验收](UBUNTU-24-VALIDATION.md)。该候选流程不修改当前 AppImage 发布门禁；构建成功不能替代真实 Ubuntu 24 安装、GUI 与 MCP 验收。

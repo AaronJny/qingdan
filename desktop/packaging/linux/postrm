@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+case "${1:-}" in
+  remove|purge)
+    # Never unload on upgrade, failed-upgrade, disappear or abort-install.
+    # The conffile may already be gone during purge. Remove by our unique name.
+    if [ -r /sys/module/apparmor/parameters/enabled ] &&
+       [ "$(cat /sys/module/apparmor/parameters/enabled)" = Y ]; then
+      # An absent profile after a preceding remove is a successful no-op.
+      if [ ! -r /sys/kernel/security/apparmor/profiles ]; then
+        echo 'Cannot verify whether Qingdan AppArmor policy is loaded.' >&2
+        exit 1
+      fi
+      if grep -q '^app\.qingdan\.desktop (' /sys/kernel/security/apparmor/profiles; then
+        printf 'profile app.qingdan.desktop {}\n' | apparmor_parser --remove
+      fi
+    fi
+    ;;
+esac
+# User profiles and data are intentionally never removed, including on purge.
+exit 0

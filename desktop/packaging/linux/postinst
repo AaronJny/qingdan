@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+# Package-owned conffile: dpkg preserves any administrator changes on upgrade.
+profile=/etc/apparmor.d/app.qingdan.desktop
+case "${1:-}" in
+  configure)
+    # No user-namespace sysctl changes and no setuid helper fallback.
+    # Do not silently succeed if an enabled AppArmor kernel rejects the policy.
+    if [ -r /sys/module/apparmor/parameters/enabled ] &&
+       [ "$(cat /sys/module/apparmor/parameters/enabled)" = Y ]; then
+      apparmor_parser --replace --skip-read-cache "$profile"
+    fi
+    ;;
+esac
+exit 0

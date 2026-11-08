@@ -1,0 +1,112 @@
+name: Ubuntu 24 installed package validation
+
+# This dedicated test branch is pushed only with explicit approval to install
+# the Qingdan-scoped policy on a disposable runner. Other branches need the
+# workflow_dispatch opt-in. No publishing or global policy changes occur.
+on:
+  push:
+    branches: ['fix/ubuntu24-install']
+  workflow_dispatch:
+    inputs:
+      approve-scoped-policy-install:
+        description: 'Install/remove the Qingdan-only AppArmor policy on this disposable runner'
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  installed-package:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/fix/ubuntu24-install') || inputs.approve-scoped-policy-install
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.22.1'
+          cache: npm
+          cache-dependency-path: |
+            application/package-lock.json
+            desktop/package-lock.json
+      - name: Require stock Ubuntu 24 restrictions and no pre-existing installation
+        run: |
+          test "$(. /etc/os-release; echo "$ID:$VERSION_ID")" = ubuntu:24.04
+          test "$(id -u)" != 0
+          test "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns)" = 1
+          test "$(cat /sys/module/apparmor/parameters/enabled)" = Y
+          for file in /opt/Qingdan /etc/apparmor.d/app.qingdan.desktop /usr/bin/qingdan /usr/share/applications/qingdan.desktop; do
+            test ! -e "$file" && test ! -L "$file"
+          done
+          if dpkg-query -W qingdan >/dev/null 2>&1; then exit 1; fi
+          sudo test -r /sys/kernel/security/apparmor/profiles
+          if sudo grep -q '^app.qingdan.desktop (' /sys/kernel/security/apparmor/profiles; then exit 1; fi
+          mkdir -p validation
+          cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns > validation/userns-policy-before.txt
+          sudo apt-get update
+          sudo apt-get install -y xvfb xauth x11-utils
+      - name: Check current source and build the unpublished candidate
+        env:
+          ELECTRON_CACHE: ${{ runner.temp }}/electron-cache
+          ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder-cache
+        run: |
+          npm ci --prefix application
+          npm run check --prefix application
+          npm ci --prefix desktop
+          node desktop/scripts/prepare-backend.cjs
+          node desktop/scripts/package.cjs linux --x64 --deb
+          # Test a real dpkg version upgrade using the SAME application payload.
+          # This proves package lifecycle behavior, not historical data migrations.
+          node -e 'const p=require("./desktop/scripts/linux-deb.cjs");p.buildDeb("desktop/dist/linux-unpacked","desktop/dist/qingdan-install-baseline.deb","0.0.0")'
+      - name: Install, upgrade and exercise the installed product as an ordinary user
+        run: |
+          set -euo pipefail
+          candidate="$(find "$PWD/desktop/dist" -maxdepth 1 -name 'Qingdan-*-linux-amd64.deb' -print)"
+          test -f "$candidate"
+          touch validation/test-owned-installation
+          sudo apt-get install -y "$PWD/desktop/dist/qingdan-install-baseline.deb"
+          test "$(dpkg-query -W -f='${Version}' qingdan)" = 0.0.0
+          test "$(stat -c '%u:%g:%a' /opt/Qingdan/qingdan)" = 0:0:755
+          test "$(stat -c '%u:%g:%a' /opt/Qingdan/chrome-sandbox)" = 0:0:755
+          sudo grep '^app.qingdan.desktop (unconfined)' /sys/kernel/security/apparmor/profiles
+          mkdir -p "$HOME/.config/QingdanDesktop"
+          printf 'synthetic install-test data\n' > "$HOME/.config/QingdanDesktop/install-test-marker"
+          # An administrator edit must survive the version upgrade.
+          echo '# Synthetic administrator comment retained across upgrade.' | sudo tee -a /etc/apparmor.d/app.qingdan.desktop
+          sudo apt-get install -y "$candidate"
+          test "$(dpkg-query -W -f='${Version}' qingdan)" = "$(node -p 'require("./desktop/package.json").version')"
+          grep -q 'Synthetic administrator comment' /etc/apparmor.d/app.qingdan.desktop
+          test -f "$HOME/.config/QingdanDesktop/install-test-marker"
+          test -z "$(find /opt/Qingdan -perm /6000 -print)"
+          test -z "$(find /opt/Qingdan -not -type l -perm /0022 -print)"
+          xvfb-run --auto-servernum node desktop/scripts/smoke-installed-linux.cjs --executable /usr/bin/qingdan --report "$PWD/validation/installed-gui.json"
+          xvfb-run --auto-servernum node desktop/scripts/smoke-packaged-mcp.cjs --executable /usr/bin/qingdan --arch x64 --report "$PWD/validation/installed-mcp.json"
+          sudo apt-get install -y --reinstall "$candidate"
+          test -f "$HOME/.config/QingdanDesktop/install-test-marker"
+          sudo apt-get remove -y qingdan
+          test ! -e /opt/Qingdan/qingdan
+          test ! -e /usr/bin/qingdan
+          test ! -e /usr/share/applications/qingdan.desktop
+          if sudo grep -q '^app.qingdan.desktop (' /sys/kernel/security/apparmor/profiles; then exit 1; fi
+          test -f "$HOME/.config/QingdanDesktop/install-test-marker"
+          sudo apt-get purge -y qingdan
+          test ! -e /etc/apparmor.d/app.qingdan.desktop
+          test -f "$HOME/.config/QingdanDesktop/install-test-marker"
+          cmp validation/userns-policy-before.txt /proc/sys/kernel/apparmor_restrict_unprivileged_userns
+          printf '{"install":true,"samePayloadVersionUpgrade":true,"reinstall":true,"remove":true,"purge":true,"userDataPreserved":true,"globalUsernsPolicyUnchanged":true,"historicalDataMigrationTested":false}\n' > validation/lifecycle.json
+      - name: Best-effort cleanup after a failed test
+        if: always()
+        run: |
+          # Remove only this test's package, never alter any other policy.
+          if [ -f validation/test-owned-installation ] && dpkg-query -W qingdan >/dev/null 2>&1; then sudo apt-get purge -y qingdan; fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          retention-days: 1
+          name: ubuntu24-install-validation
+          if-no-files-found: warn
+          path: |
+            validation/
+            desktop/dist/verified-linux-x64.json
+            desktop/dist/verified-linux-deb-amd64.json

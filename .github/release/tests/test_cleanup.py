@@ -479,7 +479,24 @@ class WorkflowContract(unittest.TestCase):
                 if 'uses: actions/upload-artifact@' in step:
                     count += 1
                     self.assertIn('retention-days: 1\n', step, str(path))
-        self.assertEqual(count, 9)
+        self.assertEqual(count, 10)
+
+    def test_ubuntu24_policy_validation_is_explicitly_opt_in_and_read_only_on_github(self):
+        workflow = (Path(__file__).parents[2] / 'workflows/linux-ubuntu24.yml').read_text()
+        self.assertIn('workflow_dispatch:', workflow)
+        self.assertIn("github.ref == 'refs/heads/fix/ubuntu24-install') || inputs.approve-scoped-policy-install", workflow)
+        self.assertIn('default: false', workflow)
+        self.assertIn('contents: read', workflow)
+        self.assertNotIn('contents: write', workflow)
+        self.assertIn("branches: ['fix/ubuntu24-install']", workflow)
+        self.assertNotIn("branches: ['main']", workflow)
+        self.assertNotIn('  pull_request:', workflow)
+        self.assertNotIn('sysctl -w', workflow)
+        self.assertNotIn('--no-sandbox', workflow)
+        self.assertNotIn('chmod 4755', workflow)
+        self.assertIn('runs-on: ubuntu-24.04', workflow)
+        self.assertIn('if [ -f validation/test-owned-installation ] && dpkg-query', workflow)
+        self.assertLess(workflow.index('test ! -e \"$file\"'), workflow.index('touch validation/test-owned-installation'))
 
     def test_cleanup_only_triggered_after_terminal_success_and_write_scope_is_one_job(self):
         workflows = Path(__file__).parents[2] / 'workflows'
